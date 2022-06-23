@@ -1,0 +1,15 @@
+### Used packages
+packs = c("shiny", "shinydashboard", "shinythemes", "plotly", 
+            "scales", "knitr", "kableExtra", "dplyr",)
+
+### Run the following command to verify that the required packages are installed. If some package
+# is missing, it will be installed automatically
+package.check <- lapply(packs, FUN = function(x) {
+  if (!require(x, character.only = TRUE)) {
+    install.packages(x, dependencies = TRUE)
+  }
+})
+
+### Load Data set
+dat <- read_csv("data-raw/step-04-ceo-final.csv")
+
