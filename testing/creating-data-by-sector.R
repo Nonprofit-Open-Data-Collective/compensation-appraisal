@@ -66,7 +66,7 @@ dat.sec <- dat %>%
 
 
 ### Save File 
-write_csv(x = dat.sec, path = "data-wrangle/data-by-sector.csv")
+write_csv(x = dat.sec, path = "data-wrangle/data-by-sector.csv") 
 
 
 
