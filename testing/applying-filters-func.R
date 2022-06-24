@@ -13,17 +13,21 @@ dat <- read_csv("data-wrangle/data-by-sector.csv")
 ### Function testing
 ##################################
 
-func.result <- dat_filtering(form.year = c(2018, 2019), 
-                             state = c("CA", "NY", "CO", "PA", "NJ", "AL"),
-                             #major.group = c("I", "X", "IV", "VII"),
-                             #ntee = c("E", "F", "G", "H"),
-                             #ntee.cc = c("E11", "H43"), 
-                             #hosp = 1,
-                             #univ = 1,
-                             #form.type = "990EZ",
-                             tot.expense = c(0, 10000))
+# func.result <- dat_filtering(form.year = c(2018, 2019), 
+#                              state = c("CA", "NY", "CO", "PA", "NJ", "AL"),
+#                              #major.group = c("I", "X", "IV", "VII"),
+#                              #ntee = c("E", "F", "G", "H"),
+#                              #ntee.cc = c("E11", "H43"), 
+#                              #hosp = 1,
+#                              #univ = 1,
+#                              #form.type = "990EZ",
+#                              tot.expense = c(0, 10000))
 
 #function to retireve data set with specified filters 
+
+######################
+### dat_filtering function
+#######################3
 
 dat_filtering <- function(form.year = NA, 
                           state = NA,
