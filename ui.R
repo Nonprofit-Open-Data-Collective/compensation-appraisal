@@ -9,7 +9,6 @@ navbarPage("CEO Compensation Tool",
           pageWithSidebar(
             headerPanel('Apply Orginization Filters'),
             sidebarPanel(width = 4,
-              selectInput('player', 'Choose a player:',paste(data$player,"-",data$team)),
               sliderInput("overall", "Overall:",
                           min = 50, max = 100,
                           value = c(50,100)),
@@ -37,7 +36,8 @@ navbarPage("CEO Compensation Tool",
                 column(8,
                        ### Internal tabsetPanel for suggested compensation 
                        tabsetPanel(type = "tabs",
-                                      tabPanel("Suggested Compensation",tableOutput("tab1"), "This is where we will put the suggested compensation."),
+                                      tabPanel("Suggested Compensation", #tableOutput("tab1"), 
+                                               "This is where we will put the suggested compensation."),
                                       tabPanel("Similar Orginizations", "This is where we will put our list of similar orgs. "),
                                       tabPanel("Model", "This is where we will put more detailed information about the model specifications.")
                        ), # end internal tabsetPanel 
@@ -51,6 +51,7 @@ navbarPage("CEO Compensation Tool",
   
   ### Gender Pay gap difference in diference model tabPanel  
   tabPanel("Gender Transitional Pay Gap Model ",
+           #plotlyOutput("graph"), 
             "This is where we will put the difference in difference model for gender transitional pay gap. "
   ), #end tabPanel for Gender transitional pay gap
    
