@@ -36,7 +36,9 @@ dat.IX <- dat_filtering(major.group = "IX")
 dat.X <- dat_filtering(major.group = "X")
 
 
-### Plot by Major Group 
+#############################
+### Plot for Total Expenses
+############################
 
 ## Group I
 
@@ -189,6 +191,166 @@ dat.X %>%
   ggplot()+
   geom_histogram(aes(x = TotalExpense, color = bin), bins = 70)+
   ggtitle( "Histogram of Major Group .X" )
+
+
+#############################
+### Plot for Total Employees
+############################
+
+## Group I
+
+quants.I <- unname(quantile(dat.I$TotalEmployee, na.rm = T))
+
+dat.I %>% 
+  mutate(bin = case_when(TotalEmployee > quants.I[4] ~ "XL",
+                         TotalEmployee < quants.I[4]  &  TotalEmployee > quants.I[3]  ~ "L", 
+                         TotalEmployee < quants.I[3]  &  TotalEmployee > quants.I[2]  ~ "M",
+                         TotalEmployee < quants.I[2] ~ "S" )) %>%
+  filter(bin != "XL") %>% #take out XL orgs because it makes the plot look messy 
+  ggplot()+
+  geom_histogram(aes(x = TotalEmployee, color = bin), bins = 50) +
+  ggtitle( "Histogram of Major Group .I" )
+
+
+
+## Group II
+
+quants.II <- unname(quantile(dat.II$TotalEmployee, na.rm = T))
+
+dat.II %>% 
+  mutate(bin = case_when(TotalEmployee > quants.II[4] ~ "XL",
+                         TotalEmployee < quants.II[4]  &  TotalEmployee > quants.II[3]  ~ "L", 
+                         TotalEmployee < quants.II[3]  &  TotalEmployee > quants.II[2]  ~ "M",
+                         TotalEmployee < quants.II[2] ~ "S" )) %>%
+  filter(bin != "XL") %>% #take out XL orgs because it makes the plot look messy 
+  ggplot()+
+  geom_histogram(aes(x = TotalEmployee, color = bin), bins = 40)+
+  ggtitle( "Histogram of Major Group .II" )
+
+
+## Group III
+
+quants.III <- unname(quantile(dat.III$TotalEmployee, na.rm = T))
+
+dat.III %>% 
+  mutate(bin = case_when(TotalEmployee > quants.III[4] ~ "XL",
+                         TotalEmployee < quants.III[4]  &  TotalEmployee > quants.III[3]  ~ "L", 
+                         TotalEmployee < quants.III[3]  &  TotalEmployee > quants.III[2]  ~ "M",
+                         TotalEmployee < quants.III[2] ~ "S" )) %>%
+  filter(bin != "XL") %>% #take out XL orgs because it makes the plot look messy 
+  ggplot()+
+  geom_histogram(aes(x = TotalEmployee, color = bin), bins = 40)+
+  ggtitle( "Histogram of Major Group .III" )
+
+
+## Group IV
+
+quants.IV <- unname(quantile(dat.IV$TotalEmployee, na.rm = T))
+
+dat.IV %>% 
+  mutate(bin = case_when(TotalEmployee > quants.IV[4] ~ "XL",
+                         TotalEmployee < quants.IV[4]  &  TotalEmployee > quants.IV[3]  ~ "L", 
+                         TotalEmployee < quants.IV[3]  &  TotalEmployee > quants.IV[2]  ~ "M",
+                         TotalEmployee < quants.IV[2] ~ "S" )) %>%
+  filter(bin != "XL") %>% #take out XL orgs because it makes the plot look messy 
+  ggplot()+
+  geom_histogram(aes(x = TotalEmployee, color = bin), bins = 50)+
+  ggtitle( "Histogram of Major Group .IV" )
+
+
+## Group V
+
+quants.V <- unname(quantile(dat.V$TotalEmployee, na.rm = T))
+
+dat.V %>% 
+  mutate(bin = case_when(TotalEmployee > quants.V[4] ~ "XL",
+                         TotalEmployee < quants.V[4]  &  TotalEmployee > quants.V[3]  ~ "L", 
+                         TotalEmployee < quants.V[3]  &  TotalEmployee > quants.V[2]  ~ "M",
+                         TotalEmployee < quants.V[2] ~ "S" )) %>%
+  filter(bin != "XL") %>% #take out XL orgs because it makes the plot look messy 
+  ggplot()+
+  geom_histogram(aes(x = TotalEmployee, color = bin), bins = 50)+
+  ggtitle( "Histogram of Major Group .V" )
+
+
+
+## Group VI
+
+quants.VI <- unname(quantile(dat.VI$TotalEmployee, na.rm = T))
+
+dat.VI %>% 
+  mutate(bin = case_when(TotalEmployee > quants.VI[4] ~ "XL",
+                         TotalEmployee < quants.VI[4]  &  TotalEmployee > quants.VI[3]  ~ "L", 
+                         TotalEmployee < quants.VI[3]  &  TotalEmployee > quants.VI[2]  ~ "M",
+                         TotalEmployee < quants.VI[2] ~ "S" )) %>%
+  filter(bin != "XL") %>% #take out XL orgs because it makes the plot look messy 
+  ggplot()+
+  geom_histogram(aes(x = TotalEmployee, color = bin), bins = 25)+
+  ggtitle( "Histogram of Major Group .VI" )
+
+
+
+## Group VII
+
+quants.VII <- unname(quantile(dat.VII$TotalEmployee, na.rm = T))
+
+dat.VII %>% 
+  mutate(bin = case_when(TotalEmployee > quants.VII[4] ~ "XL",
+                         TotalEmployee < quants.VII[4]  &  TotalEmployee > quants.VII[3]  ~ "L", 
+                         TotalEmployee < quants.VII[3]  &  TotalEmployee > quants.VII[2]  ~ "M",
+                         TotalEmployee < quants.VII[2] ~ "S" )) %>%
+  filter(bin != "XL") %>% #take out XL orgs because it makes the plot look messy 
+  ggplot()+
+  geom_histogram(aes(x = TotalEmployee, color = bin), bins = 30)+
+  ggtitle( "Histogram of Major Group .VII" )
+
+## Group VIII
+
+quants.VIII <- unname(quantile(dat.VIII$TotalEmployee, na.rm = T))
+
+dat.VIII %>% 
+  mutate(bin = case_when(TotalEmployee > quants.VIII[4] ~ "XL",
+                         TotalEmployee < quants.VIII[4]  &  TotalEmployee > quants.VIII[3]  ~ "L", 
+                         TotalEmployee < quants.VIII[3]  &  TotalEmployee > quants.VIII[2]  ~ "M",
+                         TotalEmployee < quants.VIII[2] ~ "S" )) %>%
+  filter(bin != "XL") %>% #take out XL orgs because it makes the plot look messy 
+  ggplot()+
+  geom_histogram(aes(x = TotalEmployee, color = bin), bins = 40)+
+  ggtitle( "Histogram of Major Group .VIIIII" )
+
+
+
+## Group IX
+
+quants.IX <- unname(quantile(dat.IX$TotalEmployee, na.rm = T))
+
+dat.IX %>% 
+  mutate(bin = case_when(TotalEmployee > quants.IX[4] ~ "XL",
+                         TotalEmployee < quants.IX[4]  &  TotalEmployee > quants.IX[3]  ~ "L", 
+                         TotalEmployee < quants.IX[3]  &  TotalEmployee > quants.IX[2]  ~ "M",
+                         TotalEmployee < quants.IX[2] ~ "S" )) %>%
+  filter(bin != "XL") %>% #take out XL orgs because it makes the plot look messy 
+  ggplot()+
+  geom_histogram(aes(x = TotalEmployee, color = bin), bins = 70)+
+  ggtitle( "Histogram of Major Group .IX" )
+
+
+## Group X
+
+quants.X <- unname(quantile(dat.X$TotalEmployee, na.rm = T))
+
+dat.X %>% 
+  mutate(bin = case_when(TotalEmployee > quants.X[4] ~ "XL",
+                         TotalEmployee < quants.X[4]  &  TotalEmployee > quants.X[3]  ~ "L", 
+                         TotalEmployee < quants.X[3]  &  TotalEmployee > quants.X[2]  ~ "M",
+                         TotalEmployee < quants.X[2] ~ "S" )) %>%
+  filter(bin != "XL") %>% #take out XL orgs because it makes the plot look messy 
+  ggplot()+
+  geom_histogram(aes(x = TotalEmployee, color = bin), bins = 70)+
+  ggtitle( "Histogram of Major Group .X" )
+
+
+
 
 
 
