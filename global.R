@@ -1,5 +1,5 @@
 ### Used packages
-packs = c("shiny", "shinydashboard", "shinythemes", "plotly", 
+packs = c("shiny", "shinydashboard", "shinythemes", "shinyWidgets", "plotly", 
             "scales", "knitr", "kableExtra", "dplyr", "readr")
 
 ### Run the following command to verify that the required packages are installed. If some package
@@ -13,3 +13,5 @@ package.check <- lapply(packs, FUN = function(x) {
 ### Load Data set
 dat <- read_csv("data-wrangle/data-by-sector.csv")
 
+### Load internal functions
+source("testing/applying-filters-func.R")
