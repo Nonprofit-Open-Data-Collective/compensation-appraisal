@@ -48,7 +48,7 @@ dat.sec <- dat %>%
                                 NTEE %in% LETTERS[3:4] ~ "III",
                                 NTEE %in% LETTERS[5:8] ~ "IV",
                                 NTEE %in% LETTERS[9:16] ~ "V", 
-                                NTEE %in% LETTERS[17] ~ "VI", 
+                                NTEE %in% LETTERS[17] ~ 'VI', 
                                 NTEE %in% LETTERS[18:23] ~ "VII", 
                                 NTEE %in% LETTERS[24] ~ "VIII",
                                 NTEE %in% LETTERS[25] ~ "IX",

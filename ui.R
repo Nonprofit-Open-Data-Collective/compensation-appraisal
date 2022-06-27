@@ -10,10 +10,10 @@ navbarPage("CEO Compensation Tool",
             headerPanel('Apply Orginization Filters'),
             sidebarPanel(width = 4,
                          tabsetPanel(type = "tabs",
-                                     ### Input Orginziation Characteristics
-                                     tabPanel("You Orginizaition", 
+                                     ### Input Organization Characteristics
+                                     tabPanel("You Organization", 
                                               "Input your orginizations characteristics.",
-                                              submitButton("Submit"),
+                                              
                                                # org.FormYr
                                                selectInput("org.FormYr", label = "IRS Filing Year", 
                                                            choices = list("2009" = 2009, "2010" = 2010, "2011" = 2011,
@@ -50,21 +50,35 @@ navbarPage("CEO Compensation Tool",
                                               # org.TotalEmployee
                                               numericInput("org.TotalEmployee", label = "Full Time Employees", 
                                                            value = 25,
-                                                           min = 0),    
+                                                           min = 0),  
+                                              #submitButton("Submit")
                                      ),
                                                           
                                      ### Comparison Filters
                                      tabPanel("Comparison Filters", "What types of orginizations to you want to compare to?",
-                                              submitButton("Update filters"),
+                                              
                                               #search.FormYr
-                                              checkboxGroupInput("org.FormYr", label = h3("IRS Filing Year"),
+                                              checkboxGroupInput("search.FormYr", label = h3("IRS Filing Year"),
                                                                  choices = list("2009" = 2009, "2010" = 2010, "2011" = 2011,
                                                                                 "2012" = 2012, "2013" = 2013, "2014" = 2014,
                                                                                 "2015" = 2015, "2016" = 2016, "2017" = "2017",
                                                                                 "2018" = 2018, "2019" = 2019)),
                                               # search.FormType
-                                              checkboxGroupInput("org.FormType", label = "IRS Form",
+                                              checkboxGroupInput("search.FormType", label = "IRS Form",
                                                           choices = list("990" = "990", "990EZ" = "990EZ")),
+                                              # search.state
+                                              pickerInput(
+                                                inputId = "search.State",
+                                                label = "States",
+                                                choices = state.abb,  
+                                                multiple = TRUE,
+                                                options = list(
+                                                  `actions-box` = TRUE,
+                                                  `deselect-all-text` = "None",
+                                                  `select-all-text` = "Yeah, all!",
+                                                  `none-selected-text` = "NA"
+                                                )
+                                              ),
                                               # search.MajorGroup
                                               pickerInput(
                                                 inputId = "search.MajorGroup",
@@ -83,25 +97,26 @@ navbarPage("CEO Compensation Tool",
                                               # select.HOSP
                                               # WILL NEED TO COME BACK AND CHANGE THE OPTION VALUES
                                               radioButtons("search.HOSP", label = "Do you want to compare to Orginizations that are hospitals?",
-                                                           choices = list("No, I do not want to compare with hospitals." = 1,
+                                                           choices = list("No, I do not want to compare with hospitals." = 2,
                                                                           "Yes, I want to compare to both hospitals and non-hospitals." = NA,
-                                                                          "Yes, but I only want to compare to hospitals" = 2), 
-                                                           selected = 1),
+                                                                          "Yes, but I only want to compare to hospitals" = 1), 
+                                                           selected = NA),
                                               # select.UNIV
                                               # WILL NEED TO COME BACK AND CHANGE THE OPTION VALUES
                                               radioButtons("search.UNIV", label = "Do you want to compare to Orginizations that are universities?",
-                                                           choices = list("No, I do not want to compare with universities." = 1,
+                                                           choices = list("No, I do not want to compare with universities." = 2,
                                                                           "Yes, I want to compare to both universities and non-universities." = NA,
-                                                                          "Yes, but I only want to compare to universities" = 2), 
-                                                           selected = 1),
+                                                                          "Yes, but I only want to compare to universities" = 1), 
+                                                           selected = NA),
                                               # search.TotalExpenses
                                               numericRangeInput("search.TotalExpenses", "Range of Total Expenses",
-                                                                value = c(0, 1e7) #can we get commas on these values? 
+                                                                value = c(-Inf, Inf) #can we get commas on these values? 
                                                                 ),
                                               # search.TotalEmployees
                                               numericRangeInput("search.TotalEmployees", "Range of Total Employees",
-                                                                value = c(0, 500), #can we get commas on these values? 
-                                                                min = 0)
+                                                                value = c(0, Inf), #can we get commas on these values? 
+                                                                min = 0),
+                                              #submitButton("Update filters"),
                                               
                                      )
                           ), # end internal tabsetPanel 
@@ -112,12 +127,17 @@ navbarPage("CEO Compensation Tool",
     
               mainPanel(
                 column(8,
+                       submitButton("Update"),
                        ### Internal tabsetPanel for suggested compensation 
                        tabsetPanel(type = "tabs",
-                                      tabPanel("Suggested Compensation", 
-                                               tableOutput("tab1"), 
+                                      tabPanel("Suggested Compensation",  
+                                               #textOutput("test"),
+                                               #tableOutput("tab1"),
+                                               #textOutput("ceo.suggest"),
                                                "This is where we will put the suggested compensation."),
-                                      tabPanel("Similar Orginizations", "This is where we will put our list of similar orgs. "),
+                                      tabPanel("Similar Orginizations", 
+                                               tableOutput("table.compare"),
+                                               "This is where we will put our list of similar orgs. "),
                                       tabPanel("Model", "This is where we will put more detailed information about the model specifications.")
                        ), # end internal tabsetPanel 
                        "Text here will be on every page."

@@ -13,15 +13,18 @@ dat <- read_csv("data-wrangle/data-by-sector.csv")
 ### Function testing
 ##################################
 
-# func.result <- dat_filtering(form.year = c(2018, 2019), 
-#                              state = c("CA", "NY", "CO", "PA", "NJ", "AL"),
-#                              #major.group = c("I", "X", "IV", "VII"),
-#                              #ntee = c("E", "F", "G", "H"),
-#                              #ntee.cc = c("E11", "H43"), 
-#                              #hosp = 1,
-#                              #univ = 1,
-#                              #form.type = "990EZ",
-#                              tot.expense = c(0, 10000))
+func.result <- dat_filtering(form.year = c( 2019),
+                             state = c("GA"),
+                             major.group = c(1),
+                             #ntee = c("E", "F", "G", "H"),
+                             #ntee.cc = c("E11", "H43"),
+                             #hosp = 1,
+                             #univ = 1,
+                             #form.type = "990EZ",
+                             #tot.expense = c(0, 10000)
+                             )
+
+#2019 GA 5 NA NA 2 2 c(-Inf, Inf) c(0, Inf) 990
 
 #function to retireve data set with specified filters 
 
@@ -32,19 +35,19 @@ dat <- read_csv("data-wrangle/data-by-sector.csv")
 dat_filtering <- function(form.year = NA, 
                           state = NA,
                           major.group = NA,
-                          ntee =NA,
+                          ntee = NA,
                           ntee.cc = NA,
                           univ = NA,
                           hosp = NA,
                           tot.expense = c(-Inf, Inf),
-                          tot.employee = c(-Inf, Inf),
+                          tot.employee = c(0, Inf),
                           form.type = NA){
   
   ### Inputs
   # if any input is NA, there will be no filtering on that criteria
-  # form.year = a vector of form years you want to compare to. Options are 2009 - 2019
+  # form.year = a vector of form years you want to compare to. Options are AK, AL, ... , WY 
   # state = a vector of form years you want to compare to. Options are 2009 - 2019
-  # major.group = a vector of groups you want to compare to. Options are I, II, ... , X
+  # major.group = a vector of groups you want to compare to. Options are 1, 2, ... ,10
   # ntee = a vector of NTEE codes you want to compare to . Options are A, B, C, ... Z
   # ntee.cc = a vector of NTEE-CC codes you want to compare to. Options are A01 - Z99
   # univ = NA if you want to include universities in your search, 1 if you only want to consider univerisites, 2 if you want to exclude universities

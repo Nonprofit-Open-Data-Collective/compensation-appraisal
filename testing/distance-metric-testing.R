@@ -77,10 +77,10 @@ org.dist <- org %>%
   mutate(log.expense = log(TotalExpense, base = 10)) %>%
   select(-TotalExpense)
 
-
+#need to suppress messages
 for(i in 1:dim(dat.filtered)[1] ){
   compare <- rbind(org.dist, dat.filtered[i, c("TotalEmployee", "log.expense")])
-  dat.filtered$dist[i] <- distance(compare, method = "euclidean")
+  dat.filtered$dist[i] <- philentropy::distance(compare, method = "euclidean")
 }
 
 #Get rid of the NA's - they are EZ filers - will have to figure out how to deal with that later 

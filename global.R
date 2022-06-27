@@ -2,6 +2,9 @@
 packs = c("shiny", "shinydashboard", "shinythemes", "shinyWidgets", "plotly", 
             "scales", "knitr", "kableExtra", "dplyr", "readr")
 
+#invisible(lapply(packs, library, character.only = TRUE))
+
+
 ### Run the following command to verify that the required packages are installed. If some package
 # is missing, it will be installed automatically
 package.check <- lapply(packs, FUN = function(x) {
@@ -14,4 +17,5 @@ package.check <- lapply(packs, FUN = function(x) {
 dat <- read_csv("data-wrangle/data-by-sector.csv")
 
 ### Load internal functions
-source("testing/applying-filters-func.R")
+source("funcs/applying-filters-func.R")
+source("funcs/find-comparisons-func.R")
