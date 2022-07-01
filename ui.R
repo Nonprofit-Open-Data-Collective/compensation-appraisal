@@ -159,8 +159,6 @@ navbarPage("CEO Compensation Tool",
                        ### Internal tabsetPanel for suggested compensation 
                        tabsetPanel(type = "tabs",
                                       tabPanel("Suggested Compensation",  
-                                               #textOutput("test"),
-                                               #tableOutput("tab1"),
                                                #textOutput("ceo.suggest"),
                                                "This is where we will put the suggested compensation."),
                                       tabPanel("Similar Orginizations", 

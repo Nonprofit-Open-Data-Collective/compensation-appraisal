@@ -57,21 +57,12 @@ function(input, output, session) {
   
   output$table.compare <- renderTable({dat.comparison()})
   
-  # output$table.compare <- renderTable({
-  #   
-  #   #return top 10 comparison orgs
-  #   find_comparisons(org = org(), search = search())
-  # 
-  # })
-  # 
   
   output$ceo.suggest <- renderText({
     paste("Your suggested compensation is ", median(dat.comparison()$CEOCompensation))
   })
 
-    output$tab1 <- renderTable({
-      data.frame(org())
-    })
+
     
     
   #########################################
