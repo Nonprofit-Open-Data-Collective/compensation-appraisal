@@ -5,9 +5,10 @@
 ### Libraries
 library(dplyr)
 library(ggplot2)
+library(readr)
 
 #### Read in Data
-dat <- read_csv("data-raw/step-04-ceo-final.csv")
+dat <- read_csv("data-wrangle/step-04-ceo-final.csv")
 
 #### Aggrigate by health and education with gender 
 
@@ -34,3 +35,27 @@ ggplot(dat.agg)+
   xlab("Median Compensation") +
   ggtitle("Median Compensations by Sector")
 
+
+#################################
+### Data - by - sectors testing 
+#################################
+
+
+data_by_sector <- read_csv("data-wrangle/data-by-sector.csv")
+source("funcs/applying-filters-func.R")
+
+dat.filtered <- data_by_sector%>%
+  filter(FormYr == 2019)
+
+dat.agg <- dat.filtered$CEOCompensation %>%
+  aggregate(list(sec = factor(dat.filtered$MajorGroup), gen = factor(dat.filtered$Gender)), median) %>%
+  rename(comp.med = x ) %>%
+  filter(gen != "U" )
+
+ggplot(dat.agg)+ 
+  geom_point(aes(x = comp.med, y = sec, color = gen)) +
+  ylab("Sector") +
+  xlab("Median Compensation") +
+  scale_y_discrete(labels=as.roman(1:10))
+
+  
