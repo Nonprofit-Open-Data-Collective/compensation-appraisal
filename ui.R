@@ -29,7 +29,16 @@ navbarPage("CEO Compensation Tool",
                                                           choices = state.abb), 
                                               # org.MajorGroup
                                               selectInput("org.MajorGroup", label = "Major Group",
-                                                          choices = as.roman(1:10)),
+                                                          choices = c("Arts, Culture, and Humanities" = "I",
+                                                                      "Education" = "II",
+                                                                      "Environment and Animals " = "III",
+                                                                      "Health" = "IV",
+                                                                      "Human Services" = "V",
+                                                                      "International, Foreign Affairs" = "VI",
+                                                                      "Public, Societal Benefit" = "VII",
+                                                                      "Religion Related" = "VIII",
+                                                                      "Mutual/Membership Benefit " = "IX", 
+                                                                      "Unknown/Unclassified"= "X")),
                                               #NEED TO ADD NTEE
                                               #NEED TO ADD NTEE.CC
                                               # org.Hosp 
@@ -46,7 +55,7 @@ navbarPage("CEO Compensation Tool",
                                                           offLabel = "No"),
                                               # org.TotalExpense
                                               numericInput("org.TotalExpense", label = "Anual Expenses", 
-                                                           value = 50000),
+                                                           value = 1000000),
                                               # org.TotalEmployee
                                               numericInput("org.TotalEmployee", label = "Full Time Employees", 
                                                            value = 25,
@@ -58,11 +67,21 @@ navbarPage("CEO Compensation Tool",
                                      tabPanel("Comparison Filters", "What types of orginizations to you want to compare to?",
                                               
                                               #search.FormYr
-                                              checkboxGroupInput("search.FormYr", label = h3("IRS Filing Year"),
-                                                                 choices = list("2009" = 2009, "2010" = 2010, "2011" = 2011,
-                                                                                "2012" = 2012, "2013" = 2013, "2014" = 2014,
-                                                                                "2015" = 2015, "2016" = 2016, "2017" = "2017",
-                                                                                "2018" = 2018, "2019" = 2019)),
+                                              pickerInput(
+                                                inputId = "search.FormYr",
+                                                label = "States",
+                                                choices = list("2009" = 2009, "2010" = 2010, "2011" = 2011,
+                                                                         "2012" = 2012, "2013" = 2013, "2014" = 2014,
+                                                                         "2015" = 2015, "2016" = 2016, "2017" = "2017",
+                                                                         "2018" = 2018, "2019" = 2019),
+                                                multiple = TRUE,
+                                                options = list(
+                                                  `actions-box` = TRUE,
+                                                  `deselect-all-text` = "None",
+                                                  `select-all-text` = "Yeah, all!",
+                                                  `none-selected-text` = "NA"
+                                                )
+                                              ),
                                               # search.FormType
                                               checkboxGroupInput("search.FormType", label = "IRS Form",
                                                           choices = list("990" = "990", "990EZ" = "990EZ")),
@@ -83,7 +102,16 @@ navbarPage("CEO Compensation Tool",
                                               pickerInput(
                                                 inputId = "search.MajorGroup",
                                                 label = "Major Group",
-                                                choices = as.roman(1:10), #showing up as 1:10 and idk why 
+                                                choices = c("Arts, Culture, and Humanities" = "I",
+                                                            "Education" = "II",
+                                                            "Environment and Animals " = "III",
+                                                            "Health" = "IV",
+                                                            "Human Services" = "V",
+                                                            "International, Foreign Affairs" = "VI",
+                                                            "Public, Societal Benefit" = "VII",
+                                                            "Religion Related" = "VIII",
+                                                            "Mutual/Membership Benefit " = "IX", 
+                                                            "Unknown/Unclassified"= "X"), #showing up as 1:10 and idk why 
                                                 multiple = TRUE,
                                                 options = list(
                                                   `actions-box` = TRUE,
@@ -155,10 +183,16 @@ navbarPage("CEO Compensation Tool",
    
   ###  Gender Pay Differences tabPanel
   tabPanel("Gender Pay Differences",
-           checkboxGroupInput("major.group.choice", "Choose", choices = c("I" = "I","II" = "II", "III" = "III",
-                                                       "IV" = "IV", "V" = "V", "VI" = "VI",
-                                                       "VII" = "VII", "VIII" = "VIII", 
-                                                       "IX" = "IX", "X"= "X"), selected = NULL),
+           checkboxGroupInput("major.group.choice", "Choose", choices = c("Arts, Culture, and Humanities" = "I",
+                                                                          "Education" = "II",
+                                                                          "Environment and Animals " = "III",
+                                                                          "Health" = "IV",
+                                                                          "Human Services" = "V",
+                                                                          "International, Foreign Affairs" = "VI",
+                                                                          "Public, Societal Benefit" = "VII",
+                                                                          "Religion Related" = "VIII",
+                                                                          "Mutual/Membership Benefit " = "IX", 
+                                                                          "Unknown/Unclassified"= "X"), selected = NULL),
            submitButton("Update filters"),
            textOutput("message"),
            #plotlyOutput("graph.gender"), 
