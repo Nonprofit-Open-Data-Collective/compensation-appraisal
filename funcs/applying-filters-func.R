@@ -12,17 +12,17 @@ dat <- read_csv("data-wrangle/data-by-sector.csv")
 ##################################
 ### Function testing
 ##################################
-
-func.result <- dat_filtering(form.year = c( 2019),
-                             state = c("GA"),
-                             major.group = c(1),
-                             #ntee = c("E", "F", "G", "H"),
-                             #ntee.cc = c("E11", "H43"),
-                             #hosp = 1,
-                             #univ = 1,
-                             #form.type = "990EZ",
-                             #tot.expense = c(0, 10000)
-                             )
+# 
+# func.result <- dat_filtering(form.year = c( 2019),
+#                              state = c("GA"),
+#                              major.group = c(1),
+#                              #ntee = c("E", "F", "G", "H"),
+#                              #ntee.cc = c("E11", "H43"),
+#                              #hosp = 1,
+#                              #univ = 1,
+#                              #form.type = "990EZ",
+#                              #tot.expense = c(0, 10000)
+#                              )
 
 #2019 GA 5 NA NA 2 2 c(-Inf, Inf) c(0, Inf) 990
 
