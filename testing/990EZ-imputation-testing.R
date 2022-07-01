@@ -19,7 +19,7 @@ dat.EZ <- dat %>%
 
 ##########################
 ### testing MICE 
-#########################3
+#########################
 
 # https://datascienceplus.com/imputing-missing-data-with-r-mice-package/
 library(haven)
@@ -135,8 +135,9 @@ dat.EZ <- dat.raw %>%
 
 dat.990.filter <- dat.990 %>%
   filter(GROSSRECEIPTS < 200000) %>%
-  filter(GROSSRECEIPTS < 500000) %>% 
-  filter(TOTALEXPCURRENT > 90000)
+  filter(TOTALASSETSENDYEAR < 500000) %>% 
+  filter(TOTALEXPCURRENT > 90000) %>% #need to ask jesse about 
+  filter(TOTEMPLOYEE > 0) #ask jesse about this 
 
 dim(dat.990.filter) #good size data to work with 
 
@@ -157,10 +158,10 @@ mod <- glm(TOTEMPLOYEE ~ FormYr + NTEEFINAL + UNIV +  HOSP + TOTNETASSETSENDYEAR
            family="poisson", data = dat.model )
 
 dat.plot <- data.frame(dat.model$TOTEMPLOYEE, mod$fitted.values) %>%
-  filter(dat.model.TOTEMPLOYEE < 10)
+  filter(dat.model.TOTEMPLOYEE < 100)
 
 plot(dat.plot[, 1], dat.plot[, 2])
-abline(0,1)
+abline(0,1, col = 2)
 
 #somewhat better to fit model with $90k < TOTALEXPCURRENT 
 

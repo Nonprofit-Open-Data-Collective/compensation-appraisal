@@ -50,7 +50,8 @@ HEOM <- function(dat, dat.type){
         if(type == "numeric"){
           D[i, j, a] <- abs(dat.a[i] - dat.a[j]) / r
         }else if( type == "character"){
-          D[i, j, a] <- as.numeric(dat.a[i] != dat.a[j]) # 0 if they match, 1 if they do not # want them to be far away if they do not match 
+          #D[i, j, a] <- as.numeric(dat.a[i] != dat.a[j]) # 0 if they match, 1 if they do not # want them to be far away if they do not match 
+          D[i, j, a] <- ifelse(dat.a[i] != dat.a[j], 1 ,0) # 0 if they match, 1 if they do not # want them to be far away if they do not match 
         }
         #if its type is 
       }
@@ -95,15 +96,20 @@ test.frame %>%
   rename("Point1" = rows, "Point2" = columns)
 
 #lets see if this is true 
-dat.fake[c(4,8) , ] #pretty close
-dat.fake[c(1,2) , ] #pretty close
-dat.fake[c(3,6) , ] #pretty close
-dat.fake[c(1,9) , ] #pretty close
+dat.fake[c(4,9) , ]
+
 
 ### This method compare all points to all other points, 
 #We dont need to compare every point to every other point
 #We only need to compare one point to every other point
 #so we dont need to loop over i 
+
+#we can also change some of the weights 
+# like we want to do hard match on major group
+# but instead of doing 0 = matching and 1 = no match we could do 
+# for ntee 0 = match, 0.5 = no match
+# for ntee.cc 0=match, 0.25 = no match 
+# becuase its less important to match on ntee and ntee.cc but when it does its beneficial
 
 
 
