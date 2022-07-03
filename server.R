@@ -9,8 +9,8 @@ function(input, output, session) {
     list(FormYr = input$org.FormYr,
          State = input$org.State,
          MajorGroup = input$org.MajorGroup,
-         NTEE = NA, #need to add input for this 
-         NTEE.CC = NA, #need to add input for this 
+         NTEE = input$org.NTEE, #need to add input for this 
+         NTEE.CC = input$org.NTEE.CC, #need to add input for this 
          UNIV = input$org.HOSP,
          HOSP = input$org.UNIV,
          TotalExpense = input$org.TotalExpense,
@@ -47,19 +47,35 @@ function(input, output, session) {
     
   })
   
-  
+  ### Get filtered data 
+  dat.filtered <- reactive({
+    dat_filtering(form.year = search()$form.year,
+                  state = search()$state,
+                  major.group = search()$major.group,
+                  ntee = search()$ntee,
+                  ntee.cc = search()$ntee.cc,
+                  hosp = search()$hosp,
+                  univ = search()$univ,
+                  tot.expense = search()$tot.expense,
+                  tot.employee = search()$tot.employee,
+                  form.type = search()$form.type
+    )
+  })
+
   
   ### Do the search
-  
-  dat.comparison <- reactive({
-    find_comparisons(org = org(), search = search())
+  dat.similar <- reactive({
+    HEOM_with_weights(org = org(), dat.filtered = dat.filtered())
   })
   
-  output$table.compare <- renderTable({dat.comparison()})
+  output$similar <- DT::renderDataTable({
+    dat.similar()
+  }, rownames = FALSE)
+  
   
   
   output$ceo.suggest <- renderText({
-    paste("Your suggested compensation is ", median(dat.comparison()$CEOCompensation))
+    paste("Your suggested compensation is ", median(dat.similar()$CEOCompensation))
   })
 
 
