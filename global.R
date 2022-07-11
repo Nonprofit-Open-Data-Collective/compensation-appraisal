@@ -15,7 +15,8 @@ package.check <- lapply(packs, FUN = function(x) {
 })
 
 ### Load Data set
-dat <- read_csv("data-wrangle/data-by-sector.csv")
+#dat <- read_csv("data-wrangle/data-by-sector.csv")
+dat <- read_csv("data-rodeo/dat-shinyapp.csv")
 
 ### Load internal functions
 source("funcs/applying-filters-func.R")

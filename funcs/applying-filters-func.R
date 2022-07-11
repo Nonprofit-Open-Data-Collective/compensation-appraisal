@@ -6,7 +6,7 @@ library(ggplot2)
 
 ##
 #### Read in Data
-dat <- read_csv("data-wrangle/data-by-sector.csv")
+#dat <- read_csv("data-rodeo/dat-shinyapp.csv")
 
 
 ##################################
@@ -14,7 +14,7 @@ dat <- read_csv("data-wrangle/data-by-sector.csv")
 ##################################
 # 
 # func.result <- dat_filtering(form.year = c( 2019),
-#                              state = c("GA"),
+#                              state = c("GA", "CA", "LA"),
 #                              major.group = c(1),
 #                              #ntee = c("E", "F", "G", "H"),
 #                              #ntee.cc = c("E11", "H43"),
@@ -59,7 +59,8 @@ dat_filtering <- function(form.year = NA,
   ### Output
   # A Tibble of all organizations that fit the specified criteria
   
-  dat.filtered <- read_csv("data-wrangle/data-by-sector.csv")
+  dat.filtered <- read_csv("data-rodeo/dat-shinyapp.csv")
+
   
   # Filter By form.year
   if(!any(is.na(form.year))){

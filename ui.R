@@ -83,7 +83,7 @@ navbarPage("CEO Compensation Tool",
                                                                          "2015" = 2015, "2016" = 2016, "2017" = "2017",
                                                                          "2018" = 2018, "2019" = 2019),
                                                 multiple = TRUE,
-                                                selected = 2009:2019,
+                                                selected = 2019,
                                                 options = list(
                                                   `actions-box` = TRUE,
                                                   `deselect-all-text` = "None",
@@ -153,8 +153,9 @@ navbarPage("CEO Compensation Tool",
                                                                 ),
                                               # search.TotalEmployees
                                               numericRangeInput("search.TotalEmployees", "Range of Total Employees",
-                                                                value = c(0, Inf), #can we get commas on these values? 
-                                                                min = 0),
+                                                                value = c(0, 1000), #can we get commas on these values? 
+                                                                min = 0,
+                                                                max = 1000),
                                               #submitButton("Update filters"),
                                               
                                      )
@@ -182,6 +183,7 @@ navbarPage("CEO Compensation Tool",
                                                "This is where we will put the suggested compensation."),
                                       tabPanel("Similar Orginizations", 
                                                DT::dataTableOutput("similar"),
+                                               #tableOutput("similar"),
                                                "This is where we will put our list of similar orgs. "),
                                       tabPanel("Model", "This is where we will put more detailed information about the model specifications.")
                        ), # end internal tabsetPanel 
@@ -297,7 +299,8 @@ navbarPage("CEO Compensation Tool",
                                                # search.TotalEmployees
                                                numericRangeInput("filter.gender.TotalEmployees", "Range of Total Employees",
                                                                  value = c(0, Inf), #can we get commas on these values? 
-                                                                 min = 0),
+                                                                 min = 0,
+                                                                 max = 1000),
                                                #submitButton("Update filters"),
                                             ),
                                       tabPanel("Graph Formatting Options", 

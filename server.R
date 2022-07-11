@@ -28,7 +28,7 @@ function(input, output, session) {
                      hosp = input$search.HOSP,
                      univ = input$search.UNIV,
                      tot.expense = input$search.TotalExpenses,
-                     tot.employee = input$search.TotalExpenses,
+                     tot.employee = input$search.TotalEmployees,
                      form.type = input$search.FormType)
     
     # Change null to na 
@@ -47,6 +47,7 @@ function(input, output, session) {
     
   })
   
+
   ### Get filtered data 
   dat.filtered <- reactive({
     dat_filtering(form.year = search()$form.year,
@@ -71,11 +72,14 @@ function(input, output, session) {
   output$similar <- DT::renderDataTable({
     dat.similar()
   }, rownames = FALSE)
-  
-  
+
+  # output$similar <- renderTable({
+  #   dat.similar()
+  # })
   
   output$ceo.suggest <- renderText({
-    paste("Your suggested compensation is ", median(dat.similar()$CEOCompensation))
+    paste(names(org()))
+    #paste("Your suggested compensation is ", median(dat.similar()$CEOCompensation))
   })
 
 

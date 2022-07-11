@@ -14,11 +14,11 @@ HEOM_with_weights <- function(org, dat.filtered){
   ### Low weighted match on NTEE, NTEE.CC, STATE
   ### Euclidian distance on log(Total Expense) and Total Employee
   
-  #get rid of orgs with negative expenses 
+  #get rid of that transitioned that year
   dat.filtered <- dat.filtered%>%
     mutate(dist = NA) %>%
-    filter(TotalExpense>0)%>% #might need to handle this differently ask Jesse
-    mutate(log.expense = log(TotalExpense, base = 10))
+    mutate(log.expense = log(TotalExpense+1, base = 10)) %>%
+    filter(TransitionYr == FALSE)
   
   
   #needed values
@@ -27,7 +27,7 @@ HEOM_with_weights <- function(org, dat.filtered){
   
   #initialize storage
   D <- as.data.frame(matrix(0, nrow = n, ncol = A) )
-  colnames(D) <- c("MajorGroup", "UNIV", "HOSP", "NTEE", "NTEE.CC", "State", "logTotalExpense", "Totalmployee")
+  colnames(D) <- c("MajorGroup", "UNIV", "HOSP", "NTEE", "NTEE.CC", "State", "logTotalExpense", "TotalEmployee")
   
   ## distance for Major Group
   for(i in 1:n){
@@ -76,10 +76,34 @@ HEOM_with_weights <- function(org, dat.filtered){
   
   dat.ret <- dat.filtered %>%
     arrange(dist) %>%
-    select(-c(Gender, TransitionYear, FormType, dist, log.expense))%>%
+    select(-c(Gender, TransitionYr, TRANS.D, dist, log.expense))%>%
     slice(1:100) %>%
     mutate(Rank = row_number()) %>%
     relocate(Rank)
   
   return(dat.ret)
 }
+
+### testing 
+# 
+# org <- list(MajorGroup = 1,
+#             FormYr = 2019,
+#             State = "GA",
+#             NTEE= "A",
+#             NTEE.CC = "A23",
+#             UNIV = F,
+#             HOSP = F,
+#             TotalExpense = 129323,
+#             TotalEmployee = 23)
+# dat.filtered <-  dat_filtering(form.year = c( 2019),
+#                                              state = c("GA", "CA", "LA"),
+#                                              major.group = c(1),
+#                                              #ntee = c("E", "F", "G", "H"),
+#                                              #ntee.cc = c("E11", "H43"),
+#                                              #hosp = 1,
+#                                              #univ = 1,
+#                                              #form.type = "990EZ",
+#                                              #tot.expense = c(0, 10000)
+# )
+# 
+# View(HEOM_with_weights(org, dat.filtered))
