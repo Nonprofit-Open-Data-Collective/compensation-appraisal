@@ -1,6 +1,7 @@
 ### Used packages
 packs = c("shiny", "shinydashboard", "shinythemes", "shinyWidgets", "plotly", 
-            "scales", "knitr", "kableExtra", "dplyr", "readr")
+          "scales", "knitr", "kableExtra", "dplyr", "readr", "DT",
+          "shinyhelper")
 
 #invisible(lapply(packs, library, character.only = TRUE))
 
@@ -19,3 +20,6 @@ dat <- read_csv("data-wrangle/data-by-sector.csv")
 ### Load internal functions
 source("funcs/applying-filters-func.R")
 source("funcs/find-comparisons-func.R")
+source("funcs/distance-metric.R")
+source("funcs/dollarize.R")
+

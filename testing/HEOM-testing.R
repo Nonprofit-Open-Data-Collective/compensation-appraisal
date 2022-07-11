@@ -53,7 +53,6 @@ HEOM <- function(dat, dat.type){
           #D[i, j, a] <- as.numeric(dat.a[i] != dat.a[j]) # 0 if they match, 1 if they do not # want them to be far away if they do not match 
           D[i, j, a] <- ifelse(dat.a[i] != dat.a[j], 1 ,0) # 0 if they match, 1 if they do not # want them to be far away if they do not match 
         }
-        #if its type is 
       }
     }
     
