@@ -263,7 +263,8 @@ dat.EZ$TotalEmployee <- ifelse(dat.EZ$TotalEmployee > 0 , dat.EZ$TotalEmployee, 
 
 
 ## Combine the two data sets 
-dat.final <- rbind(dat.990, dat.EZ)
+dat.final <- rbind(dat.990, dat.EZ) %>%
+  distinct()
 
 
 #### Save ####
