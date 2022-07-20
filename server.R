@@ -209,7 +209,7 @@ function(input, output, session) {
                 nudge_y = 0.3, 
                 color = "grey", 
                 size = 3)+
-      scale_color_manual(values=c("#FFB1CB", "#01A6EA")) + 
+      scale_color_manual(values=c("#9525AD", "#25AD80")) + 
       ggtitle(paste("Gender Pay Gap by", case_when(y.axis == "MajorGroup" ~ "Major Group",
                                                    y.axis == "NTEE" ~ "NTEE Code",
                                                    y.axis == "NTEE.CC" ~ "NTEE-CC Code"))) +
