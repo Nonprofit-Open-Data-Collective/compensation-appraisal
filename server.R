@@ -1,10 +1,11 @@
-function(input, output, session) {
-    
+server <- function(input, output, session) {
+  shinyhelper::observe_helpers()
+  
+  
   #########################################
   ### CEO Compensation page
   #######################################
-  observe_helpers()
-  ### Get the Orginizations Characteristics
+  ### Get the Organizations Characteristics
   org <- reactive({
     list(FormYr = input$org.FormYr,
          State = input$org.State,
@@ -29,7 +30,8 @@ function(input, output, session) {
                      univ = input$search.UNIV,
                      tot.expense = input$search.TotalExpenses,
                      tot.employee = input$search.TotalEmployees,
-                     form.type = input$search.FormType)
+                     form.type = base::ifelse(input$search.FormType =="Yes", "990EZ", "990")
+                     )
     
     # Change null to na 
     if(is.null(search.1$form.year)){search.1$form.year <- NA}
@@ -63,22 +65,31 @@ function(input, output, session) {
     )
   })
 
+  output$dat.filterd.table <- DT::renderDataTable({
+    datatable(head(dat.filtered(), 10))
+  })
+  
+  
+  
+  
+  
   
   ### Do the search
   dat.similar <- reactive({
     HEOM_with_weights(org = org(), dat.filtered = dat.filtered())
   })
-  
-  output$similar <- DT::renderDataTable({
-    dat.similar()
-  }, rownames = FALSE)
+  # 
+  # # output$similar <- DT::renderDataTable({
+  #    head(dat.filtered(), n=100)
+  # #   #dat.similar()
+  # # }, rownames = FALSE)
 
   # output$similar <- renderTable({
-  #   dat.similar()
+  #   head(dat.filtered(), n=100)
   # })
-  
+
   output$ceo.suggest <- renderText({
-    paste(names(org()))
+    paste(search())
     #paste("Your suggested compensation is ", median(dat.similar()$CEOCompensation))
   })
 
@@ -160,7 +171,7 @@ function(input, output, session) {
       select(CEOCompensation, Gender, paste(y.axis)) %>%
       rename(Yaxis = paste(y.axis)) %>%
       group_by_at(vars(-CEOCompensation)) %>%
-      summarise(Value =  ifelse(s == "Median", median(CEOCompensation), mean(CEOCompensation)), .groups = "keep") %>%
+      summarise(Value =  ifelse(s == "Median", median(CEOCompensation), mean(CEOCompensation)), n = n(), .groups = "keep") %>%
       ungroup()
     
     #rename major groups to something readable 
@@ -189,10 +200,9 @@ function(input, output, session) {
 
     #a little more formatting
     dat.diff <- dat.plot %>%
-      tidyr::pivot_wider(names_from = Gender, values_from = Value) %>%
-      dplyr::rename(c( "Female" = F, "Male" = M)) %>%
-      mutate(diff = abs(Female- Male)) %>%
-      mutate(pois = (Female + Male) / 2) %>%
+      tidyr::pivot_wider(names_from = Gender, values_from = c(Value, n)) %>%
+      mutate(diff = abs(Value_F- Value_M)) %>%
+      mutate(pois = (Value_F + Value_M) / 2) %>%
       select(c(Yaxis, pois, diff)) %>%
       merge(dat.plot)
     
@@ -201,7 +211,8 @@ function(input, output, session) {
       ggplot(aes(x = Value, 
                  y = reorder(Yaxis,Value), 
                  color = Gender,
-                 text = paste("Classification:", Yaxis))) +
+                 text = paste("Classification:", Yaxis),
+                 n = n)) +
       geom_point() + 
       geom_line(aes(group = Yaxis), col = "gray" ) +
       geom_text(aes(x = pois, y = reorder(Yaxis,Value) , 
@@ -209,8 +220,9 @@ function(input, output, session) {
                 nudge_y = 0.3, 
                 color = "grey", 
                 size = 3)+
-      scale_color_manual(values=c("#FFB1CB", "#01A6EA")) + 
-      ggtitle(paste("Gender Pay Gap by", case_when(y.axis == "MajorGroup" ~ "Major Group",
+      scale_color_manual(values=c("#9525AD", "#25AD80")) + 
+      scale_x_continuous(labels=scales::dollar_format())+
+      ggtitle(paste("CEO Pay by Gender by", case_when(y.axis == "MajorGroup" ~ "Major Group",
                                                    y.axis == "NTEE" ~ "NTEE Code",
                                                    y.axis == "NTEE.CC" ~ "NTEE-CC Code"))) +
       xlab(paste(x.label, "CEO Compensation")) +
@@ -220,7 +232,9 @@ function(input, output, session) {
     
     #output plotly
     ggplotly(p,
-             tooltip = c( "text", "Gender", "Value"))
+             tooltip = c( "text", "n", "Gender", "Value"))  %>%
+      #suppress the hover over the difference line
+      style(p, hoverinfo = "none", traces = c(4))
     
   })
 
@@ -237,6 +251,7 @@ function(input, output, session) {
               title = "Current Details",
               content = "Clusters")
    })
+   
    
 } #end function
 

@@ -1,5 +1,6 @@
 ### Used packages
-packs = c("shiny", "shinydashboard", "shinythemes", "shinyWidgets", "plotly", 
+packs = c("shiny", "shinydashboard", "shinythemes", "shinyWidgets",
+          "shinyglide", "plotly", 
           "scales", "knitr", "kableExtra", "dplyr", "readr", "DT",
           "shinyhelper")
 
@@ -20,7 +21,6 @@ dat <- read_csv("data-rodeo/dat-shinyapp.csv")
 
 ### Load internal functions
 source("funcs/applying-filters-func.R")
-source("funcs/find-comparisons-func.R")
 source("funcs/distance-metric.R")
 source("funcs/dollarize.R")
 
