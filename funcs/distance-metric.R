@@ -32,7 +32,7 @@ HEOM_with_weights <- function(org, search, dat.filtered){
   # d <- p matching else if org i attribute %in% search criteria
   # d <- 1 o.w.
   
-  tab.state <- base::table(dat.filtered$State)/ n
+  tab.state <- base::table(dat.filtered$State) / n
   tab.majorgroup <- base::table(dat.filtered$MajorGroup) / n
   tab.ntee <- base::table(dat.filtered$NTEE) / n
   tab.ntee.cc <- base::table(dat.filtered$NTEE.CC) / n
@@ -40,6 +40,25 @@ HEOM_with_weights <- function(org, search, dat.filtered){
   tab.hosp <- base::table(dat.filtered$HOSP) / n
   tab.loc <- base::table(dat.filtered$LocationType) / n
   
+  
+  #get regions for state match # https://www2.census.gov/geo/pdfs/maps-data/maps/reference/us_regdiv.pdf
+  # 1 = New England 
+  # 2 = Mid Atlantic 
+  # 3 = East North Central
+  # 4 = West North Central
+  # 5 = South Atlantic 
+  # 6 = East south central 
+  # 7 = West South Central
+  # 8 = Mountain 
+  # 9 = Pacific
+  
+  #get regions with DC and PR
+  region <- data.table::data.table(state = sort(c(state.abb, "PR", "DC")),
+                                   region = c(datasets::state.division[1:7], 
+                                               5, 
+                                               datasets::state.division[8: 38], 
+                                               5, 
+                                               datasets::state.division[39:50]))
 
   #Get weights for categorical variables, 
   #weight = 0 if there was a hard matching on only one option
@@ -66,9 +85,10 @@ HEOM_with_weights <- function(org, search, dat.filtered){
     
     
     # Next do categorical comparisons
-    D[i, "State"] <- ifelse(dat.filtered$State[i] == org$State, 0,
+    D[i, "State"] <- ifelse(dat.filtered$State[i] == org$State, 0, #if they match assign 
                             ifelse(dat.filtered$State[i] %in% search$State, weight.state, 1 ))
     
+    # Every Categorical but state uses proportions as weights
     D[i, "MajorGroup"] <- ifelse(dat.filtered$MajorGroup[i] == org$MajorGroup, 0,
                                  ifelse(dat.filtered$MajorGroup[i] %in% search$MajorGroup, weight.majorgroup, 1 ))
     
