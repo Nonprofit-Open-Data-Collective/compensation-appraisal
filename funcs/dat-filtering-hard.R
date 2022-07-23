@@ -124,14 +124,7 @@ dat_filtering_hard <- function(search.criteria,
     #get rid of any transition years 
     filter(TransitionYr == FALSE) %>%
     #remove cols TrnasitionYr, and TRANS.D
-    select(-c(TransitionYr, TRANS.D))  %>%
-    #only report most recent year for each orginization 
-    group_by(EIN) %>%
-    filter(FormYr==max(FormYr)) %>%
-    ungroup()
-  
-  
-  
+    select(-c(TransitionYr, TRANS.D))  
 
   return(dat.filtered)
 }
