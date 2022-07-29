@@ -28,11 +28,6 @@ dat_filtering_hard <- function(search.criteria,
   ### Filtering
   #for each search criteria we will say if(!any(is.na(search.criteria$criteria)) & hard.criteria$criteria ) then filter, otherwise do nothing
   
-  # Filter By form.year
-  if(!any(is.na(search.criteria$FormYr)) & hard.criteria$FormYr ){
-    dat.filtered <- dat.filtered %>%
-      dplyr::filter(FormYr %in% search.criteria$FormYr)
-  }
   
   # Filter By state
   if(!any(is.na(search.criteria$State)) & hard.criteria$State ){
@@ -71,20 +66,20 @@ dat_filtering_hard <- function(search.criteria,
   
   # EZ Qualification 
   # https://www.irs.gov/pub/irs-pdf/i990ez.pdf
-  dat.filtered <- dat.filtered %>%
-    mutate(EZQual = ifelse(TotalAssests <= 500000 & GrossReceipts <= 200000 , TRUE, FALSE))
-  if(!any(is.na(search.criteria$EZQual)) & hard.criteria$EZQual){
-    if(search.criteria$EZQual == 1){ #do not include orgs that qualify for an EZ
-      dat.filtered <- dat.filtered %>%
-        dplyr::filter(EZQual == FALSE )
-    }else if(search.criteria$EZQual == 2){ #only include orgs that qualify for an EZ
-      dat.filtered <- dat.filtered %>%
-        dplyr::filter(EZQual = TRUE )
-    }
-  }
-  
+  # dat.filtered <- dat.filtered %>%
+  #   mutate(EZQual = ifelse(TotalAssests <= 500000 & GrossReceipts <= 200000 , TRUE, FALSE))
+  # if(!any(is.na(search.criteria$EZQual)) & hard.criteria$EZQual){
+  #   if(search.criteria$EZQual == 1){ #do not include orgs that qualify for an EZ
+  #     dat.filtered <- dat.filtered %>%
+  #       dplyr::filter(EZQual == FALSE )
+  #   }else if(search.criteria$EZQual == 2){ #only include orgs that qualify for an EZ
+  #     dat.filtered <- dat.filtered %>%
+  #       dplyr::filter(EZQual = TRUE )
+  #   }
+  # }
+  # 
   # Filter by univ Code
-  if(!any(is.na(search.criteria$UNIV)) & hard.criteria$UNIV){
+  if(!any(is.na(search.criteria$UNIV)) ){
     if(search.criteria$UNIV == 1){ #do not include universities 
       dat.filtered <- dat.filtered %>%
         dplyr::filter(UNIV == FALSE)
@@ -95,7 +90,7 @@ dat_filtering_hard <- function(search.criteria,
   }
   
   # Filter by univ Code
-  if(!any(is.na(search.criteria$HOSP)) & hard.criteria$HOSP){
+  if(!any(is.na(search.criteria$HOSP)) ){
     if(search.criteria$HOSP == 1){ #do not include universities 
       dat.filtered <- dat.filtered %>%
         dplyr::filter(HOSP == FALSE)
