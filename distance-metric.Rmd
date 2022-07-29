@@ -1,7 +1,0 @@
----
-title: "HOEM Distance Metric"
-output: html_notebook
----
-
-
-For measuring the distance between 2 orginizations, we are using  
