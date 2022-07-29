@@ -1,109 +1,189 @@
 server <- function(input, output, session) {
   shinyhelper::observe_helpers()
 
+  
+  
 
   #########################################
   ### CEO Compensation page
   #######################################
   ### Get the Organizations Characteristics
+
+  ### Get the NTEE Code correct
+  ORGNTEE <- reactive({
+    org.MajorGroup <- input$OrgMajorGroup
+    
+    #if we in Major Group 1
+    if(org.MajorGroup == 1 ){ntee <- "A"}
+    
+    #Major Group 2
+    if(org.MajorGroup == 2 ){ntee <- "B"}
+    
+    #Major Group 3
+    if(org.MajorGroup == 3 ){ntee <- input$OrgNTEE3}
+    
+    #Major Group4
+    if(org.MajorGroup == 4 ){ntee <- input$OrgNTEE4}
+    
+    #Major Group5
+    if(org.MajorGroup == 5 ){ntee <- input$OrgNTEE5}
+    
+    #Major Group6
+    if(org.MajorGroup == 6){ntee <- "Q" }
+    
+    #Major Group7
+    if(org.MajorGroup == 7 ){ntee <- input$OrgNTEE7}
+    
+    #Major Group8
+    if(org.MajorGroup == 8){ntee <- "X" }
+    
+    #Major Group9
+    if(org.MajorGroup == 9){ntee <- "Y" }
+    
+    #Major Group10
+    if(org.MajorGroup == 10){ntee <- "Z" }
+    
+    ntee
+  })
+  
+  #input
   org <- reactive({
-    list(State = input$org.State,
-         Loc = input$org.loc,
-         MajorGroup = input$org.MajorGroup,
-         NTEE = input$org.NTEE, #need to add input for this
-         NTEE.CC = input$org.NTEE.CC, #need to add input for this
-         UNIV = input$org.HOSP,
-         HOSP = input$org.UNIV,
-         TotalExpense = input$org.TotalExpense,
-         TotalEmployee = input$org.TotalEmployee,
-         EZQual = input$org.EZQual)
+    org.temp <- list(State = input$OrgState,
+                     Loc = input$OrgLoc,
+                     MajorGroup = input$OrgMajorGroup, 
+                     NTEE = ORGNTEE(), 
+                     NTEE.CC = input$OrgNTEECC,
+                     UNIV = input$OrgHOSP,
+                     HOSP = input$OrgUNIV,
+                     TotalExpense = input$OrgTotalExpense,
+                     TotalEmployee = input$OrgTotalEmployee)
+    
+    #State, Loc have no errors to worry about
+
+    #NTEE-CC
+    #if nothing is selected for NTEE-CC automatically assign it to "None of these fit my organization"
+    if(is.null(org.temp$NTEE.CC)){org.temp$NTEE.CC <- NA}
+    
+    #return
+    org.temp
+    
   })
   
   output$test1 <- renderText({
-    paste(org())
+    paste((org()))
   })
 
-  #Get the Search Criteria
+
+
   search <- reactive({
-    search.1 <- list(FormYr = input$search.FormYr,
-                     State = input$search.State,
-                     Loc = input$search.loc,
-                     MajorGroup = input$search.MajorGroup,
-                     NTEE = input$search.ntee, #need to add input for this
-                     NTEE.CC = NA, #need to add input for this
-                     HOSP = input$search.HOSP,
-                     UNIV = input$search.UNIV,
-                     TotalExpense = input$search.TotalExpenses,
-                     TotalEmployee = input$search.TotalEmployees,
-                     EZQual = base::ifelse(input$search.FormType =="Yes", "990EZ", "990")
-                     )
+    search.temp <- list(UNIV = input$SearchUniv,
+                        HOSP = input$SearchHosp)
+    
+    ## location type choices
+    if(input$LocType == 1){ #if location search == state
+      search.temp$State <- input$SearchState
+      search.temp$Loc <- NA
+    }else if(input$LocType == 2){ #if location search == city type
+      search.temp$State <- NA
+      search.temp$Loc <- input$SearchLoc
+    }
+    
+    ## MajorGroup/NTEE/NTEE-CC choices
+    if(input$SearchType == 1){ #if major group selected
+      search.temp$MajorGroup <- input$SearchMajorGroup
+      search.temp$NTEE <- NA
+      search.temp$NTEE.CC <- NA
+    }else if(input$SearchType == 2){ #if NTEE selected
+      search.temp$MajorGroup <- NA
+      search.temp$NTEE <- input$SearchNTEE
+      search.temp$NTEE.CC <- NA
+    }else if(input$SearchType == 3){ #if Common Code Selected 
+      search.temp$MajorGroup <- NA
+      search.temp$NTEE <- NA
+      search.temp$NTEE.CC <- input$SearchNTEECC
+      if(input$FurtherNTEE == TRUE){
+        search.temp$NTEE <- input$SearchNTEE2
+      }
+    }
+    
+    #total Expenses
+    if(input$TotalExpenseDecide == TRUE){
+      search.temp$TotalExpense <- input$SearchTotalExpenses
+    }else{
+      search.temp$TotalExpense <- c(0 , Inf)
+    }
+    
+    #total Expenses
+    if(input$TotalEmployeeDecide == TRUE){
+      search.temp$TotalEmployee <- input$SearchTotalEmployee
+    }else{
+      search.temp$TotalEmployee <- c(0 , Inf)
+    }
+    
+    #just as a safe guard 
+    #if anything is null, fill it with Na
 
-    # Change null to na
-    if(is.null(search.1$FormYr)){search.1$FormYr <- NA}
-    if(is.null(search.1$State)){search.1$State <- NA}
-    if(is.null(search.1$Loc)){search.1$Loc <- NA}
-    if(is.null(search.1$MajorGroup)){search.1$MajorGroup <- NA}
-    if(is.null(search.1$NTEE)){search.1$NTEE <- NA}
-    if(is.null(search.1$NTEE.CC)){search.1$NTEE.CC <- NA}
-    if(is.null(search.1$HOSP)){search.1$HOSP <- NA}
-    if(is.null(search.1$UNIV)){search.1$UNIV <- NA}
-    if(is.null(search.1$TotalExpense)){search.1$TotalExpense <- c(-Inf, Inf)}
-    if(is.null(search.1$TotalEmployee)){search.1$TotalEmployee <- c(0, Inf)}
-    if(is.null(search.1$EZQual)){search.1$EZQual <- NA}
-
-    search.1
-
+    search.temp
   })
-
-
-  ### Get filtered data
-  dat.filtered <- reactive({
-    dat_filtering(form.year = search()$form.year,
-                  state = search()$state,
-                  major.group = search()$major.group,
-                  ntee = search()$ntee,
-                  ntee.cc = search()$ntee.cc,
-                  hosp = search()$hosp,
-                  univ = search()$univ,
-                  tot.expense = search()$tot.expense,
-                  tot.employee = search()$tot.employee,
-                  form.type = search()$form.type
-    )
+  
+  
+  output$test2 <- renderText({
+    paste(c(names(search()),search()))
   })
+  
+  
 
-  output$dat.filterd.table <- DT::renderDataTable({
-    datatable(head(dat.filtered(), 10))
-  })
-
-
-
-
-
-
-  ### Do the search
-  dat.similar <- reactive({
-    HEOM_with_weights(org = org(), dat.filtered = dat.filtered())
-  })
-  #
-  # # output$similar <- DT::renderDataTable({
-  #    head(dat.filtered(), n=100)
-  # #   #dat.similar()
-  # # }, rownames = FALSE)
-
-  # output$similar <- renderTable({
-  #   head(dat.filtered(), n=100)
+  
+  # 
+  # 
+  # ### Get filtered data
+  # dat.filtered <- reactive({
+  #   dat_filtering(form.year = search()$form.year,
+  #                 state = search()$state,
+  #                 major.group = search()$major.group,
+  #                 ntee = search()$ntee,
+  #                 ntee.cc = search()$ntee.cc,
+  #                 hosp = search()$hosp,
+  #                 univ = search()$univ,
+  #                 tot.expense = search()$tot.expense,
+  #                 tot.employee = search()$tot.employee,
+  #                 form.type = search()$form.type
+  #   )
   # })
-
-  output$ceo.suggest <- renderText({
-    paste(search())
-    #paste("Your suggested compensation is ", median(dat.similar()$CEOCompensation))
-  })
-
-
-
+  # 
+  # output$dat.filterd.table <- DT::renderDataTable({
+  #   datatable(head(dat.filtered(), 10))
+  # })
+  # 
+  # 
+  # 
+  # 
+  # 
+  # 
+  # ### Do the search
+  # dat.similar <- reactive({
+  #   HEOM_with_weights(org = org(), dat.filtered = dat.filtered())
+  # })
+  # #
+  # # # output$similar <- DT::renderDataTable({
+  # #    head(dat.filtered(), n=100)
+  # # #   #dat.similar()
+  # # # }, rownames = FALSE)
+  # 
+  # # output$similar <- renderTable({
+  # #   head(dat.filtered(), n=100)
+  # # })
+  # 
+  # output$ceo.suggest <- renderText({
+  #   paste(search())
+  #   #paste("Your suggested compensation is ", median(dat.similar()$CEOCompensation))
+  # })
+  # 
+  # 
+  # 
 
   #########################################
-  ### Gender Pay gap difference in diference model
+  ### Gender Pay gap difference in difference model
   #######################################
 
 
