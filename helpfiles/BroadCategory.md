@@ -1,8 +1,8 @@
-### Major Group 
+## Broad Category 
 
 ***
 
-Choose one of the major groups selections that best fits your organization. Major groups are subdivisions of broad categories. Not all broad categories have major groups. Here is a list of all broad categories and their respective major groups:
+Choose one of the 10 broad category selections that best fits your organization. Some categories have multiple subdivisions (called major groups), and some do not. Here is a list of all broad categories and their respective major groups:
 
 I. Arts, Culture, and Humanities 
 
@@ -59,6 +59,8 @@ VII. Public & Societal Benefit
 - Social Science
 
 VIII. Religion Related 
+
+- Religion Related 
 
 IX. Mutual/Membership Benefit 
 

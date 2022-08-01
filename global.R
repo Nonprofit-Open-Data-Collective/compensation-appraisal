@@ -1,8 +1,8 @@
 ### Used packages
-packs = c("shiny", "shinydashboard", "shinythemes", "shinyWidgets",
-          "shinyglide", "plotly", 
-          "scales", "knitr", "kableExtra", "dplyr", "readr", "DT",
-          "shinyhelper", "bslib", "datasets", "shinyvalidate")
+packs = c("shiny", "shinydashboard", "shinythemes", "shinyWidgets","shinyvalidate",
+          "shinyhelper", "shinyglide", "plotly", "DT",
+          "scales", "knitr", "kableExtra", 
+          "dplyr", "readr", "tidyr","bslib", "datasets" )
 
 #invisible(lapply(packs, library, character.only = TRUE))
 
@@ -17,7 +17,7 @@ package.check <- lapply(packs, FUN = function(x) {
 
 ### Load Data set
 #dat <- read_csv("data-wrangle/data-by-sector.csv")
-dat <- read_csv("data-rodeo/dat-shinyapp.csv")
+dat <- readr::read_csv("data-rodeo/dat-shinyapp.csv")
 
 ### Load internal functions
 source("funcs/applying-filters-func.R")

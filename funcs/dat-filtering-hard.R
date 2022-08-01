@@ -13,8 +13,11 @@ dat_filtering_hard <- function(search.criteria,
   
   ### Inputs
   # search.criteria - a list of the search criteria
-  # hard.criteria - a list of TRUE or FALSE on if each search criteria should be hard or soft, respectivly 
+  # hard.criteria - a list of TRUE or FALSE on if each search criteria should be hard or soft, respectively 
  
+  
+  ## See either bottom of this file or the pretend-shiny vignette for format of search.criteria and hard.criteria
+  
   ### Output
   # A Tibble of all organizations that fit the specified hard criteria
   # also, if there are repeat organizations (i.e. we have data for an orginization for multiple years, we only report the most recent value)
@@ -117,9 +120,9 @@ dat_filtering_hard <- function(search.criteria,
   ### Clean Up data and only report most recent year from each org
   dat.filtered <- dat.filtered %>%
     #get rid of any transition years 
-    filter(TransitionYr == FALSE) %>%
+    dplyr::filter(TransitionYr == FALSE) %>%
     #remove cols TrnasitionYr, and TRANS.D
-    select(-c(TransitionYr, TRANS.D))  
+    dplyr::select(-c(TransitionYr, TRANS.D))  
 
   return(dat.filtered)
 }

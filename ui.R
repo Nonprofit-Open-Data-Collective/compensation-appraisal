@@ -1,7 +1,7 @@
-ui<- bootstrapPage(
+ui<- shiny::bootstrapPage(
 
 
-  navbarPage("CEO Pay Appraisal",
+  shiny::navbarPage("CEO Pay Appraisal",
              theme = bs_theme(
                bg = "#f5f5f5",
                fg = "#0a4c6a",
@@ -13,10 +13,10 @@ ui<- bootstrapPage(
              # ##################################################
              #   ###  Data tabPanel
              # ##################################################
-             tabPanel("Glide Testing", 
-                      titlePanel("CEO Compensation Appraisal Tool!"),
+             shiny::tabPanel("Glide Testing", 
+                      titlePanel("CEO Compensation Appraisal Tool"),
                       
-                      glide(
+                      shinyglide::glide(
                         #put button at top of screen 
                         controls_position = "top", 
                         height = "400%",
@@ -81,7 +81,12 @@ ui<- bootstrapPage(
                               currencySymbolPlacement = "p",
                               decimalCharacter = ".",
                               digitGroupSeparator = ",",
-                              decimalPlaces = 2),
+                              decimalPlaces = 2)%>%
+                            shinyhelper::helper(
+                              type = "markdown",
+                              content = "AnnualExpenses",
+                              size = "l",
+                              buttonLabel = "Close"),
                       
                             #org.TotalEmployee
                             autonumericInput(
@@ -113,7 +118,9 @@ ui<- bootstrapPage(
                                           "Unknown/Unclassified"= 10)) %>%
                             shinyhelper::helper(
                               type = "markdown",
-                              content = "MajorGroup"),
+                              content = "BroadCategory",
+                              size = "l",
+                              buttonLabel = "Close"),
                             
                             #specify NTEE 
                             #groups 1, 2, 3, 6, 8, 9, 10 do not have further NTEE Divisions
@@ -122,12 +129,15 @@ ui<- bootstrapPage(
                               selectInput(
                                 "OrgNTEE3",
                                 label = htmltools::HTML("What major group best describes the work your organization does?"),
-                                choices = c("Environment" = "C", 
-                                            "Animal Related" = "D"),
+                                choices = c(
+                                  "Animal Related" = "D",
+                                  "Environment" = "C"),
                                 selected = NA) %>%
                               shinyhelper::helper(
                                 type = "markdown",
-                                content = "NTEE"),
+                                content = "NTEE",
+                                size = "l",
+                                buttonLabel = "Close"),
                             ), #end Conditional Panel
                             
                             
@@ -137,13 +147,15 @@ ui<- bootstrapPage(
                                 "OrgNTEE4",
                                 label = htmltools::HTML("What major group best describes the work your organization does?"),
                                 choices = c("Health Care" = "E",
+                                            "Medical Research" = "H",
                                             "Mental Health & Crisis Intervention" = "F",
-                                            "Voluntary Health Associations & Medical Disciplines" = "G",
-                                            "Medical Research" = "H"),
+                                            "Voluntary Health Associations & Medical Disciplines" = "G"),
                                 selected = NA) %>%
                               shinyhelper::helper(
                                 type = "markdown",
-                                content = "NTEE"),
+                                content = "NTEE",
+                                size = "l",
+                                buttonLabel = "Close"),
                             ), #end Conditional Panel
 
                             conditionalPanel( #if we are in group 5
@@ -155,13 +167,16 @@ ui<- bootstrapPage(
                                             "Employment" = "J",
                                             "Food, Agriculture & Nutrition" = "K",
                                             "Housing & Shelter" = "L", 
+                                            "Human Services" = "P",
                                             "Public Safety, Disaster Preparedness & Relief" = "M", 
                                             "Recreation & Sports" = "N", 
-                                            "Youth Development" = "O",
-                                            "Human Services" = "P"),
+                                            "Youth Development" = "O"),
                                 selected = NA) %>%
-                              shinyhelper::helper(type = "markdown",
-                                                    content = "NTEE"),
+                              shinyhelper::helper(
+                                type = "markdown",
+                                content = "NTEE",
+                                size = "l",
+                                buttonLabel = "Close"),
                             ), #end Conditional Panel
                             conditionalPanel( #if we are in group 7
                               "input.OrgMajorGroup == 7 ",
@@ -171,13 +186,15 @@ ui<- bootstrapPage(
                                 choices = c("Civil Rights, Social Action & Advocacy" = "R",
                                             "Community Improvement & Capacity Building" = "S",
                                             "Philanthropy, Voluntarism & Grantmaking Foundations" = "T",
+                                            "Public & Societal Benefit" = "W",
                                             "Science & Technology" = "U", 
-                                            "Social Science" = "V", 
-                                            "Public & Societal Benefit" = "W"),
+                                            "Social Science" = "V"),
                                 selected = NA) %>%
                               shinyhelper::helper(
                                 type = "markdown",
-                                content = "NTEE"),
+                                content = "NTEE",
+                                size = "l",
+                                buttonLabel = "Close"),
                             ), #end Conditional Panel
                             
                           )#end wellPannel
@@ -189,7 +206,7 @@ ui<- bootstrapPage(
                             #org ntee-cc
                             pickerInput(
                               "OrgNTEECC",
-                              label = htmltools::HTML("Does your orginzation fit any of the following speacilty descriptions?"),
+                              label = htmltools::HTML("Does your orginzation fit any of the following specialty descriptions?"),
                               choices = c("Alliance/Advocacy Organization" = "01",
                                           "Management and Technical Assistance" = "02",
                                           "Professional Society/Association" = "03",
@@ -197,9 +214,14 @@ ui<- bootstrapPage(
                                           "Monetary Support - Single Organization" = "11",
                                           "Monetary Support - Multiple Organizations" = "12",
                                           "Nonmonetary Support Not Elsewhere Classified (N.E.C.)" = "19",
-                                          "I am a regular non-profit. None of these speacilties describe my organization." = "00"),
-                              selected = "00"),
-                            
+                                          "I am a regular non-profit. None of these specialties describe my organization." = "00"),
+                              selected = "00") %>%
+                            shinyhelper::helper(
+                              type = "markdown",
+                              content = "NTEECC",
+                              size = "l",
+                              buttonLabel = "Close"),
+                          
                             # # org.Hosp
                             "Is your organization a Hospital?",
                             switchInput(
@@ -244,7 +266,12 @@ ui<- bootstrapPage(
                              label = "I want to search location type by... ",
                              choices = c("State" = 1, 
                                          "City Type" = 2),
-                             selected = NA),
+                             selected = NA)%>%
+                             shinyhelper::helper(
+                               type = "markdown",
+                               content = "SearchLocType",
+                               size = "l",
+                               buttonLabel = "Close"),
                            
                            
                           conditionalPanel(
@@ -259,11 +286,11 @@ ui<- bootstrapPage(
                                   options = list(
                                     `actions-box` = TRUE,
                                     `deselect-all-text` = "None",
-                                    `select-all-text` = "All",
+                                    `select-all-text` = "Select All",
                                     `none-selected-text` = "NA"
                                   )
-                                ),
-                              "Do you want to hard or soft matching on state?",
+                                ) , 
+                            "Do you want to hard or soft matching on state?",
                               switchInput("HardState",
                                           label = NA,
                                           value = FALSE,
@@ -298,14 +325,17 @@ ui<- bootstrapPage(
                           wellPanel(
                             pickerInput(
                               inputId = "SearchType",
-                              "Do you want to filter by ... ",
+                              "I want to filter by ... ",
                               choices = c("Broad Category (10 options)" = 1,
                                           "Major Group (26 options)" = 2, 
-                                          "Common Code ( NEED SOMETHING HERE)" = "3"),
+                                          "Specialty Description (only select if your orginzation fits a specality description)" = "3"),
                               selected = 1
-                            ), 
-                            
-                            "ADD HELPER FUNCTION ABOUT BROAD CATEGORY, MAJOR GROUP, AND COMMON CODE",
+                            ) %>%
+                            shinyhelper::helper(
+                              type = "markdown",
+                              content = "SearchOrgType",
+                              size = "l",
+                              buttonLabel = "Close"), 
                             
                             # if broad category is selected 
                             conditionalPanel(
@@ -379,7 +409,12 @@ ui<- bootstrapPage(
                                   `deselect-all-text` = "None",
                                   `select-all-text` = "Select All",
                                   `none-selected-text` = "NA")
-                              ), #end picker input
+                              ) %>%#end picker input
+                              shinyhelper::helper(
+                                type = "markdown",
+                                content = "SearchNTEE",
+                                size = "l",
+                                buttonLabel = "Close"), 
                               "Do you want to hard or soft matching on major group?",
                               switchInput(
                                 "HardNTEE",
@@ -394,17 +429,22 @@ ui<- bootstrapPage(
                               condition = "input.SearchType == 3",
                               pickerInput(
                                 "SearchNTEECC",
-                                label = htmltools::HTML("Do you want to include orgnizations that fit any of the following speacilty descriptions?"),
-                                choices = c("Alliance/Advocacy Organization" = 1,
-                                            "Management and Technical Assistance" = 2,
-                                            "Professional Society/Association" = 3,
-                                            "Research Institute and/or Public Policy Analysis" = 5,
-                                            "Monetary Support - Single Organization" = 11,
-                                            "Monetary Support - Multiple Organizations" = 12,
-                                            "Nonmonetary Support Not Elsewhere Classified (N.E.C.)" = 19,
-                                            "I only want to include regular non-profits. I do not want to include any of these types of organizations." = NA),
-                                multiple = TRUE),
-                              "Do you want to hard or soft matching on speacilty description?",
+                                label = htmltools::HTML("Do you want to include orgnizations that fit any of the following specialty descriptions?"),
+                                choices = c("Alliance/Advocacy Organization" = "01",
+                                            "Management and Technical Assistance" = "02",
+                                            "Professional Society/Association" = "03",
+                                            "Research Institute and/or Public Policy Analysis" = "05",
+                                            "Monetary Support - Single Organization" = "11",
+                                            "Monetary Support - Multiple Organizations" = "12",
+                                            "Nonmonetary Support Not Elsewhere Classified (N.E.C.)" = "19"),
+                                            multiple = TRUE, 
+                                            selected = c("01", "02", "03", "05", "11", "12", "19"),
+                                            options = list(
+                                              `actions-box` = TRUE,
+                                              `deselect-all-text` = "None",
+                                              `select-all-text` = "Select All",
+                                              `none-selected-text` = "NA")),
+                              "Do you want to hard or soft matching on specialty description?",
                               switchInput(
                                 "HardNTEECC",
                                 label = NA,
@@ -412,9 +452,10 @@ ui<- bootstrapPage(
                                 onLabel = "Hard",
                                 offLabel = "Soft"),
                              
-                            "Do you want to further search by major group? (We recommend that you do not. 
-                            For most searches this is not needed.
-                            If you do choose to do this, it is likely your results will be very limited and the filterted data set will not have many results)",
+                            HTML("Do you want to further search by major group? 
+                                 <br>
+                                 We HIGHLY suggest that you do not further your search by major group.
+                                 If you select yes, it is likely your comparison set will be small and your results will be extremely limited."), 
                             switchInput(
                               inputId = "FurtherNTEE",
                               label = NA,
@@ -461,7 +502,12 @@ ui<- bootstrapPage(
                                   `deselect-all-text` = "None",
                                   `select-all-text` = "Select All",
                                   `none-selected-text` = "NA")
-                            ), #end picker input 
+                            ) %>%
+                            shinyhelper::helper(
+                              type = "markdown",
+                              content = "SearchNTEE",
+                              size = "l",
+                              buttonLabel = "Close"), #end picker input 
                             "Do you want to hard or soft matching on major group?",
                             switchInput(
                               "HardNTEE2",
@@ -513,7 +559,7 @@ ui<- bootstrapPage(
                             
                             conditionalPanel(
                               condition = "input.TotalExpenseDecide == true", 
-                              
+              
                               
                               numericRangeInput(
                                 "junk", 
@@ -565,15 +611,13 @@ ui<- bootstrapPage(
                               ),#end fluid row
                               
                               
-                              
-                              
                               "Do you want to hard or soft matching on total expenses?",
                               switchInput(
                                 "HardTotalExpense",
                                 label = NA,
                                 value = FALSE,
                                 onLabel = "Hard",
-                                offLabel = "Soft")
+                                offLabel = "Soft") 
                             ) #end conditional panel
                           )#end well panel
                         ), #end total expenses screen
@@ -593,8 +637,13 @@ ui<- bootstrapPage(
                               numericRangeInput(
                                 "SearchTotalEmployee",
                                 "Range of total full time equivalent employees I want to include:",
-                                value = c(0, Inf), 
-                                ),
+                                value = c(0, 50000))%>%
+                             shinyhelper::helper(
+                               type = "markdown",
+                               content = "TotalEmployee",
+                               size = "l",
+                               buttonLabel = "Close"),
+                             
                               "Do you want to hard or soft matching on total employees?",
                               switchInput(
                                 "HardTotalEmployee",

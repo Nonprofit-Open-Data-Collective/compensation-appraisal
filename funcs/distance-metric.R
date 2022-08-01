@@ -4,7 +4,9 @@ HEOM_with_weights <- function(org, search, dat.filtered){
   # org = the list of organization characteristics
   # search = the list of search criteria
   # dat.filtered = the data frame to compare org to, output of dat-filtering-hard function 
-  #   n = # of other orgs to compare to = number of rows in dat.filtered 
+  #   n = # of other orgs to compare to = number of rows in dat.filtered
+  
+  ## See either bottom of this file or the pretend-shiny vignette for format of org and search
   
   ### Output 
   # list of (max) top 100 closest organizations with their weights
@@ -15,9 +17,9 @@ HEOM_with_weights <- function(org, search, dat.filtered){
   
   #set up distance column and transform Total Expenses to a log_10 scale
   dat.filtered <- dat.filtered%>%
-    mutate(dist = NA) %>%
-    mutate(log.expense = log(TotalExpense+1, base = 10)) %>%
-    mutate(log.employee = log(TotalEmployee+1, base = 10))
+    dplyr::mutate(dist = NA) %>%
+    dplyr::mutate(log.expense = log(TotalExpense+1, base = 10)) %>%
+    dplyr::mutate(log.employee = log(TotalEmployee+1, base = 10))
   
   #needed values
   A <- 9 #number of attributes to compare 
@@ -95,11 +97,11 @@ HEOM_with_weights <- function(org, search, dat.filtered){
   dat.filtered$dist <- rowSums(D) / A #normalize by number of matched attributes. 
   
   dat.ret <- dat.filtered %>%
-    arrange(dist) %>%
-    select(-c(log.expense, log.employee))%>%
+    dplyr::arrange(dist) %>%
+    dplyr::select(-c(log.expense, log.employee))%>%
     #slice(1:100) %>%
-    mutate(Rank = row_number()) %>%
-    relocate(Rank)
+    dplyr::mutate(Rank = row_number()) %>%
+    dplyr::relocate(Rank)
   
   return(dat.ret)
 }
@@ -111,45 +113,45 @@ HEOM_with_weights <- function(org, search, dat.filtered){
 
 ########### Example for mid summer presentation ##########3
 
-org <- list(State = "DC",
-            MajorGroup = 2,
-            NTEE = "B", 
-            NTEE.CC = "B92",
-            UNIV = FALSE,
-            HOSP = FALSE,
-            TotalExpense = 300000,
-            TotalEmployee = 3,
-            Loc = "Metropolitan"
-)
-#search criteria
-search <- list(State = c("VA", "DC", "MD"),
-               MajorGroup = 2,
-               NTEE = c("B"),
-               NTEE.CC = NA, #no hard matching on this criteria aaaa
-               UNIV = 1,
-               HOSP = 1,
-               TotalExpense = c(0, 600000),
-               TotalEmployee = c(0, 10),
-               Loc = c("Metropolitan")
-)
-
-#True is hard match, FALSE is soft match
-#no hard/soft option for univ or hosp
-hard <- list(State = FALSE,
-             MajorGroup = FALSE,
-             NTEE = FALSE, 
-             NTEE.CC = FALSE,
-             TotalExpense = TRUE,
-             TotalEmployee = TRUE,
-             Loc = TRUE
-)
-
-
-source("funcs/dat-filtering-hard.R")
-
-dat.filtered <- dat_filtering_hard(search, hard)
-
-results <- HEOM_with_weights(org, search, dat.filtered)
-
-
-
+# org <- list(State = "DC",
+#             MajorGroup = 2,
+#             NTEE = "B", 
+#             NTEE.CC = "B92",
+#             UNIV = FALSE,
+#             HOSP = FALSE,
+#             TotalExpense = 300000,
+#             TotalEmployee = 3,
+#             Loc = "Metropolitan"
+# )
+# #search criteria
+# search <- list(State = c("VA", "DC", "MD"),
+#                MajorGroup = 2,
+#                NTEE = c("B"),
+#                NTEE.CC = NA, #no hard matching on this criteria aaaa
+#                UNIV = 1,
+#                HOSP = 1,
+#                TotalExpense = c(0, 600000),
+#                TotalEmployee = c(0, 10),
+#                Loc = c("Metropolitan")
+# )
+# 
+# #True is hard match, FALSE is soft match
+# #no hard/soft option for univ or hosp
+# hard <- list(State = FALSE,
+#              MajorGroup = FALSE,
+#              NTEE = FALSE, 
+#              NTEE.CC = FALSE,
+#              TotalExpense = TRUE,
+#              TotalEmployee = TRUE,
+#              Loc = TRUE
+# )
+# 
+# 
+# source("funcs/dat-filtering-hard.R")
+# 
+# dat.filtered <- dat_filtering_hard(search, hard)
+# 
+# results <- HEOM_with_weights(org, search, dat.filtered)
+# 
+# 
+# 

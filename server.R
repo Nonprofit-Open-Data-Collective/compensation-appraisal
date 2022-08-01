@@ -111,6 +111,10 @@ server <- function(input, output, session) {
                      TotalEmployee = input$OrgTotalEmployee)
     
     #State, Loc, MajorGroup, NTEE, HOSP, UNIV have no errors to worry about
+    
+    #if not a specialty org, then make NTEE.CC = NA
+    #this will make dat-filtering-hard not filter on NTEE.CC 
+    if(input$OrgNTEECC == "00"){org.temp$NTEE.CC <- NA}
 
     
     #Safe Guards for Errors 
@@ -155,11 +159,26 @@ server <- function(input, output, session) {
     }else if(input$SearchType == 3){ #if Common Code Selected 
       search.temp$MajorGroup <- NA
       search.temp$NTEE <- NA
-      search.temp$NTEE.CC <- input$SearchNTEECC
-      if(input$FurtherNTEE == TRUE){
-        search.temp$NTEE <- input$SearchNTEE2
-      }
-    }
+      
+      #get all letter and NTEE CC options
+      # if NTEE is selected, get those letteres, otherwise use all letters
+      
+      if(input$FurtherNTEE){ 
+        let <- input$SearchNTEE2
+      }else{
+          let <- base::LETTERS
+        }
+    
+      cc <- input$SearchNTEECC
+      
+      search.temp$NTEE.CC <- tidyr::expand_grid(let, cc) %>%
+                              tidyr::unite("combo", c(let, cc),
+                                           remove = T,
+                                           sep = "") %>%
+                              unlist() %>%
+                              unname()
+      
+    } #end ntee.cc if 
     
     #total Expenses
     if(input$TotalExpenseDecide == TRUE){
@@ -394,17 +413,17 @@ server <- function(input, output, session) {
 
     #format data for plotting
     dat.plot <- dat.filterd %>%
-      filter(Gender != "U") %>%
-      select(CEOCompensation, Gender, paste(y.axis)) %>%
-      rename(Yaxis = paste(y.axis)) %>%
-      group_by_at(vars(-CEOCompensation)) %>%
-      summarise(Value =  ifelse(s == "Median", median(CEOCompensation), mean(CEOCompensation)), n = n(), .groups = "keep") %>%
-      ungroup()
+      dplyr::filter(Gender != "U") %>%
+      dplyr::select(CEOCompensation, Gender, paste(y.axis)) %>%
+      dplyr::rename(Yaxis = paste(y.axis)) %>%
+      dplyr::group_by_at(vars(-CEOCompensation)) %>%
+      dplyr::summarise(Value =  ifelse(s == "Median", median(CEOCompensation), mean(CEOCompensation)), n = n(), .groups = "keep") %>%
+      dplyr::ungroup()
 
     #rename major groups to something readable
     if(y.axis == "MajorGroup"){
       dat.plot <- dat.plot %>%
-        mutate(Yaxis = case_when(Yaxis == 1 ~ "Arts, Culture, and Humanities",
+        dplyr::mutate(Yaxis = case_when(Yaxis == 1 ~ "Arts, Culture, and Humanities",
                                  Yaxis == 2 ~ "Education",
                                  Yaxis == 3 ~ "Environment and Animals",
                                  Yaxis == 4 ~ "Health",
@@ -428,10 +447,10 @@ server <- function(input, output, session) {
     #a little more formatting
     dat.diff <- dat.plot %>%
       tidyr::pivot_wider(names_from = Gender, values_from = c(Value, n)) %>%
-      mutate(diff = abs(Value_F- Value_M)) %>%
-      mutate(pois = (Value_F + Value_M) / 2) %>%
-      select(c(Yaxis, pois, diff)) %>%
-      merge(dat.plot)
+      dplyr::mutate(diff = abs(Value_F - Value_M)) %>%
+      dplyr::mutate(pois = (Value_F + Value_M) / 2) %>%
+      dplyr::select(c(Yaxis, pois, diff)) %>%
+      data.table::merge(dat.plot)
 
     #make the ggplot
     p <- dat.diff %>%
@@ -465,19 +484,6 @@ server <- function(input, output, session) {
 
   })
 
-
-
-  ### Helpter functions that aren't working
-   # demostrate helpers on dynamic UI
-   output$dynamicUI <- renderUI({
-     h4("Click the help icon for current details...") %>%
-       helper(icon = "question",
-              colour = "orange",
-              size = "s",
-              type = "markdown",
-              title = "Current Details",
-              content = "Clusters")
-   })
 
 
 } #end function
