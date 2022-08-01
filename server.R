@@ -1,6 +1,56 @@
 server <- function(input, output, session) {
+  
+  #Needed for Helpers
   shinyhelper::observe_helpers()
-
+  
+  #Needed for vaildators
+  iv <- InputValidator$new()
+  #org total expenses
+  iv$add_rule(
+    "OrgTotalExpense", 
+    sv_required(message = "Please enter a number greater than 0.")) 
+  iv$add_rule(
+    "OrgTotalExpense", 
+    sv_gte(0, message_fmt = "Please enter a number greater than 0.")) #total expenses >=0
+  #org total Employees
+  iv$add_rule(
+    "OrgTotalEmployee", 
+    sv_required(message = "Please enter a number greater than 0.")) 
+  iv$add_rule(
+    "OrgTotalEmployee", 
+    sv_gte(0, message_fmt = "Please enter a number greater than 0.")) #total employees >=0
+  
+  # Search State 
+  iv$add_rule(
+    "SearchState", 
+    sv_required(message = "Please select at least one state."))
+  iv$add_rule(
+    "SearchLoc", 
+    sv_required(message = "Please select at least one city type."))
+  #Search major group
+  iv$add_rule(
+    "SearchMajorGroup",
+    sv_required(message = "Please select at least one broad category.")
+  )
+  #Search NTEE
+  iv$add_rule(
+    "SearchNTEE",
+    sv_required(message = "Please select at least one major group.")
+  )
+  #Search NTEE2 (only if search.nteecc is selected)
+  iv$add_rule(
+    "SearchNTEE2",
+    sv_required(message = "Please select at least one major group.")
+  )
+  #Search NTEE-CC
+  iv$add_rule(
+    "SearchNTEECC",
+    sv_required(message = "Please select at least one option.")
+  )
+  
+  #STILL NEED TO ADD SEARCH.TOTALEXPENSES AND SEARCH.TOTALEMPLOYEES BUT NEED TO WAIT UNTIL JESSE PICKS WHICH FORMAT WE WANT TO USE
+  
+  iv$enable()
   
   
 
@@ -46,24 +96,29 @@ server <- function(input, output, session) {
     ntee
   })
   
-  #input
+ 
+  #Org Inputs
   org <- reactive({
+  
     org.temp <- list(State = input$OrgState,
                      Loc = input$OrgLoc,
                      MajorGroup = input$OrgMajorGroup, 
                      NTEE = ORGNTEE(), 
-                     NTEE.CC = input$OrgNTEECC,
+                     NTEE.CC = paste0(ORGNTEE(), input$OrgNTEECC),
                      UNIV = input$OrgHOSP,
                      HOSP = input$OrgUNIV,
                      TotalExpense = input$OrgTotalExpense,
                      TotalEmployee = input$OrgTotalEmployee)
     
-    #State, Loc have no errors to worry about
+    #State, Loc, MajorGroup, NTEE, HOSP, UNIV have no errors to worry about
 
-    #NTEE-CC
-    #if nothing is selected for NTEE-CC automatically assign it to "None of these fit my organization"
+    
+    #Safe Guards for Errors 
+    if(is.null(org.temp$TotalExpense)){org.temp$TotalExpense <- 0}
+    if(is.null(org.temp$TotalEmployee)){org.temp$TotalEmployee <- 0}
     if(is.null(org.temp$NTEE.CC)){org.temp$NTEE.CC <- NA}
     
+
     #return
     org.temp
     
@@ -109,6 +164,9 @@ server <- function(input, output, session) {
     #total Expenses
     if(input$TotalExpenseDecide == TRUE){
       search.temp$TotalExpense <- input$SearchTotalExpenses
+      if(search.temp$TotalExpense[2] == 1e9){ #if search.TotalExpense == 1e9, set it equal to infinity
+        search.temp$TotalExpense[2] <- Inf
+      }
     }else{
       search.temp$TotalExpense <- c(0 , Inf)
     }
@@ -121,8 +179,18 @@ server <- function(input, output, session) {
     }
     
     #just as a safe guard 
-    #if anything is null, fill it with Na
+    #if anything is null, fill it with NA
+    if(is.null(search.temp$UNIV)){search.temp$UNIV <- NA}
+    if(is.null(search.temp$HOSP)){search.temp$HOSP <- NA}
+    if(is.null(search.temp$State)){search.temp$State <- NA}
+    if(is.null(search.temp$Loc)){search.temp$Loc <- NA}
+    if(is.null(search.temp$MajorGroup)){search.temp$MajorGroup <- NA}
+    if(is.null(search.temp$NTEE)){search.temp$NTEE <- NA}
+    if(is.null(search.temp$NTEE.CC)){search.temp$NTEE.CC <- NA}
+    if(is.null(search.temp$TotalExpense)){search.temp$TotalExpense <- NA}
+    if(is.null(search.temp$TotalEmployee)){search.temp$TotalEmployee <- NA}
 
+    #return
     search.temp
   })
   
@@ -130,6 +198,79 @@ server <- function(input, output, session) {
   output$test2 <- renderText({
     paste(c(names(search()),search()))
   })
+  
+  
+  
+  hard <- reactive({
+    hard.temp <- list()
+    
+    ## location type choices
+    if(input$LocType == 1){ #if location hard == state
+      hard.temp$State <- input$HardState
+      hard.temp$Loc <- FALSE
+    }else if(input$LocType == 2){ #if location hard == city type
+      hard.temp$State <- FALSE
+      hard.temp$Loc <- input$HardLoc
+    }
+
+    ## MajorGroup/NTEE/NTEE-CC choices
+    if(input$SearchType == 1){ #if major group selected
+      hard.temp$MajorGroup <- input$HardMajorGroup
+      hard.temp$NTEE <- FALSE
+      hard.temp$NTEE.CC <- FALSE
+    }else if(input$SearchType == 2){ #if NTEE selected
+      hard.temp$MajorGroup <- FALSE
+      hard.temp$NTEE <- input$HardNTEE
+      hard.temp$NTEE.CC <- FALSE
+    }else if(input$SearchType == 3){ #if Common Code Selected
+      hard.temp$MajorGroup <- FALSE
+      hard.temp$NTEE <- FALSE
+      hard.temp$NTEE.CC <- input$HardNTEECC
+      if(input$FurtherNTEE == TRUE){
+        hard.temp$NTEE <- input$HardNTEE2
+      }
+    }
+
+    #total Expenses
+    if(input$TotalExpenseDecide == TRUE){
+      hard.temp$TotalExpense <- input$HardTotalExpense
+    }else{
+      hard.temp$TotalExpense <- FALSE
+    }
+
+    #total Employee
+    if(input$TotalEmployeeDecide == TRUE){
+      hard.temp$TotalEmployee <- input$HardTotalEmployee
+    }else{
+      hard.temp$TotalEmployee <- FALSE
+    }
+
+    #just as a safe guard
+    #if anything is null, fill it with Na
+    if(is.null(hard.temp$State)){hard.temp$State <- FALSE}
+    if(is.null(hard.temp$Loc)){hard.temp$Loc <- FALSE}
+    if(is.null(hard.temp$MajorGroup)){hard.temp$MajorGroup <- FALSE}
+    if(is.null(hard.temp$NTEE)){hard.temp$NTEE <- FALSE}
+    if(is.null(hard.temp$NTEE.CC)){hard.temp$NTEE.CC <- FALSE}
+    if(is.null(hard.temp$TotalExpense)){hard.temp$TotalExpense <- FALSE}
+    if(is.null(hard.temp$TotalEmployee)){hard.temp$TotalEmployee <- FALSE}
+
+    hard.temp
+  })
+  
+  
+  output$test3 <- renderText({
+    paste(c(names(hard()),hard()))
+  })
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
   
 

@@ -1,8 +1,6 @@
 ui<- bootstrapPage(
-  tags$head(tags$style(HTML('.navbar-static-top {background-color: blue;}',
-                            '.navbar-default .navbar-nav>.active>a {background-color: blue;}'))),
 
-  
+
   navbarPage("CEO Pay Appraisal",
              theme = bs_theme(
                bg = "#f5f5f5",
@@ -21,7 +19,7 @@ ui<- bootstrapPage(
                       glide(
                         #put button at top of screen 
                         controls_position = "top", 
-                        
+                        height = "400%",
                         #screens
                         shinyglide::screen( #Directions
                           HTML('Welcome to the CEO Compensation Apprasial Tool. Here is how it works.
@@ -51,7 +49,7 @@ ui<- bootstrapPage(
                           h4("Where is your organization located?"),
                          wellPanel( 
                            selectInput("OrgState", 
-                                       label = "What state are you located in?",
+                                       label = "What state is your organization located in?",
                                        choices = sort(c(datasets::state.abb, "PR", "DC"))), 
                            # #org.loc
                            selectInput("OrgLoc",
@@ -62,21 +60,38 @@ ui<- bootstrapPage(
                         ), #end #org location screen
                         
                         shinyglide::screen( #org size screen
+                          next_condition = "input.OrgTotalExpense >= 0 & input.OrgTotalEmployee >=0",
                           h4("How large is your organization?"),
                           wellPanel(
                             # org.TotalExpense
-                            shinyWidgets::currencyInput(
-                              inputId = "OrgTotalExpense", 
-                              label =  "What are your organizations annual expenses?",
-                              value = 1000000,
-                              format = "dollar"
-                              ),
-                            # org.TotalEmployee
-                            numericInput(
-                              inputId = "OrgTotalEmployee", 
+                            # shinyWidgets::currencyInput(
+                            #   inputId = "OrgTotalExpense", 
+                            #   label =  "What are your organizations annual expenses?",
+                            #   value = 1000000,
+                            #   format = "dollar"
+                            #   ),
+                            
+                            #org.TotalExpense
+                            autonumericInput(
+                              inputId = "OrgTotalExpense",
+                              label = "What are your organizations total annual expenses?",
+                              value = 500000,
+                              align = "left",
+                              currencySymbol = "$",
+                              currencySymbolPlacement = "p",
+                              decimalCharacter = ".",
+                              digitGroupSeparator = ",",
+                              decimalPlaces = 2),
+                      
+                            #org.TotalEmployee
+                            autonumericInput(
+                              inputId = "OrgTotalEmployee",
                               label = "How many full time equivalent employees does your organization have?",
                               value = 25,
-                              min = 0)
+                              align = "left",
+                              digitGroupSeparator = ",",
+                              decimalPlaces = 0
+                            ),
                           )#end Well Pannel 
                         ), #end org size screen
                         
@@ -175,15 +190,15 @@ ui<- bootstrapPage(
                             pickerInput(
                               "OrgNTEECC",
                               label = htmltools::HTML("Does your orginzation fit any of the following speacilty descriptions?"),
-                              choices = c("Alliance/Advocacy Organization" = 1,
-                                          "Management and Technical Assistance" = 2,
-                                          "Professional Society/Association" = 3,
-                                          "Research Institute and/or Public Policy Analysis" = 5,
-                                          "Monetary Support - Single Organization" = 11,
-                                          "Monetary Support - Multiple Organizations" = 12,
-                                          "Nonmonetary Support Not Elsewhere Classified (N.E.C.)" = 19,
-                                          "I am a regular non-profit. None of these speacilties describe my organization." = NA),
-                              multiple = TRUE),
+                              choices = c("Alliance/Advocacy Organization" = "01",
+                                          "Management and Technical Assistance" = "02",
+                                          "Professional Society/Association" = "03",
+                                          "Research Institute and/or Public Policy Analysis" = "05",
+                                          "Monetary Support - Single Organization" = "11",
+                                          "Monetary Support - Multiple Organizations" = "12",
+                                          "Nonmonetary Support Not Elsewhere Classified (N.E.C.)" = "19",
+                                          "I am a regular non-profit. None of these speacilties describe my organization." = "00"),
+                              selected = "00"),
                             
                             # # org.Hosp
                             "Is your organization a Hospital?",
@@ -224,50 +239,40 @@ ui<- bootstrapPage(
                         shinyglide::screen( #search locations
                           h4("How do you want to consider location?"),
                           wellPanel(
-                            fluidRow(
-                              column(12,
-                              pickerInput(
-                                inputId = "LocType",
-                                label = "I want to search location type by... ",
-                                choices = c("State" = 1, 
-                                            "City Type" = 2),
-                                selected = NA
-                              )
-                              )#end column
-                            ),  #end fluid row
-                            
-                            fluidRow(
-                              conditionalPanel(
-                                condition = "input.LocType == 1 ",
-                                column(6,
-                                    #search.state
-                                    pickerInput(
-                                      inputId = "SearchState",
-                                      label = "I want to include organizations who are located in the following states:",
-                                      choices = sort(c(state.abb, "PR", "DC")),
-                                      multiple = TRUE,
-                                      selected = sort(c(state.abb, "PR", "DC")),
-                                      options = list(
-                                        `actions-box` = TRUE,
-                                        `deselect-all-text` = "None",
-                                        `select-all-text` = "All",
-                                        `none-selected-text` = "NA"
-                                      )
-                                    )
-                                  ),#end column
-                                column(6, 
-                                  "Do you want to hard or soft matching on state?",
-                                  switchInput("HardState",
-                                              label = NA,
-                                              value = FALSE,
-                                              onLabel = "Hard",
-                                              offLabel = "Soft")
-                                )#end column
-                              ), #end conditional panel 
+                           pickerInput(
+                             inputId = "LocType",
+                             label = "I want to search location type by... ",
+                             choices = c("State" = 1, 
+                                         "City Type" = 2),
+                             selected = NA),
+                           
+                           
+                          conditionalPanel(
+                            condition = "input.LocType == 1 ",
+                                #search.state
+                                pickerInput(
+                                  inputId = "SearchState",
+                                  label = "I want to include organizations who are located in the following states:",
+                                  choices = sort(c(state.abb, "PR", "DC")),
+                                  multiple = TRUE,
+                                  selected = sort(c(state.abb, "PR", "DC")),
+                                  options = list(
+                                    `actions-box` = TRUE,
+                                    `deselect-all-text` = "None",
+                                    `select-all-text` = "All",
+                                    `none-selected-text` = "NA"
+                                  )
+                                ),
+                              "Do you want to hard or soft matching on state?",
+                              switchInput("HardState",
+                                          label = NA,
+                                          value = FALSE,
+                                          onLabel = "Hard",
+                                          offLabel = "Soft")
+                          ), #end conditional panel 
                               
                               conditionalPanel(
                                 condition = "input.LocType == 2 ",
-                                column(6,
                                   #search.loc
                                   pickerInput(
                                     inputId = "SearchLoc",
@@ -276,18 +281,14 @@ ui<- bootstrapPage(
                                                    "Metropolitan" = "Metropolitan"),
                                     multiple = TRUE,
                                     selected = c("Rural", "Metropolitan"),
-                                  )
-                                ),#end column
-                                column(6,
-                                       "Do you want to hard or soft matching on city types?",
-                                       switchInput("HardLoc",
-                                                   label = NA,
-                                                   value = FALSE,
-                                                   onLabel = "Hard",
-                                                   offLabel = "Soft")
-                                )#end column
+                                  ),
+                                  "Do you want to hard or soft matching on city types?",
+                                  switchInput("HardLoc",
+                                              label = NA,
+                                              value = FALSE,
+                                              onLabel = "Hard",
+                                              offLabel = "Soft")
                               ), #end conditional panel 
-                            ) #end fluid row 
                           )#end Well Panel  
                         ), #end search locations screen
                         
@@ -460,7 +461,14 @@ ui<- bootstrapPage(
                                   `deselect-all-text` = "None",
                                   `select-all-text` = "Select All",
                                   `none-selected-text` = "NA")
-                            ) #end picker input 
+                            ), #end picker input 
+                            "Do you want to hard or soft matching on major group?",
+                            switchInput(
+                              "HardNTEE2",
+                              label = NA,
+                              value = FALSE,
+                              onLabel = "Hard",
+                              offLabel = "Soft")
                             ) #end conditional Panel
                             
                             ) #end conditional Panel
@@ -475,17 +483,17 @@ ui<- bootstrapPage(
                             pickerInput(
                               inputId = "SearchHosp",
                               label = "Do you want to include hospitals in your search?", 
-                              choices = list("No, I do not want to compare with hospitals." = 1,
-                                             "Yes, I want to compare to both hospitals and non-hospitals." = 2,
-                                             "Yes, I exclusively want to compare to hospitals." = 3),
+                              choices = list("No, I do not want include with hospitals." = 1,
+                                             "Yes, I want to include both hospitals and non-hospitals." = 2,
+                                             "Yes, I exclusively want to include hospitals." = 3),
                               selected = 2),
                             
                             pickerInput(
                               inputId = "SearchUniv",
                               label = "Do you want to include universities in your search?", 
-                              choices = list("No, I do not want to compare with universities." = 1,
-                                             "Yes, I want to compare to both universities and non-universities." = 2,
-                                             "Yes, I exclusively want to compare to universities." = 3),
+                              choices = list("No, I do not want to include universities." = 1,
+                                             "Yes, I want to include both universities and non-universities." = 2,
+                                             "Yes, I exclusively want to include universities." = 3),
                               selected = 2)
                           )#end WellPanel
                         ), #end search.hosp screen
@@ -493,7 +501,7 @@ ui<- bootstrapPage(
                         
                         shinyglide::screen( #search.total expenses
                           wellPanel(
-                            "Do you want to further filter your comparison set by Total Expenses?",
+                            "Do you want to further filter your comparison set by annual total expenses?",
                             switchInput(
                               "TotalExpenseDecide",
                               label = NA,
@@ -501,20 +509,78 @@ ui<- bootstrapPage(
                               onLabel = "Yes",
                               offLabel = "No"),
                             
+                           
+                            
                             conditionalPanel(
                               condition = "input.TotalExpenseDecide == true", 
+                              
+                              
                               numericRangeInput(
+                                "junk", 
+                                "Range of total expenses I want to include:", 
+                                value = c(0, 1e9)
+                              ),
+                              
+                              sliderInput(
                                 "SearchTotalExpenses", 
                                 "Range of total expenses I want to include:",
-                                 value = c(0, Inf) #can we get commas on these values?
-                                 ),
+                                min = 0, 
+                                max = 1e9,
+                                value = c(0,1e9), 
+                                pre = "$", 
+                                sep = ",",
+                                step = 10000),
+                              
+                              
+                              fluidRow(
+                                column(
+                                  5,
+                                  autonumericInput(
+                                    inputId = "id2",
+                                    label = "Minimum Expenses",
+                                    value = 1234.56,
+                                    align = "right",
+                                    currencySymbol = "$",
+                                    currencySymbolPlacement = "p",
+                                    decimalCharacter = ".",
+                                    digitGroupSeparator = ","
+                                  ),
+                                  ), #end column
+                                column( 1, 
+                                  HTML("<br>  <font size=\"+4\">to</font>")), 
+                                column(
+                                  5,
+                                  autonumericInput(
+                                    inputId = "id2",
+                                    label = "Maximum Expenses",
+                                    value = 1234.56,
+                                    align = "right",
+                                    currencySymbol = "$",
+                                    currencySymbolPlacement = "p",
+                                    decimalCharacter = ".",
+                                    digitGroupSeparator = ","
+                                  ),
+                                ) #end column
+                                
+                              ),#end fluid row
+                              
+                              
+                              
+                              
+                              "Do you want to hard or soft matching on total expenses?",
+                              switchInput(
+                                "HardTotalExpense",
+                                label = NA,
+                                value = FALSE,
+                                onLabel = "Hard",
+                                offLabel = "Soft")
                             ) #end conditional panel
                           )#end well panel
                         ), #end total expenses screen
                         
                         shinyglide::screen(#search.TotalEmployees
                           wellPanel(
-                            "Do you want to further filter your comparison set by Total Employees?",
+                            "Do you want to further filter your comparison set by total employees?",
                             switchInput(
                               "TotalEmployeeDecide",
                               label = NA,
@@ -525,10 +591,17 @@ ui<- bootstrapPage(
                             conditionalPanel(
                               condition = "input.TotalEmployeeDecide == true", 
                               numericRangeInput(
-                                "SearchTotalEmployee", 
-                                "Range of total employees I want to include:",
-                                value = c(0, Inf) #can we get commas on these values?
-                              ),
+                                "SearchTotalEmployee",
+                                "Range of total full time equivalent employees I want to include:",
+                                value = c(0, Inf), 
+                                ),
+                              "Do you want to hard or soft matching on total employees?",
+                              switchInput(
+                                "HardTotalEmployee",
+                                label = NA,
+                                value = FALSE,
+                                onLabel = "Hard",
+                                offLabel = "Soft")
                             ) #end conditional panel
                           )#end well panel
                         ), #end total expenses screen
@@ -537,7 +610,10 @@ ui<- bootstrapPage(
                         ### Testing screen - to be deleted 
                         shinyglide::screen(
                           "this is a test screen for making sure search inputed correctly.",
-                          textOutput("test2")
+                          textOutput("test2"),
+                          "hard test",
+                          textOutput("test3")
+                        
                         )
                         
                         
@@ -665,14 +741,12 @@ ui<- bootstrapPage(
 
 
                           mainPanel(
-                            column(12,
                                    ### Internal tabsetPanel for Gender pay differences
                                    # end internal tabsetPanel
                                    #submitButton("Update Graph"),
-                                   "Disclaimer about how this is not a true gender pay gap. To see more specifics about gender pay gap look at difference in difference model.",
+                                   "Disclaimer about how they pay gap shows information about the hiring stage, not the pay once hired stage. To see more specifics about gender pay gap look at difference in difference model.",
                                    plotlyOutput("gender.pay.graph"),
                                    #textOutput("test"),
-                            ) #end column
                           ) #end mainPanel
 
                         ),
@@ -682,4 +756,4 @@ ui<- bootstrapPage(
              
              
   )#end NavbarPage
-)#End bookstrap page
+)#End bootstrap page
