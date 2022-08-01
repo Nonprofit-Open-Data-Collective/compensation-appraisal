@@ -11,8 +11,6 @@ library(stringr)
 
 #### Read in Data ####
 dat <- read_csv("data-raw/step-04-ceo-final.csv")
-#length(unique(dat$EIN))
-#13958
 
 #### Explanations for columns in data-by-sector #### 
 
@@ -95,15 +93,6 @@ dat.sec <- dat %>%
                                   TotalAssests < 0  ~ 0))%>%
   #Adjust for inflation , *1.09
   mutate(CEOCompensation = CEOCompensation * rate.2020.to.2022) %>%
-  #Only keep the most recent Year
-  #only report most recent year for each orginization 
-  group_by(EIN) %>%
-  filter(FormYr==max(FormYr)) %>%
-  ungroup()%>%
-  #keep distinct entires, there are some entries in original dat that are multiple. 
-  distinct() %>%
-  #make org names all caps 
-  mutate(Name = toupper(Name)) %>%
   #Reorder columns
   relocate(FormYr, FormType, Name, EIN, State, MajorGroup, NTEE, NTEE.CC, UNIV, HOSP, 
            TotalExpense, TotalEmployee, GrossReceipts,TotalAssests,
@@ -175,11 +164,11 @@ dat.with.geo <- merge(dat.sec , bmf.all, by = "EIN") %>%
   #99 of them dont have FIPS #'s 
   #filter these out for now. ask Jesse how to deal with these later
   filter(!is.na(FIPS)) %>%
-  #make as character without a decimal 
+  #make as character without a decmil 
   mutate(FIPS = as.character(round(as.numeric(FIPS)))) %>%
   #get number of digits 
   mutate(digit =  stringr::str_length(FIPS)) %>%
-  #fix the ones with 4 digits to be 5 digits (leading 0 problem)
+  #fix the ones with 4 digits to be 5 digits
   mutate(FIPS = case_when(digit == 4 ~ paste0("0", FIPS),
                           digit == 5 ~ FIPS)) 
 
@@ -206,9 +195,10 @@ dat.ruca <- dat.ruca.raw %>%
 
 #merge 
 dat.merge <- merge(dat.with.geo, dat.ruca, by = "FIPS") %>%
-  #make RUCA into rural and metropolitan 
-  mutate(LocationType = case_when(RUCA <= 6 ~ "Metropolitan", 
-                                  RUCA > 7 ~ "Rural")) %>%
+  #make RUCA into rual, suburban, and metropolitin 
+  mutate(LocationType = case_when(RUCA <= 3 ~ "Urban", 
+                                  RUCA > 3 & RUCA < 8 ~ "Suburban", 
+                                  RUCA >= 8 ~ "Rural")) %>%
   #get rid of intermediate steps 
   select(-c(RUCA, digit)) %>%
   relocate(FIPS, .after = LocationType)
@@ -272,15 +262,8 @@ dat.EZ$TotalEmployee <- stats::predict.glm(mod, dat.EZ)
 dat.EZ$TotalEmployee <- ifelse(dat.EZ$TotalEmployee > 0 , dat.EZ$TotalEmployee, 0)
 
 
-## Combine the two data sets
-dat.final <- rbind(dat.990, dat.EZ) %>%
-  distinct()
-
-
-
-
-
-
+## Combine the two data sets 
+dat.final <- rbind(dat.990, dat.EZ)
 
 
 #### Save ####
