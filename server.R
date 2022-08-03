@@ -182,17 +182,14 @@ server <- function(input, output, session) {
     
     #total Expenses
     if(input$TotalExpenseDecide == TRUE){
-      search.temp$TotalExpense <- input$SearchTotalExpenses
-      if(search.temp$TotalExpense[2] == 1e9){ #if search.TotalExpense == 1e9, set it equal to infinity
-        search.temp$TotalExpense[2] <- Inf
-      }
+      search.temp$TotalExpense <- c(input$SearchTotalExpensesMin, input$SearchTotalExpensesMax)
     }else{
       search.temp$TotalExpense <- c(0 , Inf)
     }
     
     #total Expenses
     if(input$TotalEmployeeDecide == TRUE){
-      search.temp$TotalEmployee <- input$SearchTotalEmployee
+      search.temp$TotalEmployee <-c(input$SearchTotalEmployeeMin, input$SearchTotalEmployeeMax)
     }else{
       search.temp$TotalEmployee <- c(0 , Inf)
     }
@@ -214,8 +211,8 @@ server <- function(input, output, session) {
   })
   
   
-  output$test2 <- renderText({
-    paste(c(names(search()),search()))
+  output$test2 <- renderPrint({
+    paste(search())
   })
   
   
@@ -282,43 +279,71 @@ server <- function(input, output, session) {
     paste(c(names(hard()),hard()))
   })
   
+
+
+  ### Get filtered data
+  dat.filtered.pre <- reactive({
+    sc <- search()
+    h <- hard()
+    
+    dat_filtering_hard(search.criteria = sc, 
+                       hard.criteria = h)
+  })
   
   
+  #PRE SELECTION OF ROWS
+  dat.filtered.pre.size <- reactive({
+    dim(dat.filtered.pre())[1]
+  })
   
   
-  
-  
-  
-  
-  
-  
+  #number of elements in dat filtered pre selection of rows
+  output$dat.filtered.pre.size <- renderUI({
+    
+    n.text <- paste("There are", "<b>",dat.filtered.pre.size(),"</b>", "unique orginizations in your comparison set.")
+    HTML(paste(n.text))
+  })
+
 
   
-  # 
-  # 
-  # ### Get filtered data
-  # dat.filtered <- reactive({
-  #   dat_filtering(form.year = search()$form.year,
-  #                 state = search()$state,
-  #                 major.group = search()$major.group,
-  #                 ntee = search()$ntee,
-  #                 ntee.cc = search()$ntee.cc,
-  #                 hosp = search()$hosp,
-  #                 univ = search()$univ,
-  #                 tot.expense = search()$tot.expense,
-  #                 tot.employee = search()$tot.employee,
-  #                 form.type = search()$form.type
-  #   )
-  # })
-  # 
-  # output$dat.filterd.table <- DT::renderDataTable({
-  #   datatable(head(dat.filtered(), 10))
-  # })
-  # 
-  # 
-  # 
-  # 
-  # 
+  #PRE SELECTION OF ROWS output
+  output$dat.filtered.pre.table <- DT::renderDataTable({
+    head(dat.filtered.pre(), 10) %>%
+      select(-c(Gender, CEOCompensation))
+  })
+
+  
+  #get selected rows 
+  rows.selected <- reactive({
+    input$dat.filtered.pre.table_rows_selected
+  })
+  
+  output$rows <- renderPrint({
+    rows.selected()
+  })
+  
+  #if user wants to select rows, then only include selected rows 
+  #if user does not want to select rows, use the entire pre selected data set
+  dat.filtered.post <- reactive({
+    if(input$TablePickerDecide == TRUE){
+      ret <- dat.filtered.pre()[rows.selected(), ]
+    }else{
+      ret <- dat.filtered.pre
+    }
+    ret
+  })
+
+  output$dat.filtered.post <- DT::renderDataTable({
+    dat.filtered.post()
+  })
+
+
+  
+  #POST SELECTION OF ROWS
+  
+  # dat.filtered.pre.table
+  
+
   # 
   # ### Do the search
   # dat.similar <- reactive({

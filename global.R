@@ -1,7 +1,7 @@
 ### Used packages
 packs = c("shiny", "shinydashboard", "shinythemes", "shinyWidgets","shinyvalidate",
           "shinyhelper", "shinyglide", "plotly", "DT",
-          "scales", "knitr", "kableExtra", 
+          "scales", "knitr", 
           "dplyr", "readr", "tidyr","bslib", "datasets" )
 
 #invisible(lapply(packs, library, character.only = TRUE))
