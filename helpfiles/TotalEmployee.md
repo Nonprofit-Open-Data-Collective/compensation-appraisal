@@ -1,17 +1,11 @@
-### Total Employees
+## Annual Expenses 
 
 ***
 
-Enter the range of total employees that you want to include in your comparison set of non-profits. The smallest minimum value you can enter is 0, and the largest maximum value you can enter is 50,000. 
+Enter the number of people your organization employs. 
 
-<u> Example 1 </u> 
+If your organization filed IRS Form 990, this is Part I, line 5. 
 
-If you only want to include organizations whose total employees are less than 10,000, you would enter: Minimum Employees = 0 and Maximum Employees = 10,000.
+This information is not listed on IRS Form 990-EZ.
 
-<u> Example 2 </u>
-
-If you only want to include organization whose total employees are greater than 500 you would enter: Minimum Employees = 500 and Maximum Employees = 50,000. 
-
-<u> Example 3 </u>
-
-If you only want to include organizations whose total employees are between 200 and 700 then you would enter: Minimum Employees = 200 and Maximum Employees = 700.
+[Click here](https://www.irs.gov/charities-non-profits/required-filing-form-990-series) to learn more about IRS 990 series. 

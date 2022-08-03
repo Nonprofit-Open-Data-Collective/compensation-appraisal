@@ -66,7 +66,7 @@ If you only want to include non-profits who do work in Housing & Shelter and Men
 
 <u> Example 2 </u> 
 
-If you want all non-profits in your comparison set regardless of the work you do, hit "Select All". 
+If you want all non-profits in your comparison set regardless of the specific type of work they do, press "Select All". 
 
 
 
