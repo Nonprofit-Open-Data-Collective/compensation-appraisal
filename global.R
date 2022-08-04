@@ -1,7 +1,7 @@
 ### Used packages
 packs = c("shiny", "shinydashboard", "shinythemes", "shinyWidgets","shinyvalidate",
           "shinyhelper", "shinyglide", "plotly", "DT",
-          "scales", "knitr", 
+          "knitr", 
           "dplyr", "readr", "tidyr","bslib", "datasets" )
 
 #invisible(lapply(packs, library, character.only = TRUE))
@@ -21,6 +21,7 @@ dat <- readr::read_csv("data-rodeo/dat-shinyapp.csv")
 
 ### Load internal functions
 source("funcs/applying-filters-func.R")
+source("funcs/dat-filtering-hard.R")
 source("funcs/distance-metric.R")
 source("funcs/dollarize.R")
 source("funcs/state-distance.R")

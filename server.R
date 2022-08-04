@@ -163,12 +163,14 @@ server <- function(input, output, session) {
       #get all letter and NTEE CC options
       # if NTEE is selected, get those letteres, otherwise use all letters
       
-      if(input$FurtherNTEE){ 
-        let <- input$SearchNTEE2
-      }else{
-          let <- base::LETTERS
-        }
-    
+      # if(input$FurtherNTEE){ 
+      #   let <- input$SearchNTEE2
+      # }else{
+      #     let <- base::LETTERS
+      #   }
+      # 
+      
+      let <- base::LETTERS
       cc <- input$SearchNTEECC
       
       search.temp$NTEE.CC <- tidyr::expand_grid(let, cc) %>%
@@ -475,7 +477,7 @@ server <- function(input, output, session) {
       dplyr::mutate(diff = abs(Value_F - Value_M)) %>%
       dplyr::mutate(pois = (Value_F + Value_M) / 2) %>%
       dplyr::select(c(Yaxis, pois, diff)) %>%
-      data.table::merge(dat.plot)
+      base::merge(dat.plot)
 
     #make the ggplot
     p <- dat.diff %>%

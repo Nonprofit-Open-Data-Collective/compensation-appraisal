@@ -187,6 +187,92 @@ results <- HEOM_with_weights(org, search, dat.filtered)
 We then use the distance metrics to suggest a range for a "reasonable" CEO compensation using a distance weighted mean, https://encyclopediaofmath.org/wiki/Distance-weighted_mean. I do not know if this is the right type of statistic to calculate. 
 
 
+#### Get the weighted average using the distance metric 
+
+Let $d_i$ be the distance metric for each organization. $i$, in the comparison set. Let $w_i = \frac{1-d_i}{\sum_i(1-d_i)}$ be the weight for each organziation. Let $C_i$ be the CEO compensation (in 2022 dollars) of organization i. 
+
+
+We then use the weighted average as the mean suggested pay as $\frac{}{}$ 
+
+```{r}
+
+d_i <- results$dist
+sum_w <- sum(1 - d_i)
+w_i <- (1-d_i) / sum_w
+#sum(w_i) = 1
+
+weighted_average <- sum(w_i * results$CEOCompensation)
+
+```
+
+
+#### Range of Pay
+
+We next get the range of pay by
+
+1. Making a regression model using the same characteristics used for the data imputation in the 990EZ total employees
+
+
+```{r}
+dat.model <- results
+
+#make everything factors
+dat.model$FormYr <- as.factor(dat.model$FormYr )
+dat.model$MajorGroup <- as.factor(dat.model$MajorGroup)
+dat.model$UNIV <- as.factor(dat.model$UNIV )
+dat.model$HOSP <- as.factor(dat.model$HOSP )
+dat.model$State <- as.factor(dat.model$State)
+
+#only use complete data
+dat.model <- na.omit(dat.model)
+
+form <- "CEOCompensation ~ FormYr + TotalAssests + GrossReceipts + TotalExpense + TotalEmployee"
+
+#if there is more than one major group, add it
+if(length(unique(search$MajorGroup)) > 1){
+  form <- c(form, " + MajorGroup")
+}
+
+#if there is more than one state, add it
+if(length(unique(search$State)) > 1){
+  form <- c(form, " + State")
+}
+
+#if we are considering Universities and non-Universities, include UNIV
+if(search$UNIV == 2){
+  form <- c(form, " + UNIV")
+}
+
+#if we are considering hospitals and non-hospitals, include HOSP
+if(search$HOSP == 2){
+  form <- c(form, " + HOSP")
+}
+
+form <- stats::formula(form)
+
+
+mod <- lm(form , data = dat.model )
+
+
+#get residuals as a percentage of their original value
+resids <- mod$residuals
+per <- resids / dat.model$CEOCompensation / 100
+quants <- quantile(per, c(0.05, 0.95))
+
+CI <- weighted_average + weighted_average * quants
+
+#the range of values is
+CI
+weighted_average
+```
+
+
+
+
+#### Exploring the data 
+
+
+
 ```{r}
 
 plot(results$TotalExpense, results$CEOCompensation)
