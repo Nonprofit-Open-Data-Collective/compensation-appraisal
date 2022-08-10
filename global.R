@@ -4,7 +4,7 @@ packs = c("shiny", "shinydashboard", "shinythemes", "shinyWidgets","shinyvalidat
           "knitr", "stats", "knitr", "kableExtra",
           "dplyr", "readr", "tidyr","bslib", "datasets" )
 
-#invisible(lapply(packs, library, character.only = TRUE))
+invisible(lapply(packs, library, character.only = TRUE))
 
 
 ### Run the following command to verify that the required packages are installed. If some package

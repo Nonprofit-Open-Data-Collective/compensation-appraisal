@@ -224,7 +224,7 @@ For size of your nonprofit, we will be asking you about your total annual expens
         h4("We have a few more questions about your nonprofit."),
         wellPanel(
           #org ntee-cc
-          pickerInput(
+          shinyWidgets::pickerInput(
             "OrgNTEECC",
             label = htmltools::HTML("Does your organization fit any of the following specialty descriptions?"),
             choices = c("Alliance/Advocacy Organization" = "01",
@@ -291,7 +291,7 @@ We again be using the NTEE classification system to categorize the type of work 
         h4("How do you want to consider location?"),
         wellPanel(
           
-          pickerInput(
+          shinyWidgets::pickerInput(
             inputId = "LocType",
             label = "I want to search location type by... ",
             choices = c("State" = 1,
@@ -306,7 +306,7 @@ We again be using the NTEE classification system to categorize the type of work 
           conditionalPanel(
             condition = "input.LocType == 1", 
             #search.state
-            pickerInput(
+            shinyWidgets::pickerInput(
               inputId = "SearchState", 
               label = "I want to include organizations who are located in the following states:", 
               choices = sort(c(state.abb, "PR", "DC")),
@@ -336,7 +336,7 @@ We again be using the NTEE classification system to categorize the type of work 
           conditionalPanel(
             condition = "input.LocType == 2",
             #search.loc
-            pickerInput(
+            shinyWidgets::pickerInput(
               inputId = "SearchLoc", 
               label = "I want to include organizations who are located in the following types of cities:", 
               choices = c("Rural", "Metropolitan"),
@@ -370,7 +370,7 @@ We again be using the NTEE classification system to categorize the type of work 
       shinyglide::screen( # search types
         h4("How to do you want to filter by organization type?"),
         wellPanel(
-          pickerInput(
+          shinyWidgets::pickerInput(
             inputId = "SearchType",
             "I want to filter by ... ",
             choices = c("Broad Category (10 options)" = 1,
@@ -387,7 +387,7 @@ We again be using the NTEE classification system to categorize the type of work 
           # if broad category is selected
           conditionalPanel(
             condition = "input.SearchType == 1",
-            pickerInput(
+            shinyWidgets::pickerInput(
               inputId = "SearchMajorGroup",
               label = "I want to include organizations in the following broad categories:",
               choices = c("Arts, Culture, and Humanities" = 1,
@@ -427,7 +427,7 @@ We again be using the NTEE classification system to categorize the type of work 
           #if major group is selected
           conditionalPanel(
             condition = "input.SearchType == 2",
-            pickerInput(
+            shinyWidgets::pickerInput(
               inputId = "SearchNTEE",
               label = "I want to include organizations in the following major groups:",
               choices = c("Animals" = "D",
@@ -486,7 +486,7 @@ We again be using the NTEE classification system to categorize the type of work 
           #if common code is selected
           conditionalPanel(
             condition = "input.SearchType == 3",
-            pickerInput(
+            shinyWidgets::pickerInput(
               "SearchNTEECC",
               label = htmltools::HTML("Do you want to include orgnizations that fit any of the following specialty descriptions?"),
               choices = c("Alliance/Advocacy Organization" = "01",
@@ -595,7 +595,7 @@ We again be using the NTEE classification system to categorize the type of work 
       shinyglide::screen( #search.hosp screen
         h4("Do you want to include hospitals or universities?"),
         wellPanel(
-          pickerInput(
+          shinyWidgets::pickerInput(
             inputId = "SearchHosp",
             label = "Do you want to include hospitals in your comparison set?",
             choices = list("No, I do not want include with hospitals." = 1,
@@ -603,7 +603,7 @@ We again be using the NTEE classification system to categorize the type of work 
                            "Yes, I exclusively want to include hospitals." = 3),
             selected = 2),
 
-          pickerInput(
+          shinyWidgets::pickerInput(
             inputId = "SearchUniv",
             label = "Do you want to include universities in your comparison set?",
             choices = list("No, I do not want to include universities." = 1,
@@ -851,7 +851,7 @@ We again be using the NTEE classification system to categorize the type of work 
                                                #          size = "s"),
                                                
                                                # search.state
-                                               pickerInput(
+                                               shinyWidgets::pickerInput(
                                                  inputId = "filter.gender.State",
                                                  label = "States",
                                                  choices = state.abb,
@@ -865,7 +865,7 @@ We again be using the NTEE classification system to categorize the type of work 
                                                  )
                                                ),
                                                # search.MajorGroup
-                                               pickerInput(
+                                               shinyWidgets::pickerInput(
                                                  inputId = "filter.gender.MajorGroup",
                                                  label = "Major Group",
                                                  choices = c("Arts, Culture, and Humanities" = 1,
