@@ -589,7 +589,7 @@ server <- function(input, output, session) {
       scale_color_manual(values=c("#9525AD", "#25AD80")) +
       scale_x_continuous(labels=scales::dollar_format())+
       ggtitle(paste("CEO Pay by Gender by", case_when(y.axis == "MajorGroup" ~ "Major Group",
-                                                   y.axis == "NTEE" ~ "NTEE Code",
+                                                 y.axis == "NTEE" ~ "NTEE Code",
                                                    y.axis == "NTEE.CC" ~ "NTEE-CC Code"),
                     "in 2019")) +
       xlab(paste(x.label, "CEO Compensation")) +
