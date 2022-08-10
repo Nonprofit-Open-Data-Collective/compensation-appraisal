@@ -4,7 +4,7 @@ packs = c("shiny", "shinydashboard", "shinythemes", "shinyWidgets","shinyvalidat
           "knitr", "stats", "knitr", "kableExtra",
           "dplyr", "readr", "tidyr","bslib", "datasets" )
 
-invisible(lapply(packs, library, character.only = TRUE))
+#invisible(lapply(packs, library, character.only = TRUE))
 
 
 ### Run the following command to verify that the required packages are installed. If some package
@@ -14,6 +14,9 @@ package.check <- lapply(packs, FUN = function(x) {
     install.packages(x, dependencies = TRUE)
   }
 })
+#load libraries
+invisible(lapply(packs, library, character.only = TRUE))
+
 
 ### Load Data set
 #dat <- read_csv("data-wrangle/data-by-sector.csv")
@@ -51,3 +54,7 @@ region <- data.table::data.table(state = sort(c(state.abb, "PR", "DC")),
                                             1, 5, 4, 6, 7, 8, 5, 1, 8, 3, 
                                             5, 8))
 
+
+
+### 
+#shiny::runGitHub("compensation-appraisal", "Nonprofit-Open-Data-Collective")
