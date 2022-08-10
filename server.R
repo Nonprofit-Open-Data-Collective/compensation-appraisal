@@ -48,6 +48,8 @@ server <- function(input, output, session) {
     sv_required(message = "Please select at least one option.")
   )
   
+  
+  
   #STILL NEED TO ADD SEARCH.TOTALEXPENSES AND SEARCH.TOTALEMPLOYEES BUT NEED TO WAIT UNTIL JESSE PICKS WHICH FORMAT WE WANT TO USE
   
   iv$enable()

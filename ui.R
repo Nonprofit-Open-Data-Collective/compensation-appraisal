@@ -85,7 +85,7 @@ For size of your nonprofit, we will be asking you about your total annual expens
         h4("How large is your nonprofit?"),
         wellPanel(
           #org.TotalExpense
-          autonumericInput(
+          shinyWidgets::autonumericInput(
             inputId = "OrgTotalExpense",
             label = "What are your organization's total annual expenses?",
             value = 500000,
@@ -102,7 +102,7 @@ For size of your nonprofit, we will be asking you about your total annual expens
               buttonLabel = "Close"),
 
           #org.TotalEmployee
-          autonumericInput(
+          shinyWidgets::autonumericInput(
             inputId = "OrgTotalEmployee",
             label = "How many people does your organization employ?",
             value = 25,
@@ -632,7 +632,7 @@ We again be using the NTEE classification system to categorize the type of work 
             fluidRow(
               column(
                 5,
-                autonumericInput(
+                shinyWidgets::autonumericInput(
                   inputId = "SearchTotalExpensesMin",
                   label = "Minimum Expenses",
                   value = 0,
@@ -649,7 +649,7 @@ We again be using the NTEE classification system to categorize the type of work 
                       HTML("<br>  <font size=\"+3\">-</font>")),
               column(
                 5,
-                autonumericInput(
+                shinyWidgets::autonumericInput(
                   inputId = "SearchTotalExpensesMax",
                   label = "Maximum Expenses",
                   value = 6000000000,
@@ -704,7 +704,7 @@ We again be using the NTEE classification system to categorize the type of work 
             fluidRow(
               column(
                 5,
-                autonumericInput(
+                shinyWidgets::autonumericInput(
                   inputId = "SearchTotalEmployeeMin",
                   label = "Minimum Employees",
                   value = 0,
@@ -719,7 +719,7 @@ We again be using the NTEE classification system to categorize the type of work 
                       HTML("<br>  <font size=\"+3\">-</font>")),
               column(
                 5,
-                autonumericInput(
+                shinyWidgets::autonumericInput(
                   inputId = "SearchTotalEmployeeMax",
                   label = "Maximum Employees",
                   value = 50000,
