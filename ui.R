@@ -18,31 +18,31 @@ ui <- navbarPage( "Urban Institute",
           
         HTML('
               This tool is designed for nonprofits to receive a CEO total compensation appraisal based on their organization’s characteristics as well as their job market of their prospective CEO. We use the latest IRS information about nonprofit CEO pay to compare your nonprofits to other nonprofits in U.S. and provide to you a suggested CEO pay range.
-<br>
+<br><br>
 This tool has 3 steps: Input the nonprofit’s characteristics, creating a set of other nonprofits to compare to, and the resulting CEO pay appraisal. 
-<br>
+<br><br>
 How it works:
-<br>
+<br><br>
 <u>Step 1:</u> Tell us about your nonprofit: 
 <br>
 We ask you a series of questions about your particular nonprofit. We want to know about the work your nonprofit does, where you are located, how large you are, and a few other questions. 
-<br>
+<br><br>
 <u>Step 2:</u> Defining your Comparison Set
 <br>
 We want to allow you, the user, to define your own job market for a potential new CEO hire. To do this, you will create a comparison set of other nonprofits who are similar to your own. We allow you to choose from a series of filters to create your own comparison set of other nonprofits. We have over 12,000 unique nonprofits for you add to your comparison set.
-<br>
+<br><br>
 For example, if your nonprofit is a large museum, a job market for a CEO candidate might be other large museums, regardless of where they are located. 
-<br>
+<br><br>
 But, if your nonprofit is a small agricultural nonprofit in rural Kansas, the job market for a CEO might be other small agricultural nonprofits in rural Kansas, Iowa, Nebraska, and Missouri. 
-<br>
+<br><br>
 <u>Step 3:</u> The Results
 <br>
 Based on your organization’s characteristics given in Step 1 and the other nonprofits who match the filtering criteria defined in Step 2, we suggest a reasonable range of pay for a CEO.  
-<br>
+<br><br>
 We also provide detailed information about the originations in the user-defined job market, such as the organization’s names, size, location, the CEO’s total compensation worth, and the CEO’s sex.
-<br>
+<br><br>
 At the end, you will be able to download all of the information used to create you CEO suggested pay in a PDF report. You will also be able to download more detailed information about the organizations in your comparison set as a csv or a Excel document. 
-<br>
+<br><br>
              ') #end html
         ) #end well panel
       ), #end directions screen
@@ -276,11 +276,11 @@ For size of your nonprofit, we will be asking you about your total annual expens
         HTML("
 
 We want to allow you, the user, to define your own job market for a potential new CEO hire. To do this, you create a comparison set of other nonprofits who are similar to your own. We allow you to choose from a series of filters to create your own comparison set of other nonprofits.
-<br>
+<br><br>
 We ask you a series of questions about organizations you want to compare your nonprofit to such as the work the other nonprofits do, type of nonprofit, and organization size. 
-<br>
+<br><br>
 In the sections we allow you to decide if you want to apply hard or soft filtering to each organizational attribute we ask about. Hard filtering only includes organizations who match the criteria you specify. Soft matching includes all organizations regardless of your filtering selections, but will prioritize organizations who satisfy to soft matching criteria when we calculated your suggested pay range. For example, say you only want to include organizations in your comparison set whose total employees are less than 200. Then you would select hard filtering on the total employees attribute. If you want to prioritize organizations in your comparison set who have less that 200 employees, but also want to include organizations who have more than 200 employees, then you would select soft filtering on the total employees attribute. 
-<br>
+<br><br>
 We again be using the NTEE classification system to categorize the type of work nonprofits do. 
 <a href='https://nccs.urban.org/project/national-taxonomy-exempt-entities-ntee-codes'>Click here</a> to learn more about the NTEE classification system.
 ")
@@ -795,8 +795,11 @@ We again be using the NTEE classification system to categorize the type of work 
         wellPanel(
           
           box(
-            title = "All organizations used to generate your CEO suggested pay:", width = NULL, status = "primary",
-            div(style = 'overflow-x: scroll', DT::DTOutput('dat.filtered.pre.table'))
+            #title = "All organizations used to generate your CEO suggested pay:", 
+            width = NULL, 
+            status = "primary",
+            div(style = 'overflow-x: scroll', 
+                DT::DTOutput('dat.filtered.pre.table'))
           ) #end box
           
         ) #end wellPanel

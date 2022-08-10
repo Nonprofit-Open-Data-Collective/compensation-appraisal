@@ -312,8 +312,9 @@ server <- function(input, output, session) {
   # 
   #PRE SELECTION OF ROWS output
   output$dat.filtered.pre.table <- DT::renderDataTable({
-    dat.filtered.pre() %>%
-      select(-c(Gender, CEOCompensation))
+    dat.filtered.pre() 
+    # %>%
+    #   select(-c(Gender, CEOCompensation))
   }, 
   extensions = 'Buttons',
   options = list(
