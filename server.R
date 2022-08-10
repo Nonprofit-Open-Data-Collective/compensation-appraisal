@@ -57,7 +57,7 @@ server <- function(input, output, session) {
   #########################################
   ### CEO Compensation page
   #######################################
-  ### Get the Organizations Characteristics
+  ####### Get the Organizations Characteristics #######
 
   ### Get the NTEE Code correct
   ORGNTEE <- reactive({
@@ -132,7 +132,7 @@ server <- function(input, output, session) {
     paste((org()))
   })
 
-
+  ####### Getting Search Criteria ###########
 
   search <- reactive({
     search.temp <- list(UNIV = input$SearchUniv,
@@ -205,8 +205,8 @@ server <- function(input, output, session) {
     if(is.null(search.temp$MajorGroup)){search.temp$MajorGroup <- NA}
     if(is.null(search.temp$NTEE)){search.temp$NTEE <- NA}
     if(is.null(search.temp$NTEE.CC)){search.temp$NTEE.CC <- NA}
-    if(is.null(search.temp$TotalExpense)){search.temp$TotalExpense <- NA}
-    if(is.null(search.temp$TotalEmployee)){search.temp$TotalEmployee <- NA}
+    if(is.null(search.temp$TotalExpense)){search.temp$TotalExpense <- c(0, Inf)}
+    if(is.null(search.temp$TotalEmployee)){search.temp$TotalEmployee <- c(0, Inf)}
 
     #return
     search.temp
@@ -214,10 +214,11 @@ server <- function(input, output, session) {
   
   
   output$test2 <- renderPrint({
-    paste(search())
+    paste(c(names(search()),search()))
   })
   
   
+  ##### Get Hard Criteria ######
   
   hard <- reactive({
     hard.temp <- list()
@@ -244,9 +245,9 @@ server <- function(input, output, session) {
       hard.temp$MajorGroup <- FALSE
       hard.temp$NTEE <- FALSE
       hard.temp$NTEE.CC <- input$HardNTEECC
-      if(input$FurtherNTEE == TRUE){
-        hard.temp$NTEE <- input$HardNTEE2
-      }
+      # if(input$FurtherNTEE == TRUE){
+      #   hard.temp$NTEE <- input$HardNTEE2
+      # }
     }
 
     #total Expenses
@@ -283,7 +284,7 @@ server <- function(input, output, session) {
   
 
 
-  ### Get filtered data
+  ######  Get filtered data #####
   dat.filtered.pre <- reactive({
     sc <- search()
     h <- hard()
@@ -292,53 +293,64 @@ server <- function(input, output, session) {
                        hard.criteria = h)
   })
   
+  ############ Getting the selection of rows. Currently this breaks the code 
   
-  #PRE SELECTION OF ROWS
-  dat.filtered.pre.size <- reactive({
-    dim(dat.filtered.pre())[1]
-  })
-  
+  # #PRE SELECTION OF ROWS
+  # dat.filtered.pre.size <- reactive({
+  #   dim(dat.filtered.pre())[1]
+  # })
+  # 
   
   #number of elements in dat filtered pre selection of rows
-  output$dat.filtered.pre.size <- renderUI({
-    
-    n.text <- paste("There are", "<b>",dat.filtered.pre.size(),"</b>", "unique orginizations in your comparison set.")
-    HTML(paste(n.text))
-  })
+  # output$dat.filtered.pre.size <- renderUI({
+  #   
+  #   n.text <- paste("There are", "<b>",dat.filtered.pre.size(),"</b>", "unique orginizations in your comparison set.")
+  #   HTML(paste(n.text))
+  # })
+  # 
 
-
-  
+  # 
   #PRE SELECTION OF ROWS output
   output$dat.filtered.pre.table <- DT::renderDataTable({
-    head(dat.filtered.pre(), 10) %>%
+    dat.filtered.pre() %>%
       select(-c(Gender, CEOCompensation))
-  })
+  }, 
+  extensions = 'Buttons',
+  options = list(
+    paging = TRUE,
+    searching = TRUE,
+    fixedColumns = TRUE,
+    autoWidth = TRUE,
+    ordering = TRUE,
+    dom = 'Bfrtip',
+    buttons = c('copy', 'csv', 'excel')
+  ))
 
-  
-  #get selected rows 
-  rows.selected <- reactive({
-    input$dat.filtered.pre.table_rows_selected
-  })
-  
-  output$rows <- renderPrint({
-    rows.selected()
-  })
+
+  # #get selected rows 
+  # rows.selected <- reactive({
+  #   input$dat.filtered.pre.table_rows_selected
+  # })
+  # 
+  # output$rows <- renderPrint({
+  #   rows.selected()
+  # })
   
   #if user wants to select rows, then only include selected rows 
   #if user does not want to select rows, use the entire pre selected data set
-  dat.filtered.post <- reactive({
-    if(input$TablePickerDecide == TRUE){
-      ret <- dat.filtered.pre()[rows.selected(), ]
-    }else{
-      ret <- dat.filtered.pre
-    }
-    ret
-  })
-
-  output$dat.filtered.post <- DT::renderDataTable({
-    dat.filtered.post()
-  })
-
+  # dat.filtered.post <- reactive({
+  #   if(input$TablePickerDecide == TRUE){
+  #     ret <- dat.filtered.pre()[rows.selected(), ]
+  #   }else{
+  #     ret <- dat.filtered.pre
+  #   }
+  #   ret
+  # })
+  # 
+  # output$dat.filtered.post <- DT::renderDataTable({
+  #   dat.filtered.post()
+  # })
+  # 
 
   
   #POST SELECTION OF ROWS
@@ -368,7 +380,88 @@ server <- function(input, output, session) {
   # 
   # 
   # 
+  
+  
+  ##### Getting Results########
+  
+  #see pretend-shiny vignette for explanation
+  
+  #get the distance
+  # 
+  # dat.dist <- reactive({
+  #   HEOM_with_weights(org(), search(), dat.filtered.pre())
+  # 
+  # })
 
+  
+  
+  # ## weighted average 
+  # weighted.average <- reactive({
+  # 
+  #   d_i <- dat.dist()$dist
+  #   sum_w <- sum(1 - d_i)
+  #   # w_i <- (1-d_i) / sum_w
+  #   #sum(w_i) = 1
+  # 
+  #   # sum(w_i * dat.filtered.pre()$CEOCompensation)
+  # })
+  # # 
+  # #print weighted average
+  # output$weighted.average <- renderText({
+  # 
+  #   paste((weighted.average()))
+  #   #t <- paste("Your suggested CEO pay is", "<b>", weighted.average()[1], "-", weighted.average()[2])
+  # })
+  # 
+  # 
+  # output$final.table <-  DT::renderDataTable({
+  #   dat.dist()
+  # })
+
+  # 
+  # output$dat.filtered.pre.size <- ({
+  #   #   
+  #   #   n.text <- paste("There are", "<b>",dat.filtered.pre.size(),"</b>", "unique orginizations in your comparison set.")
+  #   #   HTML(paste(n.text))
+  #   # })
+  #   # 
+
+  
+  #### Download report ##### 
+  output$report <- downloadHandler(
+    # For PDF output, change this to "report.pdf"
+    filename = "report.pdf",
+    content = function(file) {
+      # Copy the report file to a temporary directory before processing it, in
+      # case we don't have write permissions to the current working dir (which
+      # can happen when deployed).
+      tempReport <- file.path(tempdir(), "report.Rmd")
+      file.copy("report.Rmd", tempReport, overwrite = TRUE)
+      
+      # Set up parameters to pass to Rmd document
+      params <- list(dat.final = dat.filtered.pre(),
+                     org = org(),
+                     search = search(),
+                     hard = hard())
+      
+      #loading screen
+      showModal(modalDialog("Downloading...", footer=NULL))
+      on.exit(removeModal())
+      
+      # Knit the document, passing in the `params` list, and eval it in a
+      # child of the global environment (this isolates the code in the document
+      # from the code in this app).
+      rmarkdown::render(tempReport, output_file = file,
+                        params = params,
+                        envir = new.env(parent = globalenv())
+      )
+    }
+  )
+  
+  
+  
+  
+  
   #########################################
   ### Gender Pay gap difference in difference model
   #######################################
@@ -382,7 +475,7 @@ server <- function(input, output, session) {
 
   #Format the Search Criteria
   gender.graph.filters <- reactive({
-    filter.gender.1 <- list(form.year = input$filter.gender.FormYr,
+    filter.gender.1 <- list(form.year = 2019, #input$filter.year, 
                      state = input$filter.gender.State,
                      major.group = input$filter.gender.MajorGroup,
                      ntee = NA, #need to add input for this
@@ -497,7 +590,8 @@ server <- function(input, output, session) {
       scale_x_continuous(labels=scales::dollar_format())+
       ggtitle(paste("CEO Pay by Gender by", case_when(y.axis == "MajorGroup" ~ "Major Group",
                                                    y.axis == "NTEE" ~ "NTEE Code",
-                                                   y.axis == "NTEE.CC" ~ "NTEE-CC Code"))) +
+                                                   y.axis == "NTEE.CC" ~ "NTEE-CC Code"),
+                    "in 2019")) +
       xlab(paste(x.label, "CEO Compensation")) +
       ylab(paste(case_when(y.axis == "MajorGroup" ~ "Major Group",
                            y.axis == "NTEE" ~ "NTEE Code",

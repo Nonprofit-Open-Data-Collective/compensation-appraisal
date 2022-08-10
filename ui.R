@@ -8,35 +8,66 @@ ui <- navbarPage( "Urban Institute",
   ),
 
   shiny::tabPanel(
-    "Glide Testing",
+    "CEO Pay Appraisal",
     shinyglide::glide(
       controls_position = "top",
 
       shinyglide::screen( #Directions
-        HTML('Welcome to the CEO Compensation Apprasial Tool. Here is how it works.
-                                <br>
-                                PUT DIRECTIONS HERE
-                                <br>
-                                We will first ask your questions about your organization
-                                <br>
-                                We will then let you define your own market and find a set of orgnizations to compare you to,
-                                <br>
-                                Then we will give you orgs to compare yourself to, you can select/deselect.
-                                <br>
-                                Then we will give you a suggested CEO pay
-                                <br>
-                                At the end you will be able to download a pdf of this report.
-                                SCROLL DOWN')
+        h4("Welcome to Urban Institutes CEO Pay Appraisal Tool!"), 
+        wellPanel(
+          
+        HTML('
+              This tool is designed for nonprofits to receive a CEO total compensation appraisal based on their organization’s characteristics as well as their job market of their prospective CEO. We use the latest IRS information about nonprofit CEO pay to compare your nonprofits to other nonprofits in U.S. and provide to you a suggested CEO pay range.
+<br>
+This tool has 3 steps: Input the nonprofit’s characteristics, creating a set of other nonprofits to compare to, and the resulting CEO pay appraisal. 
+<br>
+How it works:
+<br>
+<u>Step 1:</u> Tell us about your nonprofit: 
+<br>
+We ask you a series of questions about your particular nonprofit. We want to know about the work your nonprofit does, where you are located, how large you are, and a few other questions. 
+<br>
+<u>Step 2:</u> Defining your Comparison Set
+<br>
+We want to allow you, the user, to define your own job market for a potential new CEO hire. To do this, you will create a comparison set of other nonprofits who are similar to your own. We allow you to choose from a series of filters to create your own comparison set of other nonprofits. We have over 12,000 unique nonprofits for you add to your comparison set.
+<br>
+For example, if your nonprofit is a large museum, a job market for a CEO candidate might be other large museums, regardless of where they are located. 
+<br>
+But, if your nonprofit is a small agricultural nonprofit in rural Kansas, the job market for a CEO might be other small agricultural nonprofits in rural Kansas, Iowa, Nebraska, and Missouri. 
+<br>
+<u>Step 3:</u> The Results
+<br>
+Based on your organization’s characteristics given in Step 1 and the other nonprofits who match the filtering criteria defined in Step 2, we suggest a reasonable range of pay for a CEO.  
+<br>
+We also provide detailed information about the originations in the user-defined job market, such as the organization’s names, size, location, the CEO’s total compensation worth, and the CEO’s sex.
+<br>
+At the end, you will be able to download all of the information used to create you CEO suggested pay in a PDF report. You will also be able to download more detailed information about the organizations in your comparison set as a csv or a Excel document. 
+<br>
+             ') #end html
+        ) #end well panel
       ), #end directions screen
       shinyglide::screen(# Tell us about your org
-        HTML("Tell us about your organization.
-                               <br>
-                               We are going to ask you a series of questions about your own organization. ")
+        h4("Step 1: Tell us about your nonprofit"),
+        HTML(" 
+We are going to ask you a series of questions about your particular nonprofit. We want to know about the work your nonprofit does, where you are located, how large you are, and other basic information. 
+<br><br>
+
+To categorize the work your nonprofit does, we use the National Taxonomy of Exempt Entities (NTEE) codes. The NTEE classification system divides the universe of nonprofit organizations into 26 major groups under 10 broad categories. <a href='https://nccs.urban.org/project/national-taxonomy-exempt-entities-ntee-codes'>Click here</a> to learn more about the NTEE system 
+<br><br>
+
+For size of your nonprofit, we will be asking you about your total annual expenses and the total employees the CEO would be overseeing. Both of these items are listed on IRS Form 990. [Click here]( https://www.irs.gov/charities-nonprofits/required-filing-form-990-series 
+) to learn more about IRS 990 series. If you do not have access to your origination’s tax filing information, your best guess should suffice (note the final results will be less specific the more approximating is done in this step).
+
+
+")
       ), #end tell us screen
+      
+      
+      
 
       ### Org input
       shinyglide::screen(#org location screen
-        h4("Where is your organization located?"),
+        h4("Where is your nonprofit located?"),
         wellPanel(
           selectInput("OrgState",
                       label = "What state is your organization located in?",
@@ -51,12 +82,12 @@ ui <- navbarPage( "Urban Institute",
 
       shinyglide::screen( #org size screen
         #next_condition = "input.OrgTotalExpense >= 0 & input.OrgTotalEmployee >=0",
-        #h4("How large is your organization?"),
+        h4("How large is your nonprofit?"),
         wellPanel(
           #org.TotalExpense
           autonumericInput(
             inputId = "OrgTotalExpense",
-            label = "What are your organizations total annual expenses?",
+            label = "What are your organization's total annual expenses?",
             value = 500000,
             align = "left",
             currencySymbol = "$",
@@ -89,7 +120,7 @@ ui <- navbarPage( "Urban Institute",
       ), #end org size screen
 
       shinyglide::screen( #org type
-        h4("What type of organization do you have? "),
+        h4("What type of work does your nonprofit do?"),
         wellPanel(
           selectInput(
             "OrgMajorGroup",
@@ -190,12 +221,12 @@ ui <- navbarPage( "Urban Institute",
       ), #end org type screen
 
       shinyglide::screen( #org other questions
-        h4("We have a few more questions about your organization."),
+        h4("We have a few more questions about your nonprofit."),
         wellPanel(
           #org ntee-cc
           pickerInput(
             "OrgNTEECC",
-            label = htmltools::HTML("Does your orginzation fit any of the following specialty descriptions?"),
+            label = htmltools::HTML("Does your organization fit any of the following specialty descriptions?"),
             choices = c("Alliance/Advocacy Organization" = "01",
                         "Management and Technical Assistance" = "02",
                         "Professional Society/Association" = "03",
@@ -203,7 +234,7 @@ ui <- navbarPage( "Urban Institute",
                         "Monetary Support - Single Organization" = "11",
                         "Monetary Support - Multiple Organizations" = "12",
                         "Nonmonetary Support Not Elsewhere Classified (N.E.C.)" = "19",
-                        "I am a regular non-profit. None of these specialties describe my organization." = "00"),
+                        "I am a regular nonprofit. None of these specialties describe my organization." = "00"),
             selected = "00") %>%
             shinyhelper::helper(
               type = "markdown",
@@ -232,19 +263,28 @@ ui <- navbarPage( "Urban Institute",
         ) #end WellPanel
       ), # end other questions screen
 
-      ### Testing screen - to be deleted
-      shinyglide::screen(
-        "this is a test screen for making sure org inputed correctly.",
-        textOutput("test1")
-      ),
+      # ### Testing screen - to be deleted
+      # shinyglide::screen(
+      #   "this is a test screen for making sure org inputed correctly.",
+      #   textOutput("test1")
+      # ),
 
       ### Comparison set
       shinyglide::screen( # comparison directions
-        HTML("We will next ask you a series of questions about orginziations you want to compare yourself to
-                               <br>
-                               Add details about how this allows your to define your own market,
-                               <br>
-                               Define hard and soft searches ")
+        h4("Step 2: Defining your Comparison Set"), 
+        wellPanel(
+        HTML("
+
+We want to allow you, the user, to define your own job market for a potential new CEO hire. To do this, you create a comparison set of other nonprofits who are similar to your own. We allow you to choose from a series of filters to create your own comparison set of other nonprofits.
+<br>
+We ask you a series of questions about organizations you want to compare your nonprofit to such as the work the other nonprofits do, type of nonprofit, and organization size. 
+<br>
+In the sections we allow you to decide if you want to apply hard or soft filtering to each organizational attribute we ask about. Hard filtering only includes organizations who match the criteria you specify. Soft matching includes all organizations regardless of your filtering selections, but will prioritize organizations who satisfy to soft matching criteria when we calculated your suggested pay range. For example, say you only want to include organizations in your comparison set whose total employees are less than 200. Then you would select hard filtering on the total employees attribute. If you want to prioritize organizations in your comparison set who have less that 200 employees, but also want to include organizations who have more than 200 employees, then you would select soft filtering on the total employees attribute. 
+<br>
+We again be using the NTEE classification system to categorize the type of work nonprofits do. 
+<a href='https://nccs.urban.org/project/national-taxonomy-exempt-entities-ntee-codes'>Click here</a> to learn more about the NTEE classification system.
+")
+        )#end well Panel
       ), # end comparison directions
 
       shinyglide::screen( #search locations
@@ -279,12 +319,17 @@ ui <- navbarPage( "Urban Institute",
                 `none-selected-text` = "NA"
               )
             ),
-            HTML("Do you want to hard or soft matching on state?"),
+            HTML("Do you want to hard or soft filtering on state?"),
             switchInput("HardState",
                         label = NA,
                         value = FALSE,
                         onLabel = "Hard",
-                        offLabel = "Soft")
+                        offLabel = "Soft") %>%
+              shinyhelper::helper(
+                type = "markdown",
+                content = "HardSoft",
+                size = "l",
+                buttonLabel = "Close")
           ),
           
           
@@ -304,12 +349,17 @@ ui <- navbarPage( "Urban Institute",
                 `none-selected-text` = "NA"
               )
             ),
-            HTML("Do you want to hard or soft matching on city types?"),
+            HTML("Do you want to hard or soft filtering on city types?"),
             switchInput("HardLoc",
                            label = NA,
                            value = FALSE,
                            onLabel = "Hard",
-                           offLabel = "Soft")
+                           offLabel = "Soft")%>%
+              shinyhelper::helper(
+                type = "markdown",
+                content = "HardSoft",
+                size = "l",
+                buttonLabel = "Close")
           ),
           
           #How many items in dat.filtered.pre
@@ -325,9 +375,9 @@ ui <- navbarPage( "Urban Institute",
             "I want to filter by ... ",
             choices = c("Broad Category (10 options)" = 1,
                         "Major Group (26 options)" = 2,
-                        "Specialty Description (only select if your orginzation fits a specality description)" = "3"),
+                        "Specialty Description (only select if your organization fits a specality description)" = "3"),
             selected = 1
-          ) %>%
+          )%>%
             shinyhelper::helper(
               type = "markdown",
               content = "SearchOrgType",
@@ -358,15 +408,20 @@ ui <- navbarPage( "Urban Institute",
                 `select-all-text` = "Select All",
                 `none-selected-text` = "NA")
             ), #end picker input
-            "Do you want to hard or soft matching on broad category?",
+            "Do you want to hard or soft filtering on broad category?",
             switchInput(
               "HardMajorGroup",
               label = NA,
               value = FALSE,
               onLabel = "Hard",
-              offLabel = "Soft"),
+              offLabel = "Soft") %>%
+              shinyhelper::helper(
+                type = "markdown",
+                content = "HardSoft",
+                size = "l",
+                buttonLabel = "Close"),
             #How many items in dat.filtered.pre
-            #h5(htmlOutput("dat.filtered.pre.size"))
+           # h5(htmlOutput("dat.filtered.pre.size"))
           ),  #end conditional panel
           
           #if major group is selected
@@ -408,19 +463,24 @@ ui <- navbarPage( "Urban Institute",
                 `deselect-all-text` = "None",
                 `select-all-text` = "Select All",
                 `none-selected-text` = "NA")
-            ) %>%#end picker input
+            )  %>%#end picker input
               shinyhelper::helper(
                 type = "markdown",
                 content = "SearchNTEE",
                 size = "l",
                 buttonLabel = "Close"),
-            "Do you want to hard or soft matching on major group?",
+            "Do you want to hard or soft filtering on major group?",
             switchInput(
               "HardNTEE",
               label = NA,
               value = FALSE,
               onLabel = "Hard",
-              offLabel = "Soft")
+              offLabel = "Soft") %>%
+              shinyhelper::helper(
+                type = "markdown",
+                content = "HardSoft",
+                size = "l",
+                buttonLabel = "Close")
           ), #end conditional panel
           
           #if common code is selected
@@ -448,13 +508,18 @@ ui <- navbarPage( "Urban Institute",
                 content = "SearchNTEECC",
                 size = "l",
                 buttonLabel = "Close"),
-            "Do you want to hard or soft matching on specialty description?",
+            "Do you want to hard or soft filtering on specialty description?",
             switchInput(
               "HardNTEECC",
               label = NA,
               value = FALSE,
               onLabel = "Hard",
-              offLabel = "Soft"),
+              offLabel = "Soft") %>%
+              shinyhelper::helper(
+                type = "markdown",
+                content = "HardSoft",
+                size = "l",
+                buttonLabel = "Close"),
             
             # HTML("Do you want to further search by major group?
             #                       <br>
@@ -526,30 +591,32 @@ ui <- navbarPage( "Urban Institute",
         )#end WellPannel
       ), #end search types screen
       
-      
-      # shinyglide::screen( #search.hosp screen
-      #   wellPanel(
-      #     pickerInput(
-      #       inputId = "SearchHosp",
-      #       label = "Do you want to include hospitals in your search?",
-      #       choices = list("No, I do not want include with hospitals." = 1,
-      #                      "Yes, I want to include both hospitals and non-hospitals." = 2,
-      #                      "Yes, I exclusively want to include hospitals." = 3),
-      #       selected = 2),
-      #     
-      #     pickerInput(
-      #       inputId = "SearchUniv",
-      #       label = "Do you want to include universities in your search?",
-      #       choices = list("No, I do not want to include universities." = 1,
-      #                      "Yes, I want to include both universities and non-universities." = 2,
-      #                      "Yes, I exclusively want to include universities." = 3),
-      #       selected = 2)
-      #   )#end WellPanel
-      # ), #end search.hosp screen
-      # 
-      shinyglide::screen( #search.total expenses
+
+      shinyglide::screen( #search.hosp screen
+        h4("Do you want to include hospitals or universities?"),
         wellPanel(
-          "Do you want to further filter your comparison set by annual total expenses?",
+          pickerInput(
+            inputId = "SearchHosp",
+            label = "Do you want to include hospitals in your comparison set?",
+            choices = list("No, I do not want include with hospitals." = 1,
+                           "Yes, I want to include both hospitals and non-hospitals." = 2,
+                           "Yes, I exclusively want to include hospitals." = 3),
+            selected = 2),
+
+          pickerInput(
+            inputId = "SearchUniv",
+            label = "Do you want to include universities in your comparison set?",
+            choices = list("No, I do not want to include universities." = 1,
+                           "Yes, I want to include both universities and non-universities." = 2,
+                           "Yes, I exclusively want to include universities." = 3),
+            selected = 2)
+        )#end WellPanel
+      ), #end search.hosp screen
+
+      shinyglide::screen( #search.total expenses
+        h4("Do you want to further filter your comparison set by annual total expenses?"),
+        wellPanel(
+          #search.totalexpenses
           switchInput(
             "TotalExpenseDecide",
             label = NA,
@@ -604,20 +671,26 @@ ui <- navbarPage( "Urban Institute",
             ),#end fluid row
             
             
-            "Do you want to hard or soft matching on total expenses?",
+            "Do you want to hard or soft filtering on total expenses?",
             switchInput(
               "HardTotalExpense",
               label = NA,
               value = FALSE,
               onLabel = "Hard",
-              offLabel = "Soft")
+              offLabel = "Soft")%>%
+              shinyhelper::helper(
+                type = "markdown",
+                content = "HardSoft",
+                size = "l",
+                buttonLabel = "Close")
           ) #end conditional panel
         )#end well panel
       ), #end total expenses screen
       
       shinyglide::screen(#search.TotalEmployees
+        h4("Do you want to further filter your comparison set by total employees?"),
         wellPanel(
-          "Do you want to further filter your comparison set by total employees?",
+          #search.totalemployee
           switchInput(
             "TotalEmployeeDecide",
             label = NA,
@@ -633,7 +706,7 @@ ui <- navbarPage( "Urban Institute",
                 5,
                 autonumericInput(
                   inputId = "SearchTotalEmployeeMin",
-                  label = "Minimum Expenses",
+                  label = "Minimum Employees",
                   value = 0,
                   align = "right",
                   currencySymbolPlacement = "p",
@@ -648,7 +721,7 @@ ui <- navbarPage( "Urban Institute",
                 5,
                 autonumericInput(
                   inputId = "SearchTotalEmployeeMax",
-                  label = "Maximum Expenses",
+                  label = "Maximum Employees",
                   value = 50000,
                   align = "right",
                   currencySymbolPlacement = "p",
@@ -668,13 +741,18 @@ ui <- navbarPage( "Urban Institute",
             ),#end fluid row
             
             
-            "Do you want to hard or soft matching on total employees?",
+            "Do you want to hard or soft filtering on total employees?",
             switchInput(
               "HardTotalEmployee",
               label = NA,
               value = FALSE,
               onLabel = "Hard",
-              offLabel = "Soft")
+               offLabel = "Soft") %>%
+              shinyhelper::helper(
+                type = "markdown",
+                content = "HardSoft",
+                size = "l",
+                buttonLabel = "Close")
           ), #end conditional panel
           #How many items in dat.filtered.pre
           #h5(htmlOutput("dat.filtered.pre.size"))
@@ -682,49 +760,54 @@ ui <- navbarPage( "Urban Institute",
       ), #end total expenses screen
       
       
-      ### Testing screen - to be deleted
+      # ### Testing screen - to be deleted
+      # shinyglide::screen(
+      #   "this is a test screen for making sure search inputed correctly.",
+      #   verbatimTextOutput("test2"),
+      #   "hard test",
+      #   textOutput("test3")
+      # 
+      # ),
+
+      
+      
+      # shinyglide::screen(
+      #   h4("The Resutls"),
+      # 
+      #     wellPanel(
+      #       textOutput("weighted.average")
+      # 
+      #     )#well pannel
+      # 
+      # ), #end results screen
+      
+
       shinyglide::screen(
-        "this is a test screen for making sure search inputed correctly.",
-        verbatimTextOutput("test2"),
-        "hard test",
-        textOutput("test3")
-        
-      ),
+        h4("The Report"),
+        wellPanel(
+          HTML("Click here to download your final report. <br>"),
+          downloadButton("report", "Generate Report")
+        ),#end well panel 
+      next_label = "See Comparison Data Set"),
       
       shinyglide::screen(
+        h4("Your Comparison Set"), 
         wellPanel(
-          "Do you want to view the orinizations in your comparison set and hand select which orginizations to keep for the final analysis?",
-          switchInput(
-            "TablePickerDecide",
-            label = NA,
-            value = TRUE,
-            onLabel = "Yes",
-            offLabel = "No"),
           
-          #if yes, display the data table
-          conditionalPanel(
-            condition = "input.TablePickerDecide == true",
-            "Select all orinizations you want to include by clicking on their respecitve row.",
-            box(
-              title = "Box title", width = NULL, status = "primary",
-              div(style = 'overflow-x: scroll', DT::DTOutput('dat.filtered.pre.table'))
-            ) #end box
-          ) #end conditional panel
+          box(
+            title = "All organizations used to generate your CEO suggested pay:", width = NULL, status = "primary",
+            div(style = 'overflow-x: scroll', DT::DTOutput('dat.filtered.pre.table'))
+          ) #end box
+          
         ) #end wellPanel
         
-        # DT::dataTableOutput("",
-        #              style = "height:500px; overflow-y: scroll;overflow-x: scroll;")
-        #
-      ), #end data table picker screen
+      ) #end data table picker screen
       
-      
-      
-      
-      shinyglide::screen(
-        "junk",
-        "hello world"
-      )
-    )# end shiny glide
+    ),# end shiny glide
+    
+    
+    
+    
 
 
   ),# End Tab Panel
@@ -743,28 +826,26 @@ ui <- navbarPage( "Urban Institute",
                           tabsetPanel(type = "tabs",
                                       tabPanel("Filter Criteria",
                                                #search.FormYr
-                                               pickerInput(
-                                                 inputId = "filter.gender.FormYr",
-                                                 label = "IRS Filing Year",
-                                                 choices = list("2009" = 2009, "2010" = 2010, "2011" = 2011,
-                                                                "2012" = 2012, "2013" = 2013, "2014" = 2014,
-                                                                "2015" = 2015, "2016" = 2016, "2017" = 2017,
-                                                                "2018" = 2018, "2019" = 2019),
-                                                 multiple = TRUE,
-                                                 selected = 2009:2019,
-                                                 options = list(
-                                                   `actions-box` = TRUE,
-                                                   `deselect-all-text` = "None",
-                                                   `select-all-text` = "Select All",
-                                                   `none-selected-text` = "NA"
-                                                 )
-                                               )%>%
-                                                 helper(type = "inline",
-                                                        title = "Inline Help",
-                                                        content = c("This helpfile is defined entirely in the UI!",
-                                                                    "This is on a new line.",
-                                                                    "This is some <b>HTML</b>."),
-                                                        size = "s"),
+                                               # pickerInput(
+                                               #   inputId = "filter.year",
+                                               #   label = "test year", 
+                                               #   choices = 2013:2019,
+                                               #   selected = 2019
+                                               # ), #justdoing 2019 for now, will talk to Jesse about why later, this is because we only retained distinct values in the data-rodeo phase. this can be changed later but its too late in the intership at the moment to change everything
+                                               # sliderInput(
+                                               #   inputId = "filter.year",
+                                               #   label = "Years to include", 
+                                               #   min = 2009,
+                                               #   max = 2019, 
+                                               #   step = 1
+                                               # ),
+                                               # %>%
+                                               #   helper(type = "inline",
+                                               #          title = "Inline Help",
+                                               #          content = c("This helpfile is defined entirely in the UI!",
+                                               #                      "This is on a new line.",
+                                               #                      "This is some <b>HTML</b>."),
+                                               #          size = "s"),
                                                
                                                # search.state
                                                pickerInput(
@@ -806,14 +887,12 @@ ui <- navbarPage( "Urban Institute",
                                                #NEED TO ADD NTEE
                                                #NEED TO ADD NTEE.CC both NTEE and NTEE.CC need to be reactive to inside Major Group
                                                # select.HOSP
-                                               # WILL NEED TO COME BACK AND CHANGE THE OPTION VALUES
                                                radioButtons("filter.gender.HOSP", label = "Do you want to compare to organizations that are hospitals?",
                                                             choices = list("No, I do not want to compare with hospitals." = 2,
                                                                            "Yes, I want to include both hospitals and non-hospitals." = NA,
                                                                            "Yes, but I only want to include hospitals." = 1),
                                                             selected = NA),
                                                # select.UNIV
-                                               # WILL NEED TO COME BACK AND CHANGE THE OPTION VALUES
                                                radioButtons("filter.gender.UNIV", label = "Do you want to compare to organizations that are universities?",
                                                             choices = list("No, I do not want to compare with universities." = 2,
                                                                            "Yes, I want to include both universities and non-universities." = NA,
@@ -854,7 +933,7 @@ ui <- navbarPage( "Urban Institute",
                ### Internal tabsetPanel for Gender pay differences
                # end internal tabsetPanel
                #submitButton("Update Graph"),
-               "Disclaimer about how they pay gap shows information about the hiring stage, not the pay once hired stage. To see more specifics about gender pay gap look at difference in difference model.",
+               "This gap represents the total gender pay gap for all nonprofits who filed with the IRS in 2019. ",
                plotlyOutput("gender.pay.graph"),
                #textOutput("test"),
              ) #end mainPanel

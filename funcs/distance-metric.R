@@ -54,56 +54,90 @@ HEOM_with_weights <- function(org, search, dat.filtered){
   #weight.ntee.cc <- sum(tab.ntee.cc[which(names(tab.ntee.cc) %in% search$NTEE.CC)])
   weight.loc <- sum(tab.loc[which(names(tab.loc) %in% search$Loc)])
   
+  #if anything is NA assign that distance 1 
   
   #for loop
   for(i in 1:n){
-    
-    #first do numerical comparisons 
+
+    #first do numerical comparisons
     ## distance for log.expense
-    r.log.expense <- max(dat.filtered$log.expense) -  min(dat.filtered$log.expense) #range
-    D[i, "logTotalExpense"] <- abs(dat.filtered$log.expense[i] - log(org$TotalExpense, 10)) / r.log.expense
-    
+    if(is.na(dat.filtered$TotalExpense[i])){
+      D[i, "logTotalExpense"] <- 1
+    }else{
+      r.log.expense <- max(dat.filtered$log.expense) -  min(dat.filtered$log.expense) #range
+      D[i, "logTotalExpense"] <- abs(dat.filtered$log.expense[i] - log(org$TotalExpense, 10)) / r.log.expense
+    }
+   
     ## distance for total employee
-    r.log.employee <- max(dat.filtered$log.employee) -  min(dat.filtered$log.employee) #range
-    D[i, "TotalEmployee"] <- abs(dat.filtered$log.employee[i] - log(org$TotalEmployee, 10)) / r.log.employee
+    if(is.na(dat.filtered$TotalEmployee[i])){
+      D[i, "TotalEmployee"] <- 1
+    }else{
+      #r.log.employee <- max(dat.filtered$log.employee) -  min(dat.filtered$log.employee) #range
+      #D[i, "TotalEmployee"] <- abs(dat.filtered$log.employee[i] - log(org$TotalEmployee+1, 10)) / r.log.employee
+      D[i, "TotalEmployee"] <- 0
+    }
     
-    
+
     # Next do categorical comparisons
     #State has its own function
-    D[i, "State"] <- state_distance(org$State, dat.filtered$State[i])
-      
+    if(is.na(dat.filtered$State[i])){
+      D[i, "State"] <- 1
+    }else{
+      D[i, "State"] <- state_distance(org$State, dat.filtered$State[i])
+    }
+    
     # Every Categorical but state uses proportions as weights
-    D[i, "MajorGroup"] <- ifelse(dat.filtered$MajorGroup[i] == org$MajorGroup, 0,
+    if(is.na(dat.filtered$MajorGroup[i])){
+      D[i, "MajorGroup"] <- 1
+    }else{
+      D[i, "MajorGroup"] <- ifelse(dat.filtered$MajorGroup[i] == org$MajorGroup, 0,
                                  ifelse(dat.filtered$MajorGroup[i] %in% search$MajorGroup, weight.majorgroup, 1 ))
+    }
     
-    D[i, "NTEE"] <- ifelse(dat.filtered$NTEE[i] == org$NTEE, 0,
-                                 ifelse(dat.filtered$NTEE[i] %in% search$NTEE, weight.ntee, 1 ))
+    if(is.na(dat.filtered$NTEE[i])){
+      D[i, "NTEE"] <- 1
+    }else{
+      D[i, "NTEE"] <- ifelse(dat.filtered$NTEE[i] == org$NTEE, 0,
+                             ifelse(dat.filtered$NTEE[i] %in% search$NTEE, weight.ntee, 1 ))
+    }
     
-    # D[i, "NTEE.CC"] <- ifelse(dat.filtered$NTEE.CC[i] == org$NTEE.CC, 0,
-    #                        ifelse(dat.filtered$NTEE.CC[i] %in% search$NTEE.CC, weight.ntee.cc, 1 ))
+    if(is.na(dat.filtered$LocationType[i] )){
+      D[i, "Loc"] <- 1
+    }else{
+      D[i, "Loc"] <-  ifelse(dat.filtered$LocationType[i] == org$Loc, 0,
+                             ifelse(dat.filtered$LocationType[i] %in% search$Loc, weight.loc, 1 ))
+    }
     
-    D[i, "Loc"] <-  ifelse(dat.filtered$LocationType[i] == org$Loc, 0,
-                           ifelse(dat.filtered$LocationType[i] %in% search$Loc, weight.loc, 1 ))
+    if(is.na(dat.filtered$UNIV[i] )){
+      D[i, "UNIV"] <- 1
+    }else{
+      D[i, "UNIV"] <- ifelse(dat.filtered$UNIV[i] == org$UNIV, 0 , 1)
+    }
     
-    D[i, "UNIV"] <- ifelse(dat.filtered$UNIV[i] == org$UNIV, 0 , 1)
-    D[i, "HOSP"] <- ifelse(dat.filtered$HOSP[i] == org$HOSP, 0 , 1)
+    if(is.na(dat.filtered$HOSP[i] )){
+      D[i, "HOSP"] <- 1
+    }else{
+      D[i, "HOSP"] <- ifelse(dat.filtered$HOSP[i] == org$HOSP, 0 , 1)
+    }
     
     
+
+
   }
-  
+
   # Get distance
-  #this number will be between 0 and 1
+  # this number will be between 0 and 1
   # closer to 0 = filtered org is closer to input org, closer to 1 = filtered or is farther away from input org
-  dat.filtered$dist <- rowSums(D) / A #normalize by number of matched attributes. 
-  
+  dat.filtered$dist <- rowSums(D) / A #normalize by number of matched attributes.
+
   dat.ret <- dat.filtered %>%
     dplyr::arrange(dist) %>%
     dplyr::select(-c(log.expense, log.employee))%>%
     #slice(1:100) %>%
     dplyr::mutate(Rank = row_number()) %>%
     dplyr::relocate(Rank)
-  
-  return(dat.ret)
+
+  return(dat.filtered)
 }
 
 ### testing 

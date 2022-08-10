@@ -1,5 +1,5 @@
 ---
-title: "Pretend Shiny Inputs"
+title: "Shiny Workflow"
 output:
   html_document:
     df_print: paged
@@ -18,35 +18,31 @@ The user will input their organization characteristics, their search/market crit
 
 The possible organization characteristics 
 
-- Form year (2009, 2010, ... , 2019)
-
-- Do you qualify to file and 990EZ? (Yes or No)
-
 - State (AL, AK, ..., WY)
 
-- What type of location are you in? (Urban, Suburban, Rural)
+- What type of location are you in? (Metropolitan, Rural)
 
 - Major Group (1, 2, ..., 10). (https://nccs.urban.org/project/national-taxonomy-exempt-entities-ntee-codes)
 
 - NTEE Code (A, ... , Z) ( https://nccs.urban.org/project/national-taxonomy-exempt-entities-ntee-codes)
 
-- Does your organization fall into any othe following NTEE-CC categories? (https://nccs.urban.org/publication/irs-activity-codes)
+- Does your organization fall into any of following NTEE-CC categories? (https://nccs.urban.org/publication/irs-activity-codes)
 
-  - 01 Alliance/Advocacy Organizations
+  - 01: Alliance/Advocacy Organizations
   
-  - 02 Management and Technical Assistance
+  - 02: Management and Technical Assistance
 
-  - 03 Professional Societies/Associations
+  - 03: Professional Societies/Associations
 
-  - 05 Research Institutes and/or Public Policy Analysis
+  - 05: Research Institutes and/or Public Policy Analysis
 
-  - 11 Monetary Support - Single Organization
+  - 11: Monetary Support - Single Organization
 
-  - 12 Monetary Support - Multiple Organizations
+  - 12: Monetary Support - Multiple Organizations
 
-  - 19 Non-monetary Support Not Elsewhere Classified (N.E.C.)
+  - 19: Non-monetary Support Not Elsewhere Classified (N.E.C.)
   
-  - None
+  - 00: I am a regular non-profit. I do not fit into any of these specaltiy organizations. 
 
 
 - Are you a univeristy? (Yes or No)
@@ -64,12 +60,12 @@ Here is a pretend orginization:
 org <- list(State = "DC",
             MajorGroup = 2,
             NTEE = "B", 
-            NTEE.CC = "B92",
+            NTEE.CC = NA,
             UNIV = FALSE,
             HOSP = FALSE,
-            TotalExpense = 300000,
-            TotalEmployee = 3,
-            Loc = "Metropolitan"
+            TotalExpense = 3000000,
+            TotalEmployee = 9,
+            Loc = "Rural"
 )
 
 ```
@@ -78,9 +74,7 @@ org <- list(State = "DC",
 The user then inputs their search criteria. They specify which types of organizations they want to compare themselves to and if each criteria is a hard or soft match. (Hard match is we will only consider what they have provided in that criteria and then if there are multiple options listed we will prioritize based on exact matches, and a soft match is we will prioritize organizations that meet their search criteria and exact matches). The search criteria is: 
 
 
-- Form year (2009, 2010, ... , 2019)
 
-- Do you want to consider orgs that qualify to file and 990EZ? (1- no, 2-yes, I want to include both orgs that do and do not qualify, 3 - yes, I only want to consider orgs that qualify)
 
 - List of States (AL, AK, ..., WY)
 
@@ -125,11 +119,11 @@ An example search criteria is below:
 search <- list(State = c("VA", "DC", "MD"),
                MajorGroup = 2,
                NTEE = c("B"),
-               NTEE.CC = NA, #no hard matching on this criteria aaaa
+               NTEE.CC = NA, 
                UNIV = 1,
                HOSP = 1,
-               TotalExpense = c(0, 600000),
-               TotalEmployee = c(0, 10),
+               TotalExpense = c(1000000, 6000000),
+               TotalEmployee = c(0, 100),
                Loc = c("Metropolitan")
 )
 
@@ -201,7 +195,7 @@ sum_w <- sum(1 - d_i)
 w_i <- (1-d_i) / sum_w
 #sum(w_i) = 1
 
-weighted_average <- sum(w_i * results$CEOCompensation)
+weighted.average <- sum(w_i * results$CEOCompensation)
 
 ```
 
@@ -210,63 +204,125 @@ weighted_average <- sum(w_i * results$CEOCompensation)
 
 We next get the range of pay by
 
-1. Making a regression model using the same characteristics used for the data imputation in the 990EZ total employees
+1. Making a regression model using the same characteristics used for the data imputation in the 990EZ total employees plus gender and location. 
+
+2. Getting the residuals of this model as percentages of their original statistics. 
+
+3. Find the 10\% and 90\% quantiles of these percentage residuals.
+
+4. Report final suggested pay range as  weighted.average + weighted.average * quants. 
 
 
 ```{r}
-dat.model <- results
+dat.model <- results %>%
+  select(FormYr, TotalAssests, GrossReceipts, TotalExpense, TotalEmployee, MajorGroup, State, UNIV, HOSP, LocationType, Gender, CEOCompensation) %>%
+  #make numierics log
+  dplyr::mutate(log.assests = log(TotalAssests + 1, 10)) %>%
+  dplyr::mutate(log.gross = log(GrossReceipts + 1, 10)) %>%
+  dplyr::mutate(log.expense = log(TotalExpense + 1,  10)) %>%
+  dplyr::mutate(log.employee= log(TotalEmployee + 1, 10)) %>%
+  #make categoricals factors
+  dplyr::mutate(FormYr = as.factor(FormYr )) %>%
+  dplyr::mutate(MajorGroup = as.factor(MajorGroup )) %>%
+  dplyr::mutate(UNIV = as.factor(UNIV )) %>%
+  dplyr::mutate(HOSP = as.factor(HOSP )) %>%
+  dplyr::mutate(State = as.factor(State )) %>%
+  dplyr::mutate(LocationType = as.factor(LocationType )) %>%
+  dplyr::mutate(Gender = as.factor(Gender )) %>%
 
-#make everything factors
-dat.model$FormYr <- as.factor(dat.model$FormYr )
-dat.model$MajorGroup <- as.factor(dat.model$MajorGroup)
-dat.model$UNIV <- as.factor(dat.model$UNIV )
-dat.model$HOSP <- as.factor(dat.model$HOSP )
-dat.model$State <- as.factor(dat.model$State)
+  #get ride of things not needed in the model
+  select(-c(TotalAssests, GrossReceipts, TotalExpense, TotalEmployee ))
+
+# #make everything factors
+# dat.model$FormYr <- as.factor(dat.model$FormYr )
+# dat.model$MajorGroup <- as.factor(dat.model$MajorGroup)
+# dat.model$UNIV <- as.factor(dat.model$UNIV )
+# dat.model$HOSP <- as.factor(dat.model$HOSP )
+# dat.model$State <- as.factor(dat.model$State)
+# dat.model$LocationType <- as.factor(dat.model$LocationType)
 
 #only use complete data
 dat.model <- na.omit(dat.model)
 
-form <- "CEOCompensation ~ FormYr + TotalAssests + GrossReceipts + TotalExpense + TotalEmployee"
+values_count <- sapply(lapply(dat.model, unique), length) 
 
-#if there is more than one major group, add it
-if(length(unique(search$MajorGroup)) > 1){
-  form <- c(form, " + MajorGroup")
-}
-
-#if there is more than one state, add it
-if(length(unique(search$State)) > 1){
-  form <- c(form, " + State")
-}
-
-#if we are considering Universities and non-Universities, include UNIV
-if(search$UNIV == 2){
-  form <- c(form, " + UNIV")
-}
-
-#if we are considering hospitals and non-hospitals, include HOSP
-if(search$HOSP == 2){
-  form <- c(form, " + HOSP")
-}
-
-form <- stats::formula(form)
-
-
-mod <- lm(form , data = dat.model )
+mod <- lm(CEOCompensation ~ ., dat.model[ , values_count > 1])    
 
 
 #get residuals as a percentage of their original value
 resids <- mod$residuals
 per <- resids / dat.model$CEOCompensation / 100
-quants <- quantile(per, c(0.05, 0.95))
+quants <- quantile(per, c(0.10, 0.90)) #get rid of the bonus years 
 
-CI <- weighted_average + weighted_average * quants
+
+suggested.range<- weighted.average + weighted.average * quants
 
 #the range of values is
-CI
-weighted_average
+suggested.range
+weighted.average
 ```
 
 
+
+#### Gender adjusted 
+
+```{r}
+
+#get the beta-hat for being a male 
+#side note the p-value changes greatly with the inputs but this makes senes
+
+diff <- unname(mod$coefficients["GenderM"])
+
+### Exactly the same as doing this 
+# 
+# #make all the women coded as men 
+# dat.women <- dat.model %>%
+#   filter(Gender == "F") 
+# 
+# dat.women.as.men <- dat.women%>%
+#   mutate(Gender = "M")
+# 
+# #get the predicted values with women coded as men
+# y.hat.women <- predict(mod, dat.women.as.men)
+# 
+# #get the average differnce between the gender adjusted predicted value and the original model predicted values
+# y.hat.orig <- predict(mod, dat.women)
+# diff <- mean(abs(y.hat.women - y.hat.orig))
+
+
+#get the percentage residuals of the women 
+y.hat.orig <- mod$fitted.values
+is.female <- dat.model$Gender == "F"
+
+#only add diff if the CEO is a women
+y.hat.adjusted <- y.hat.orig + diff*is.female
+
+#get new residual
+resid.adjusted <- dat.model$CEOCompensation - y.hat.adjusted
+per.adjusted <- resid.adjusted /( dat.model$CEOCompensation + diff*is.female) / 100
+quants.adjusted <- quantile(per.adjusted, c(0.10, 0.90)) 
+
+suggested.range.adjusted <- weighted.average + weighted.average * quants.adjusted
+
+#the range of values is
+suggested.range.adjusted
+weighted.average
+
+###### exploring the differences 
+
+plot(y.hat.orig, y.hat.adjusted)
+abline(0, 1)
+
+#lower quantiles comes up
+quantile(y.hat.orig, c(0, 10, 25, 50, 75, 90, 100)/100)
+quantile(y.hat.adjusted, c(0, 10, 25, 50, 75, 90, 100)/100)
+
+quantile(per, c(0, 10, 25, 50, 75, 90, 100)/100)
+quantile(per.adjusted, c(0, 10, 25, 50, 75, 90, 100)/100)
+```
+
+
+side note about p-values: sometimes the p-value can get up to something like .2. Even though that is conventionally high, I don't think the traditional p-value cut offs are appropriate in this scenario. In my opinion, this is enough for us to consider worth looking at. I am also very opinionated about p-values so many may not agree with this stance. 
 
 
 #### Exploring the data 

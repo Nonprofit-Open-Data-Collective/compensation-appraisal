@@ -279,8 +279,15 @@ dat.final <- rbind(dat.990, dat.EZ) %>%
 
 
 
+### Remove these rows. They have no useful data because too many NA's 
+#plus they are causing issues in the HEOM function 
+#13072 13075 13083 13103 13106 13111 13114 13117 13127 13139 13142
 
+get.rid.of <- which(is.na(dat.final$MajorGroup) & is.na(dat.final$NTEE) & is.na(dat.final$NTEE.CC))
+get.rid.of <- c(get.rid.of, 13139, 13142)
 
+dat.final <- dat.final[ -get.rid.of, ]
+  
 
 
 #### Save ####

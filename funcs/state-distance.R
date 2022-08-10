@@ -13,6 +13,10 @@ state_distance <- function(org.state, compare.state ){
   ## Notes
   # region data table is in global.R
   
+  if(is.null(compare.state) | is.na(compare.state)){
+    return(1)
+  }
+  
   
   #if they match return 0
   if(org.state == compare.state){
