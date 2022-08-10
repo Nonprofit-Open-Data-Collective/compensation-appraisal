@@ -1,5 +1,5 @@
 ---
-title: "Urban's CEO Compensation Appasial Toll Results"
+title: "Urban Institute's CEO Compensation Appasial Tool Results"
 output: pdf_document
 params:
   dat.final: NA
