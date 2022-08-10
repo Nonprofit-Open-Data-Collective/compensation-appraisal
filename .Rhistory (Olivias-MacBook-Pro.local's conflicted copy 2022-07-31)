@@ -1,0 +1,512 @@
+ifelse(dat.filtered$LocationType[i] %in% search$Loc, weight.loc, 1 ))
+D[i, "UNIV"] <- ifelse(dat.filtered$UNIV[i] == org$UNIV, 0 , 1)
+D[i, "HOSP"] <- ifelse(dat.filtered$HOSP[i] == org$HOSP, 0 , 1)
+}
+# Get distance
+#this number will be between 0 and 1
+# closer to 0 = filtered org is closer to input org, closer to 1 = filtered or is farther away from input org
+dat.filtered$dist <- rowSums(D) / A #normalize by number of matched attributes.
+dat.ret <- dat.filtered %>%
+arrange(dist) %>%
+select(-c(log.expense, log.employee))%>%
+#slice(1:100) %>%
+mutate(Rank = row_number()) %>%
+relocate(Rank)
+return(dat.ret)
+}
+### testing
+# View(HEOM_with_weights(org, dat.filtered))
+########### Example for mid summer presentation ##########3
+org <- list(State = "DC",
+MajorGroup = 2,
+NTEE = "B",
+NTEE.CC = "B92",
+UNIV = FALSE,
+HOSP = FALSE,
+TotalExpense = 300000,
+TotalEmployee = 3,
+Loc = "Metropolitan"
+)
+#search criteria
+search <- list(FormYr = c(2018, 2019),
+State = c("VA", "DC", "MD"),
+MajorGroup = 2,
+NTEE = c("B"),
+NTEE.CC = NA, #no hard matching on this criteria aaaa
+UNIV = 1,
+HOSP = 1,
+TotalExpense = c(0, 600000),
+TotalEmployee = c(0, 10),
+Loc = c("Metropolitan")
+)
+#True is hard match, FALSE is soft match
+hard <- list(FormYr = FALSE,
+State = FALSE,
+MajorGroup = FALSE,
+NTEE = FALSE,
+NTEE.CC = FALSE,
+UNIV = TRUE,
+HOSP = TRUE,
+TotalExpense = TRUE,
+TotalEmployee = TRUE,
+Loc = TRUE
+)
+source("funcs/dat-filtering-hard.R")
+dat.filtered <- dat_filtering_hard(search, hard)
+results <- HEOM_with_weights(org, search, dat.filtered)
+View(results)
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+?currencyInput
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+server <- function(input, output) {
+output$plot <- renderPlot({
+input$goPlot # Re-run when button is clicked
+# Create 0-row data frame which will be used to store data
+dat <- data.frame(x = numeric(0), y = numeric(0))
+withProgress(message = 'Making plot', value = 0, {
+# Number of times we'll go through the loop
+n <- 10
+for (i in 1:n) {
+# Each time through the loop, add another row of data. This is
+# a stand-in for a long-running computation.
+dat <- rbind(dat, data.frame(x = rnorm(1), y = rnorm(1)))
+# Increment the progress bar, and update the detail text.
+incProgress(1/n, detail = paste("Doing part", i))
+# Pause for 0.1 seconds to simulate a long computation.
+Sys.sleep(0.1)
+}
+})
+plot(dat$x, dat$y)
+})
+}
+ui <- shinyUI(basicPage(
+plotOutput('plot', width = "300px", height = "300px"),
+actionButton('goPlot', 'Go plot')
+))
+shinyApp(ui = ui, server = server)
+runApp()
+runApp()
+?screen
+runApp()
+?selectInput
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+shiny::runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+?conditionalPanel
+runApp()
+runApp()
+shiny::runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+?column
+runApp()
+runApp()
+runApp()
+shiny::runApp()
+runApp()
+list(a = c(1,2), b = 3)
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+ret <- c()
+c(ret, "A")
+runApp()
+HEOM_with_weights <- function(org, search, dat.filtered){
+### Inputs
+# org = the list of organization characteristics
+# search = the list of search criteria
+# dat.filtered = the data frame to compare org to, output of dat-filtering-hard function
+#   n = # of other orgs to compare to = number of rows in dat.filtered
+### Output
+# list of (max) top 100 closest organizations with their weights
+### High weighted match on matching on MajorGroup, UNIV, HOSP
+### Low weighted match on NTEE, NTEE.CC, STATE
+### Euclidian distance on log(Total Expense) and Total Employee
+#set up distance column and transform Total Expenses to a log_10 scale
+dat.filtered <- dat.filtered%>%
+mutate(dist = NA) %>%
+mutate(log.expense = log(TotalExpense+1, base = 10)) %>%
+mutate(log.employee = log(TotalEmployee+1, base = 10))
+#needed values
+A <- 9 #number of attributes to compare
+n <- dim(dat.filtered)[1] #number of points in the filtered data set
+#initialize storage
+D <- as.data.frame(matrix(0, nrow = n, ncol = A) )
+colnames(D) <- c("logTotalExpense", "TotalEmployee", "State", "MajorGroup", "NTEE", "NTEE.CC", "UNIV", "HOSP", "Loc" )
+#get categorical comparisons tables for probabilities
+# State, Major Group, NTEE, NTEE.CC, UNIV, HOSP, and Location type
+# d <- 0 if org i attribute == org attribute
+# d <- p matching else if org i attribute %in% search criteria
+# d <- 1 o.w.
+#tab.state <- base::table(dat.filtered$State) / n
+tab.majorgroup <- base::table(dat.filtered$MajorGroup) / n
+tab.ntee <- base::table(dat.filtered$NTEE) / n
+tab.ntee.cc <- base::table(dat.filtered$NTEE.CC) / n
+tab.univ <- base::table(dat.filtered$UNIV) / n
+tab.hosp <- base::table(dat.filtered$HOSP) / n
+tab.loc <- base::table(dat.filtered$LocationType) / n
+#Get weights for categorical variables,
+#weight = 0 if there was a hard matching on only one option
+#weight = 0 if exact match with multiple hard matching options, = 1 if no match with multiple hard mathcing criteria
+#weight.state <- sum(tab.state[which(names(tab.state) %in% search$State)])
+weight.majorgroup <- sum(tab.majorgroup[which(names(tab.majorgroup) %in% search$MajorGroup)])
+weight.ntee <- sum(tab.ntee[which(names(tab.ntee) %in% search$NTEE)])
+#weight.ntee.cc <- sum(tab.ntee.cc[which(names(tab.ntee.cc) %in% search$NTEE.CC)])
+weight.loc <- sum(tab.loc[which(names(tab.loc) %in% search$Loc)])
+#for loop
+for(i in 1:n){
+#first do numerical comparisons
+## distance for log.expense
+r.log.expense <- max(dat.filtered$log.expense) -  min(dat.filtered$log.expense) #range
+D[i, "logTotalExpense"] <- abs(dat.filtered$log.expense[i] - log(org$TotalExpense, 10)) / r.log.expense
+## distance for total employee
+r.log.employee <- max(dat.filtered$log.employee) -  min(dat.filtered$log.employee) #range
+D[i, "TotalEmployee"] <- abs(dat.filtered$log.employee[i] - log(org$TotalEmployee, 10)) / r.log.employee
+# Next do categorical comparisons
+#State has its own function
+D[i, "State"] <- state_distance(org$State, dat.filtered$State[i])
+# Every Categorical but state uses proportions as weights
+D[i, "MajorGroup"] <- ifelse(dat.filtered$MajorGroup[i] == org$MajorGroup, 0,
+ifelse(dat.filtered$MajorGroup[i] %in% search$MajorGroup, weight.majorgroup, 1 ))
+D[i, "NTEE"] <- ifelse(dat.filtered$NTEE[i] == org$NTEE, 0,
+ifelse(dat.filtered$NTEE[i] %in% search$NTEE, weight.ntee, 1 ))
+# D[i, "NTEE.CC"] <- ifelse(dat.filtered$NTEE.CC[i] == org$NTEE.CC, 0,
+#                        ifelse(dat.filtered$NTEE.CC[i] %in% search$NTEE.CC, weight.ntee.cc, 1 ))
+D[i, "Loc"] <-  ifelse(dat.filtered$LocationType[i] == org$Loc, 0,
+ifelse(dat.filtered$LocationType[i] %in% search$Loc, weight.loc, 1 ))
+D[i, "UNIV"] <- ifelse(dat.filtered$UNIV[i] == org$UNIV, 0 , 1)
+D[i, "HOSP"] <- ifelse(dat.filtered$HOSP[i] == org$HOSP, 0 , 1)
+}
+# Get distance
+#this number will be between 0 and 1
+# closer to 0 = filtered org is closer to input org, closer to 1 = filtered or is farther away from input org
+dat.filtered$dist <- rowSums(D) / A #normalize by number of matched attributes.
+dat.ret <- dat.filtered %>%
+arrange(dist) %>%
+select(-c(log.expense, log.employee))%>%
+#slice(1:100) %>%
+mutate(Rank = row_number()) %>%
+relocate(Rank)
+return(dat.ret)
+}
+### testing
+# View(HEOM_with_weights(org, dat.filtered))
+########### Example for mid summer presentation ##########3
+org <- list(State = "DC",
+MajorGroup = 2,
+NTEE = "B",
+NTEE.CC = "B92",
+UNIV = FALSE,
+HOSP = FALSE,
+TotalExpense = 300000,
+TotalEmployee = 3,
+Loc = "Metropolitan"
+)
+#search criteria
+search <- list(FormYr = c(2018, 2019),
+State = c("VA", "DC", "MD"),
+MajorGroup = 2,
+NTEE = c("B"),
+NTEE.CC = NA, #no hard matching on this criteria aaaa
+UNIV = 1,
+HOSP = 1,
+TotalExpense = c(0, 600000),
+TotalEmployee = c(0, 10),
+Loc = c("Metropolitan")
+)
+#True is hard match, FALSE is soft match
+#no hard/soft option for univ or hosp
+hard <- list(FormYr = FALSE,
+State = FALSE,
+MajorGroup = FALSE,
+NTEE = FALSE,
+NTEE.CC = FALSE,
+TotalExpense = TRUE,
+TotalEmployee = TRUE,
+Loc = TRUE
+)
+source("funcs/dat-filtering-hard.R")
+dat.filtered <- dat_filtering_hard(search, hard)
+results <- HEOM_with_weights(org, search, dat.filtered)
+results
+View(results)
+knitr::opts_knit$set(root.dir = normalizePath("~/Dropbox/Olivia/Conflict/school/UI/Project6/compensation-appraisal"))
+#org characteristics
+org <- list(State = "DC",
+MajorGroup = 2,
+NTEE = "B",
+NTEE.CC = "B92",
+UNIV = FALSE,
+HOSP = FALSE,
+TotalExpense = 300000,
+TotalEmployee = 3,
+Loc = "Metropolitan"
+)
+#search criteria
+search <- list(FormYr = c(2018, 2019),
+State = c("VA", "DC", "MD"),
+MajorGroup = 2,
+NTEE = c("B"),
+NTEE.CC = NA, #no hard matching on this criteria aaaa
+UNIV = 1,
+HOSP = 1,
+TotalExpense = c(0, 600000),
+TotalEmployee = c(0, 10),
+Loc = c("Metropolitan")
+)
+#True is hard match, FALSE is soft match
+hard <- list(FormYr = FALSE,
+State = FALSE,
+MajorGroup = TRUE,
+NTEE = TRUE,
+NTEE.CC = FALSE,
+TotalExpense = TRUE,
+TotalEmployee = TRUE,
+Loc = TRUE
+)
+setwd("~/Dropbox/Olivia/Conflict/school/UI/Project6/compensation-appraisal")
+source("funcs/dat-filtering-hard.R")
+dat.filtered <- dat_filtering_hard(search, hard)
+#say for whatever reason the user does not want to include these orgs
+rows.select <- c(1,2,3,4,5)
+dat.filtered <- dat.filtered[ -rows.select, ]
+setwd("~/Dropbox/Olivia/Conflict/school/UI/Project6/compensation-appraisal")
+source("funcs/distance-metric.R")
+source("funcs/state-distance.R")
+results <- HEOM_with_weights(org, search, dat.filtered)
+plot(results$TotalExpense, results$CEOCompensation)
+plot(results$TotalEmployee, results$CEOCompensation)
+hist(results$CEOCompensation, breaks = 20)
+boxplot(results$CEOCompensation)
+quantile(results$CEOCompensation, c(0, 10, 25, 50, 75, 90, 100)/ 100)
+mean(results$CEOCompensation)
+ggplot(results) +
+geom_point(aes(x = TotalExpense, y = CEOCompensation, color = dist))
+mean(results1$CEOCompensation[results1$dist <= 0.1])
+results1 <- results[results$TotalEmployee > 0, ]
+hist(results1$CEOCompensation, breaks = 50)
+plot(results1$TotalExpense, results1$CEOCompensation)
+plot(results1$TotalEmployee, results1$CEOCompensation)
+boxplot(results1$CEOCompensation)
+quantile(results1$CEOCompensation, c(0, 10, 25, 50, 75, 90, 100)/ 100)
+mean(results1$CEOCompensation)
+ggplot(results1) +
+geom_point(aes(x = TotalExpense, y = CEOCompensation, color = dist))
+#take the average of CEO pay whose distance is <0.1
+mean(results1$CEOCompensation[results1$dist <= 0.1])
+hist(results$dist, breaks = 20)
+boxplot(results$dist)
+quantile(results$dist, c(0, 10, 25, 50, 75, 90, 100)/ 100)
+runApp()
+?screen
+?glide
+shiny::runApp()
+library(shiny)
+library(shinyWidgets)
+ui <- fluidPage(
+tags$h2("Sweet Alert examples"),
+actionButton(
+inputId = "success",
+label = "Launch a success sweet alert",
+icon = icon("check")
+),
+actionButton(
+inputId = "error",
+label = "Launch an error sweet alert",
+icon = icon("remove")
+),
+actionButton(
+inputId = "sw_html",
+label = "Sweet alert with HTML",
+icon = icon("thumbs-up")
+)
+)
+server <- function(input, output, session) {
+observeEvent(input$success, {
+show_alert(
+title = "Success !!",
+text = "All in order",
+type = "success"
+)
+})
+observeEvent(input$error, {
+show_alert(
+title = "Error !!",
+text = "It's broken...",
+type = "error"
+)
+})
+observeEvent(input$sw_html, {
+show_alert(
+title = NULL,
+text = tags$span(
+tags$h3("With HTML tags",
+style = "color: steelblue;"),
+"In", tags$b("bold"), "and", tags$em("italic"),
+tags$br(),
+"and",
+tags$br(),
+"line",
+tags$br(),
+"breaks",
+tags$br(),
+"and an icon", icon("thumbs-up")
+),
+html = TRUE
+)
+})
+}
+if (interactive())
+shinyApp(ui, server)
+# Ouptut in alert ----
+library(shiny)
+library(shinyWidgets)
+ui <- fluidPage(
+tags$h1("Click the button to open the alert"),
+actionButton(
+inputId = "sw_html",
+label = "Sweet alert with plot"
+)
+)
+server <- function(input, output, session) {
+observeEvent(input$sw_html, {
+show_alert(
+title = "Yay a plot!",
+text = tags$div(
+plotOutput(outputId = "plot"),
+sliderInput(
+inputId = "clusters",
+label = "Number of clusters",
+min = 2, max = 6, value = 3, width = "100%"
+)
+),
+html = TRUE,
+width = "80%"
+)
+})
+output$plot <- renderPlot({
+plot(Sepal.Width ~ Sepal.Length,
+data = iris, col = Species,
+pch = 20, cex = 2)
+points(kmeans(iris[, 1:2], input$clusters)$centers,
+pch = 4, cex = 4, lwd = 4)
+})
+}
+shinyApp(ui, server)
+library(shiny)
+library(shinyvalidate)
+ui <- fluidPage(
+textInput("name", "Name"),
+textInput("email", "Email")
+)
+server <- function(input, output, session) {
+iv <- InputValidator$new()
+iv$add_rule("name", sv_required())
+iv$add_rule("email", sv_required())
+iv$add_rule("email", sv_email())
+iv$enable()
+}
+shinyApp(ui, server)
+library(shinyvalidate)
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+View(server)
+head(dat$NTEE.CC)
+runApp()
+View(HEOM_with_weights)
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+?sv_required
+?sv_gte
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()

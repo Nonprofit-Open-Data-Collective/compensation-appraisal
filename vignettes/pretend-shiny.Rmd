@@ -1,0 +1,385 @@
+---
+title: "Shiny Workflow"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+```{r setup}
+    knitr::opts_knit$set(root.dir = normalizePath("~/Dropbox/Olivia/Conflict/school/UI/Project6/compensation-appraisal")) 
+```
+
+This document explains how the shiny app will take in inputs from the user, how we process the information, then how we report it. 
+
+## Step 1: User Inputs 
+
+The user will input their organization characteristics, their search/market criteria, and if they want to hard or soft match on each criteria. 
+
+The possible organization characteristics 
+
+- State (AL, AK, ..., WY)
+
+- What type of location are you in? (Metropolitan, Rural)
+
+- Major Group (1, 2, ..., 10). (https://nccs.urban.org/project/national-taxonomy-exempt-entities-ntee-codes)
+
+- NTEE Code (A, ... , Z) ( https://nccs.urban.org/project/national-taxonomy-exempt-entities-ntee-codes)
+
+- Does your organization fall into any of following NTEE-CC categories? (https://nccs.urban.org/publication/irs-activity-codes)
+
+  - 01: Alliance/Advocacy Organizations
+  
+  - 02: Management and Technical Assistance
+
+  - 03: Professional Societies/Associations
+
+  - 05: Research Institutes and/or Public Policy Analysis
+
+  - 11: Monetary Support - Single Organization
+
+  - 12: Monetary Support - Multiple Organizations
+
+  - 19: Non-monetary Support Not Elsewhere Classified (N.E.C.)
+  
+  - 00: I am a regular non-profit. I do not fit into any of these specaltiy organizations. 
+
+
+- Are you a univeristy? (Yes or No)
+
+- Are you a hospital? (Yes or No)
+
+- Total Expenses (0 - Inf)
+
+- Total Full time equivalent employees (0 - Inf)
+
+Here is a pretend orginization: 
+
+```{r}
+#org characteristics 
+org <- list(State = "DC",
+            MajorGroup = 2,
+            NTEE = "B", 
+            NTEE.CC = NA,
+            UNIV = FALSE,
+            HOSP = FALSE,
+            TotalExpense = 3000000,
+            TotalEmployee = 9,
+            Loc = "Rural"
+)
+
+```
+
+
+The user then inputs their search criteria. They specify which types of organizations they want to compare themselves to and if each criteria is a hard or soft match. (Hard match is we will only consider what they have provided in that criteria and then if there are multiple options listed we will prioritize based on exact matches, and a soft match is we will prioritize organizations that meet their search criteria and exact matches). The search criteria is: 
+
+
+
+
+- List of States (AL, AK, ..., WY)
+
+- What type of locations do you want to consider? (Urban, Suburban, Rural)
+
+- Major Group (1, 2, ..., 10). (https://nccs.urban.org/project/national-taxonomy-exempt-entities-ntee-codes)
+
+- NTEE Code (A, ... , Z) ( https://nccs.urban.org/project/national-taxonomy-exempt-entities-ntee-codes)
+
+- Do you want to include any organizations that have the following Common Codes codes in your search? (https://nccs.urban.org/publication/irs-activity-codes)
+
+  - 01 Alliance/Advocacy Organizations
+  
+  - 02 Management and Technical Assistance
+
+  - 03 Professional Societies/Associations
+
+  - 05 Research Institutes and/or Public Policy Analysis
+
+  - 11 Monetary Support - Single Organization
+
+  - 12 Monetary Support - Multiple Organizations
+
+  - 19 Non-monetary Support Not Elsewhere Classified (N.E.C.)
+  
+- Do you want to include universities?  (1- no, 2-yes, I want to include both orgs that are and are not universities, 3 - yes, I only want to consider universities)
+
+- Do you want to include hospitals?  (1- no, 2-yes, I want to include both orgs that are and are not hospitals, 3 - yes, I only want to consider hospitals)
+
+- Range of Total Expenses c(min expenses, max expenses) (default is c(0,Inf))
+
+- Range of Full Time equivalent Expenses c(min expenses, max expenses)(default is c(0,Inf))
+
+If any criteria is a NA value, there will be no hard matching on that criteria. (This will mostly come up with NTEE and NTEE-CC Codes)
+
+For each criteria, the user then specifies if they want a hard or soft match. If the user chooses hard match, we will filter out. There is no hard or soft options for UNIV and HOSP.
+
+An example search criteria is below: 
+
+```{r}
+#search criteria
+search <- list(State = c("VA", "DC", "MD"),
+               MajorGroup = 2,
+               NTEE = c("B"),
+               NTEE.CC = NA, 
+               UNIV = 1,
+               HOSP = 1,
+               TotalExpense = c(1000000, 6000000),
+               TotalEmployee = c(0, 100),
+               Loc = c("Metropolitan")
+)
+
+#True is hard match, FALSE is soft match
+hard <- list(State = FALSE,
+             MajorGroup = TRUE,
+             NTEE = TRUE, 
+             NTEE.CC = FALSE,
+             TotalExpense = TRUE,
+             TotalEmployee = TRUE,
+             Loc = TRUE
+)
+
+```
+
+
+
+## Step 2: Behind the Scenes computations
+
+#### Step 2A: 
+
+We first filter the data to match their hard search criteria using the `dat_filtering_hard` function in the func/dat-filtering-hard.R directory. 
+
+```{r}
+setwd("~/Dropbox/Olivia/Conflict/school/UI/Project6/compensation-appraisal")
+source("funcs/dat-filtering-hard.R")
+dat.filtered <- dat_filtering_hard(search, hard)
+```
+
+#### Step 2B:
+
+We next allow the user to deselect organizations they do not want to include in their search. In the shiny app we will use the DT::dataTable options. 
+
+```{r}
+#say for whatever reason the user does not want to include these orgs
+rows.select <- c(1,2,3,4,5)
+dat.filtered <- dat.filtered[ -rows.select, ]
+```
+
+#### Step 2C: 
+
+We then take these selected options and find the distance of each org in the search criteria to the user's org. We use the `HEOM_with_weights` function in the funcs/distance-metric.R file. 
+
+There are 9 matching criteria: log10(Total Expenses), Total Employees, State, Major Group, NTEE, NTEE.CC, UNIV, HOSP,  and Location type. We do not match on year or EZ Qualification even though they are a filtering criteria. 
+
+```{r}
+setwd("~/Dropbox/Olivia/Conflict/school/UI/Project6/compensation-appraisal")
+source("funcs/distance-metric.R")
+source("funcs/state-distance.R")
+results <- HEOM_with_weights(org, search, dat.filtered)
+
+```
+## Step 3: Suggest CEO Compensation
+
+We then use the distance metrics to suggest a range for a "reasonable" CEO compensation using a distance weighted mean, https://encyclopediaofmath.org/wiki/Distance-weighted_mean. I do not know if this is the right type of statistic to calculate. 
+
+
+#### Get the weighted average using the distance metric 
+
+Let $d_i$ be the distance metric for each organization. $i$, in the comparison set. Let $w_i = \frac{1-d_i}{\sum_i(1-d_i)}$ be the weight for each organziation. Let $C_i$ be the CEO compensation (in 2022 dollars) of organization i. 
+
+
+We then use the weighted average as the mean suggested pay as $\frac{}{}$ 
+
+```{r}
+
+d_i <- results$dist
+sum_w <- sum(1 - d_i)
+w_i <- (1-d_i) / sum_w
+#sum(w_i) = 1
+
+weighted.average <- sum(w_i * results$CEOCompensation)
+
+```
+
+
+#### Range of Pay
+
+We next get the range of pay by
+
+1. Making a regression model using the same characteristics used for the data imputation in the 990EZ total employees plus gender and location. 
+
+2. Getting the residuals of this model as percentages of their original statistics. 
+
+3. Find the 10\% and 90\% quantiles of these percentage residuals.
+
+4. Report final suggested pay range as  weighted.average + weighted.average * quants. 
+
+
+```{r}
+dat.model <- results %>%
+  select(FormYr, TotalAssests, GrossReceipts, TotalExpense, TotalEmployee, MajorGroup, State, UNIV, HOSP, LocationType, Gender, CEOCompensation) %>%
+  #make numierics log
+  dplyr::mutate(log.assests = log(TotalAssests + 1, 10)) %>%
+  dplyr::mutate(log.gross = log(GrossReceipts + 1, 10)) %>%
+  dplyr::mutate(log.expense = log(TotalExpense + 1,  10)) %>%
+  dplyr::mutate(log.employee= log(TotalEmployee + 1, 10)) %>%
+  #make categoricals factors
+  dplyr::mutate(FormYr = as.factor(FormYr )) %>%
+  dplyr::mutate(MajorGroup = as.factor(MajorGroup )) %>%
+  dplyr::mutate(UNIV = as.factor(UNIV )) %>%
+  dplyr::mutate(HOSP = as.factor(HOSP )) %>%
+  dplyr::mutate(State = as.factor(State )) %>%
+  dplyr::mutate(LocationType = as.factor(LocationType )) %>%
+  dplyr::mutate(Gender = as.factor(Gender )) %>%
+
+  #get ride of things not needed in the model
+  select(-c(TotalAssests, GrossReceipts, TotalExpense, TotalEmployee ))
+
+# #make everything factors
+# dat.model$FormYr <- as.factor(dat.model$FormYr )
+# dat.model$MajorGroup <- as.factor(dat.model$MajorGroup)
+# dat.model$UNIV <- as.factor(dat.model$UNIV )
+# dat.model$HOSP <- as.factor(dat.model$HOSP )
+# dat.model$State <- as.factor(dat.model$State)
+# dat.model$LocationType <- as.factor(dat.model$LocationType)
+
+#only use complete data
+dat.model <- na.omit(dat.model)
+
+values_count <- sapply(lapply(dat.model, unique), length) 
+
+mod <- lm(CEOCompensation ~ ., dat.model[ , values_count > 1])    
+
+
+#get residuals as a percentage of their original value
+resids <- mod$residuals
+per <- resids / dat.model$CEOCompensation / 100
+quants <- quantile(per, c(0.10, 0.90)) #get rid of the bonus years 
+
+
+suggested.range<- weighted.average + weighted.average * quants
+
+#the range of values is
+suggested.range
+weighted.average
+```
+
+
+
+#### Gender adjusted 
+
+```{r}
+
+#get the beta-hat for being a male 
+#side note the p-value changes greatly with the inputs but this makes senes
+
+diff <- unname(mod$coefficients["GenderM"])
+
+### Exactly the same as doing this 
+# 
+# #make all the women coded as men 
+# dat.women <- dat.model %>%
+#   filter(Gender == "F") 
+# 
+# dat.women.as.men <- dat.women%>%
+#   mutate(Gender = "M")
+# 
+# #get the predicted values with women coded as men
+# y.hat.women <- predict(mod, dat.women.as.men)
+# 
+# #get the average differnce between the gender adjusted predicted value and the original model predicted values
+# y.hat.orig <- predict(mod, dat.women)
+# diff <- mean(abs(y.hat.women - y.hat.orig))
+
+
+#get the percentage residuals of the women 
+y.hat.orig <- mod$fitted.values
+is.female <- dat.model$Gender == "F"
+
+#only add diff if the CEO is a women
+y.hat.adjusted <- y.hat.orig + diff*is.female
+
+#get new residual
+resid.adjusted <- dat.model$CEOCompensation - y.hat.adjusted
+per.adjusted <- resid.adjusted /( dat.model$CEOCompensation + diff*is.female) / 100
+quants.adjusted <- quantile(per.adjusted, c(0.10, 0.90)) 
+
+suggested.range.adjusted <- weighted.average + weighted.average * quants.adjusted
+
+#the range of values is
+suggested.range.adjusted
+weighted.average
+
+###### exploring the differences 
+
+plot(y.hat.orig, y.hat.adjusted)
+abline(0, 1)
+
+#lower quantiles comes up
+quantile(y.hat.orig, c(0, 10, 25, 50, 75, 90, 100)/100)
+quantile(y.hat.adjusted, c(0, 10, 25, 50, 75, 90, 100)/100)
+
+quantile(per, c(0, 10, 25, 50, 75, 90, 100)/100)
+quantile(per.adjusted, c(0, 10, 25, 50, 75, 90, 100)/100)
+```
+
+
+side note about p-values: sometimes the p-value can get up to something like .2. Even though that is conventionally high, I don't think the traditional p-value cut offs are appropriate in this scenario. In my opinion, this is enough for us to consider worth looking at. I am also very opinionated about p-values so many may not agree with this stance. 
+
+
+#### Exploring the data 
+
+
+
+```{r}
+
+plot(results$TotalExpense, results$CEOCompensation)
+plot(results$TotalEmployee, results$CEOCompensation)
+
+
+hist(results$CEOCompensation, breaks = 20)
+boxplot(results$CEOCompensation)
+quantile(results$CEOCompensation, c(0, 10, 25, 50, 75, 90, 100)/ 100)
+mean(results$CEOCompensation)
+
+
+ggplot(results) +
+  geom_point(aes(x = TotalExpense, y = CEOCompensation, color = dist))
+
+mean(results$CEOCompensation[results1$dist <= 0.1])
+
+
+```
+
+#### Removing the orgs with 0 employees 
+
+```{r}
+results1 <- results[results$TotalEmployee > 0, ]
+hist(results1$CEOCompensation, breaks = 50)
+
+plot(results1$TotalExpense, results1$CEOCompensation)
+plot(results1$TotalEmployee, results1$CEOCompensation)
+
+
+boxplot(results1$CEOCompensation)
+quantile(results1$CEOCompensation, c(0, 10, 25, 50, 75, 90, 100)/ 100)
+mean(results1$CEOCompensation)
+
+
+ggplot(results1) +
+  geom_point(aes(x = TotalExpense, y = CEOCompensation, color = dist))
+
+#take the average of CEO pay whose distance is <0.1
+mean(results1$CEOCompensation[results1$dist <= 0.1])
+
+```
+
+
+
+
+Exploring the distributions of distance metrics 
+
+```{r}
+hist(results$dist, breaks = 20)
+boxplot(results$dist)
+#quantile(results$dist, c(0, 10, 25, 50, 75, 90, 100)/ 100)
+
+```

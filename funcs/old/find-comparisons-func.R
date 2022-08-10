@@ -65,29 +65,29 @@ find_comparisons <- function(org , search){
 
 ### Testing
 
-# search <- list(form.year = NA,
-#                state = NA,
-#                major.group = NA,
-#                ntee = NA, #need to add input for this
-#                ntee.cc = NA, #need to add input for this
-#                hosp = NA,
-#                univ = NA,
-#                tot.expense = c(-Inf, Inf),
-#                tot.employee = c(0, Inf),
-#                form.type = "990")
-# 
-# 
-# org <- list(FormYr = 2019,
-#             State = "CA",
-#             MajorGroup = "III",
-#             NTEE = NA, #need to add input for this
-#             NTEE.CC = NA, #need to add input for this
-#             UNIV = FALSE,
-#             HOSP = FALSE,
-#             TotalExpense = 300000,
-#             TotalEmployee = 10,
-#             FormType = "990"
-# )
+search <- list(form.year = 2019,
+               state = c("GA", "SC", "AL", "NC", "TN", "MS"),
+               major.group = 3,
+               ntee = NA, #need to add input for this
+               ntee.cc = NA, #need to add input for this
+               hosp = NA,
+               univ = NA,
+               tot.expense = c(-Inf, Inf),
+               tot.employee = c(0, Inf),
+               form.type = "990")
+
+
+org <- list(FormYr = 2019,
+            State = "GA",
+            MajorGroup = 2,
+            NTEE = "B", #need to add input for this
+            NTEE.CC = "B01", #need to add input for this
+            UNIV = FALSE,
+            HOSP = FALSE,
+            TotalExpense = 300000,
+            TotalEmployee = 4,
+            FormType = "990"
+)
 
 
 # find_comparisons(org, search)

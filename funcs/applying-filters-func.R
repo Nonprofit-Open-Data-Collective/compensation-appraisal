@@ -2,7 +2,6 @@
 ### Libraries
 library(dplyr)
 library(readr)
-library(ggplot2)
 
 ##
 #### Read in Data
