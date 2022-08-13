@@ -72,9 +72,8 @@ HEOM_with_weights <- function(org, search, dat.filtered){
     if(is.na(dat.filtered$TotalEmployee[i])){
       D[i, "TotalEmployee"] <- 1
     }else{
-      #r.log.employee <- max(dat.filtered$log.employee) -  min(dat.filtered$log.employee) #range
-      #D[i, "TotalEmployee"] <- abs(dat.filtered$log.employee[i] - log(org$TotalEmployee+1, 10)) / r.log.employee
-      D[i, "TotalEmployee"] <- 0
+      r.log.employee <- max(dat.filtered$log.employee) -  min(dat.filtered$log.employee) #range
+      D[i, "TotalEmployee"] <- abs(dat.filtered$log.employee[i] - log(org$TotalEmployee+1, 10)) / r.log.employee
     }
     
 

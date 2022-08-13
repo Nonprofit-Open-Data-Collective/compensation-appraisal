@@ -1,58 +1,33 @@
-##########################
-### Making Data used for shiny app
-###########################
+---
+title: "Making Data Rodeo"
+author: "Olivia Beck"
+date: '2022-08-12'
+output: pdf_document
+---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
-#### Libraries #### 
+In this vignette, I will describe how I created the data-rodeo/dat-shinyapp.csv file that is used for the entire shiny app and all functions in it. Nothing on this document is evaluated, this is for purely explination purposes. In order to create the dat-shinyapp.csv, open the file making-data-wrangle/creating-dat-shinyapp.R and run the entire script. 
+
+## Step 1: Set Up
+
+First, load in the needed libraries and raw data.
+
+```{r, eval=F}
 library(dplyr)
 library(readr)
 library(stringr)
 
-
-#### Read in Data ####
 dat <- read_csv("data-raw/step-04-ceo-final.csv")
-#length(unique(dat$EIN))
-#13958
 
-#### Explanations for columns in data-by-sector #### 
-
-# FormYr = year filed with the IRS. Options: 2009, 2010, ... , 2019
-# FormType = 990 of 990EZ
-# Name = name or orginization
-# EIN = EIN
-# State = 2 letter abbreviation for state. Options: AK, AL, ... , WY
-# MajorGroup = Major group from NTEE codes from #https://nccs.urban.org/project/national-taxonomy-exempt-entities-ntee-codes
-    # 1. Arts, Culture, and Humanities - A
-    # 2. Education - B
-    # 3. Environment and Animals - C, D
-    # 4. Health - E, F, G, H
-    # 5. Human Services - I, J, K, L, M, N, O, P
-    # 6. International, Foreign Affairs - Q
-    # 7. Public, Societal Benefit - R, S, T, U, V, W
-    # 8. Religion Related - X
-    # 9. Mutual/Membership Benefit - Y
-    # 10. Unknown, Unclassified - Z
-# NTEE = NTEE code. Options: A, B, ... , Z
-# NTEE.CC = NTEE-CC code. Options A01, A02, ... , Z99
-# UNIV = T or F for if organization is a university
-# HOSP = T or F for if organization is a hospital
-# TotalExpense = Total Expenses for that organization with the FormYr
-# TotalEmployee = Total (full time equivalent) employees for that organization with the FormYr
-# GrossReceipts = Gross Receipts for that organization with the FormYr
-# TotalAssets = Total assests for that orginization at the end of the FormYr
-# CEOCompensation= Total CEO compensation for that organization with the FormYr
-# Gender = Gender of the CEO. Options: M, F, U (unknown)
-# TransitionYr = TRUE if the orginization had a trasition of CEO's during that FormYr, FALSE otherwise
+```
 
 
-#### Get 2020 to 2022 inflation rate #### 
-# https://www.bls.gov/data/inflation_calculator.htm
-# $1 in Jan 2020 is worth $1.09 in Jan 2022
-rate.2020.to.2022 <- 1.09
+Next, get rid of any CEO's who are also CFO's, only select the columns we care about, and relabel them appropriately. We want to keep information regarding the EIN, filer name, filing year, total expenses, total employees, total assets, gross receipts, NTEE codes, university/hospital status, transition year status, CEO total compensation, and CEO gender. From this information, we create the variable coding we want to use (i.e. MajorGroup, NTEE, NTEE.CC). 
 
-
-#### Filtering Data #### 
-
+```{r, eval=F}
 dat.sec <- dat %>%
   #get rid of anybody who is also a CFO
   filter(CFO == F) %>%
@@ -86,21 +61,49 @@ dat.sec <- dat %>%
   rename(TotalAssests = TOTALASSETSENDYEAR) %>%
   rename(Gender = gender) %>%
   rename(State = STATE) %>%
-  rename(FormType = FORMTYPE) %>%
+  rename(FormType = FORMTYPE)
+```
+
+
+
+Reassign any org with less than 0 total expenses to just have 0 total expenses. Do the same for total assests. 
+
+```{r, eval = F}
+dat.sec <- dat.sec %>%
   #if TotalExpense<0, assign TotalExpense=0
   mutate(TotalExpense = case_when(TotalExpense >= 0 ~ TotalExpense ,
                                   TotalExpense < 0  ~ 0))%>%
   #if TotalAssests<0, assign TotalAssests=0
   mutate(TotalAssests = case_when(TotalAssests >= 0 ~ TotalAssests ,
-                                  TotalAssests < 0  ~ 0))%>%
+                                  TotalAssests < 0  ~ 0))
+
+```
+
+
+Adjust for inflation. The raw data file has all CEO compensation in 2020 dollars. The 2022 inflation has been skyrocketing. We just used January 2022 as the base line for inflation rate, then whenever this project gets published, the inflation rate can easily be changed. 
+
+```{r eval = F}
+dat.sec <- dat.sec %>%
   #Adjust for inflation , *1.09
-  mutate(CEOCompensation = CEOCompensation * rate.2020.to.2022) %>%
+  mutate(CEOCompensation = CEOCompensation * rate.2020.to.2022) 
+```
+
+For each unique organization, only keep the most recent entry. Note, this causes issues for the gender pay gap graph for graphing over time. These issues are discussed in the gender-pay-graph vignette. 
+
+```{r, eval=F}
+dat.sec <- dat.sec %>%
   #Only keep the most recent Year for each unique EIN
   group_by(EIN) %>%
   filter(FormYr==max(FormYr)) %>%
   ungroup()%>%
   #keep distinct entires, there are some entries in original dat that are multiple. 
-  distinct() %>%
+  distinct() 
+```
+
+Change all org names to all caps for consistance. Reorder the table to be more logical. 
+
+```{r, eval = F}
+dat.sec <- dat.sec %>%
   #make org names all caps 
   mutate(Name = toupper(Name)) %>%
   #Reorder columns
@@ -108,15 +111,29 @@ dat.sec <- dat %>%
            TotalExpense, TotalEmployee, GrossReceipts,TotalAssests,
            CEOCompensation, Gender,
            TransitionYr) 
+```
 
-#### Match with FIPS CODES #### 
+## Step 2: Adding location types 
 
+We will be adding location types by FIPS codes and RUCA codes. The BMF files have the FIPS codes for each EIN. We then match FIPS codes to RUCA codes for type of city. We then aggragate RUCA codes into "Metropolitan" or "Rural". 
+
+More information about FIPS codes can be found here: 
+
+More information about RUCA codes can be found here: https://www.ers.usda.gov/data-products/rural-urban-commuting-area-codes/documentation/
+
+First, get all unique EIN's 
+
+```{r, eval = F}
 #Our EIN's 
 ein.ours  <- dat.sec$EIN
+```
 
-#get Fips #'s for geolocations
 
-#only looking at the latest release from each year
+#### Getting FIPS codes 
+
+Get the link for the BMF flies. Some years have multiple files. We used the most recent file for each year. 
+
+```{r, eval = F}
 links <- c("https://nccs-data.urban.org/dl.php?f=bmf/2019/bmf.bm1908.csv", 
            "https://nccs-data.urban.org/dl.php?f=bmf/2018/bmf.bm1812.csv", 
            "https://nccs-data.urban.org/dl.php?f=bmf/2017/bmf.bm1712.csv",
@@ -130,8 +147,11 @@ links <- c("https://nccs-data.urban.org/dl.php?f=bmf/2019/bmf.bm1908.csv",
            "https://nccs-data.urban.org/dl.php?f=bmf/2009/bmf.bm0910.csv"
            )
 
-#get all the data, but only keep the data with unique EIN numbers 
+```
 
+We will start with the first link, but then for the remainder of the link do the exact same process in a for loop. The process is, read in the link, only keep the EIN, zip code, and FIPS code, only keep the EIN's that are in our dat.sec, then store those EIN/Zip/FIPS codes in a data file to later merge into dat.sec. Note it can take up to 10 minutes to load in each BMF file.
+
+```{r, eval = F}
 #start with the first link 
 bmf.all <- read_csv(links[1])
 bmf.all <- bmf.all[ , c("EIN", "ZIP5", "FIPS")]
@@ -145,7 +165,12 @@ keep.rows <- ein.total %in% ein.ours
 #data set to merge 
 bmf.all <- bmf.all[keep.rows, ]
 
+```
 
+
+Now do the exact same things for the other links, except only keep the EIN's thare aren't in dat.sec AND not in the previous bmf files. 
+
+```{r, eval=F}
 #now do the other links
 counter = 1
 for(i in 2:length(links)){
@@ -169,6 +194,13 @@ for(i in 2:length(links)){
 }
   
 
+```
+
+
+
+Now merge the dat.bmf and dat.sec by EIN. Also, deal with the leading 0 issue by making FIPS codes a character vector and manually adding back in the leading 0.  
+
+```{r, eval = F}
 #merge bmf.all and dat.sec by EIN and ensure all FIPS codes have 5 digits 
 dat.with.geo <- merge(dat.sec , bmf.all, by = "EIN") %>%
   #99 of them dont have FIPS #'s 
@@ -183,8 +215,16 @@ dat.with.geo <- merge(dat.sec , bmf.all, by = "EIN") %>%
                           digit == 5 ~ FIPS)) 
 
 
+```
 
-#### Match FIPS Codes with RUCA codes ######
+
+#### Getting RUCA codes 
+
+The USDA provides all RUCA codes for every FIPS code. We assign every EIN its RUCA code through the FIPS code. 
+
+Load in the FIPS to RUCA codes and format the data so that it can be merged. 
+
+```{r, eval=F}
 #get RUCA codes from FIPS codes
 dat.ruca.raw <- readxl::read_excel("data-raw/cencus-ruca-2010-revised.xlsx", 
                                skip = 1)
@@ -202,6 +242,12 @@ dat.ruca <- dat.ruca.raw %>%
   group_by(FIPS) %>%
   summarise(RUCA = mean(RUCA), .groups = "keep")
 
+```
+
+Merge dat.ruca and dat.with.geo. Assign any EIN with a RUCA code of 6 or lower to be "Metropolitan" and a RUCA code of 7 or higher to be "Rural". 
+
+
+```{r, eval = F}
 
 #merge 
 dat.merge <- merge(dat.with.geo, dat.ruca, by = "FIPS") %>%
@@ -212,23 +258,35 @@ dat.merge <- merge(dat.with.geo, dat.ruca, by = "FIPS") %>%
   select(-c(RUCA, digit)) %>%
   relocate(FIPS, .after = LocationType)
 
+```
 
-#### Impute EZ Total Employees #### 
+## Imputing total employees for 990EZ filers
 
+Form 900EZ does not have any recorded information about total employees. We use information from the full 990 filers who qualify to file the 990EZ but for whatever reason did not, to impute the total employees for the 990EZ filers. 
+
+Split the data by who filed a 990 and who filed a 990EZ. 
+
+```{r, eval=F}
 #make 2 data sets for 990 and 990EZ
 dat.990 <- dat.merge %>%
   filter(FormType == "990")
 
 dat.EZ <- dat.merge %>%
   filter(FormType == "990EZ")
+```
 
+Find the orgs who filed a full 990 but qualified to file a 990EZ. 
 
+```{r, eval = F}
 #filter 990 data to match criteria for 990EZ filers 
 dat.model <- dat.990 %>%
   filter(GrossReceipts < 200000) %>%
   filter(TotalAssests < 500000) 
+```
 
+Fit a regression model with Total Employees as the response variable.
 
+```{r, eval=F}
 dat.model$FormYr <- as.factor(dat.model$FormYr )
 dat.model$MajorGroup <- as.factor(dat.model$MajorGroup)
 dat.model$NTEE <- as.factor(dat.model$NTEE )
@@ -236,13 +294,11 @@ dat.model$UNIV <- as.factor(dat.model$UNIV )
 dat.model$HOSP <- as.factor(dat.model$HOSP )
 dat.model$State <- as.factor(dat.model$State)
 
-
+#remove non-complete cases
 dat.model <- na.omit(dat.model)
 
-
-
-
-mod <- glm(TotalEmployee ~ FormYr + MajorGroup + UNIV +  HOSP + TotalAssests + GrossReceipts  + TotalExpense , 
+mod <- glm(TotalEmployee ~ FormYr + MajorGroup + UNIV +  HOSP + 
+             TotalAssests + GrossReceipts  + TotalExpense , 
            family="poisson", data = dat.model )
 #checking that model is okay
 # dat.plot <- data.frame(dat.model$TotalEmployee, mod$fitted.values) %>%
@@ -254,7 +310,14 @@ mod <- glm(TotalEmployee ~ FormYr + MajorGroup + UNIV +  HOSP + TotalAssests + G
 # abline(0,1, col = 2)
 # 
 # plot(mod)
+```
 
+
+
+
+Impute the 900EZ filers total employees. Also, force any imputed value less than 0 to just be assigned 0. 
+
+```{r, eval=F}
 ## Get the imputed data
 #format EZ data
 dat.EZ$FormYr <- as.factor(dat.EZ$FormYr )
@@ -270,14 +333,22 @@ dat.EZ$TotalEmployee <- stats::predict.glm(mod, dat.EZ)
 #if anything is less than 0 just make it 0
 dat.EZ$TotalEmployee <- ifelse(dat.EZ$TotalEmployee > 0 , dat.EZ$TotalEmployee, 0)
 
+```
 
+Finally, combine the 990 and 990EZ filers into one data set. 
+
+```{r, eval=F}
 ## Combine the two data sets
 dat.final <- rbind(dat.990, dat.EZ) %>%
   distinct()
+```
 
 
+## Hard coding out problematic cases
 
+There are a few cases that were causing erros in the HEOM function. I think its because somehow their NA values got coded as the character "\<NA\>" which the HEOM function doesn't know how to process. 
 
+```{r, eval = F}
 ### Remove these rows. They have no useful data because too many NA's 
 #plus they are causing issues in the HEOM function 
 #13072 13075 13083 13103 13106 13111 13114 13117 13127 13139 13142
@@ -286,11 +357,19 @@ get.rid.of <- which(is.na(dat.final$MajorGroup) & is.na(dat.final$NTEE) & is.na(
 get.rid.of <- c(get.rid.of, 13139, 13142)
 
 dat.final <- dat.final[ -get.rid.of, ]
-  
+```
 
+## Save the file 
 
-#### Save ####
+Save this data set as data-rodeo/dat-shinyapp.csv
+
+```{r, eval = F}
 write_csv(dat.final, file = "data-rodeo/dat-shinyapp.csv")
+
+```
+
+
+
 
 
 
