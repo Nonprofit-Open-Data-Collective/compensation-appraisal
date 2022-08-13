@@ -233,3 +233,7 @@ Output a plotly object. This can't be outputed in a pdf document so I'm just out
 p
 
 ```
+
+## Problems 
+
+The main issue with this graph is the way dat-shinyapp was created. This data set only has one entry for each unique EIN. In the raw data file each nonprofit might multiple entires, one for each year they filed with the IRS, but only the most recent filing years is kept in the final data set. For example, if non profit X filed with the IRS in 2017, 2018, and 2019, only the information from 2019 is kept in the final data set. This is problematic for filtering this graph for any year other than 2019. Because if we wanted to plot year 2017, if nonprofit X filed in 2017, 2018, 2019, then nonprofit X will not be represented in the 2017 graph as only the data from 2019 was included. 
