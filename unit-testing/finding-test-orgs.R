@@ -18,16 +18,14 @@ summary(dat.final)
 ##########################
 
 dat.edu <- dat.final %>%
-  filter(MajorGroup == 2) 
+  filter(MajorGroup == 2 & !UNIV) 
 
-summary(dat.edu)
+#summary(dat.edu)
 
 dat.edu.att <- dat.edu %>%
   select(TotalExpense, TotalEmployee, TotalAssests, GrossReceipts, CEOCompensation)
 
-plot(dat.edu.att)
-
-
+#plot(dat.edu.att)
 
 med.edu <- data.frame(Vals = apply(dat.edu.att,2,median),
                        Vars = c("TotalExpense", "TotalEmployee", "TotalAssests", "GrossReceipts", "CEOCompensation"))
@@ -41,13 +39,13 @@ for(i in 1:(dim(dat.edu.att)[1])){
 
 row.num <- which(dat.edu.att$dist.2  == min(dat.edu.att$dist.2 ))
 View(dat.edu[row.num, ])
-#https://www.newarktrust.org
 EIN.edu <- dat.edu$EIN[row.num]
 
-cbind(dat.edu$EIN, dat.edu.att)  %>% 
-  arrange(dist.2) %>%
-  slice(1:5)
-
+dat.edu$med.dist <- dat.edu.att$dist.2
+dat.edu%>% 
+  arrange(med.dist) %>%
+  slice(1:5) %>%
+  View()
 
 edu.org <- data.frame(Vals =  unlist(dat.edu.att[row.num, c("TotalExpense", "TotalEmployee", "TotalAssests", "GrossReceipts", "CEOCompensation")]),
                        Vars =  c("TotalExpense", "TotalEmployee", "TotalAssests", "GrossReceipts", "CEOCompensation"))
@@ -72,14 +70,12 @@ cbind(dat.edu$EIN, dat.edu.att) %>%
 dat.univ <- dat.final %>%
   filter(UNIV) 
 
-summary(dat.edu)
+#summary(dat.edu)
 
 dat.univ.att <- dat.univ %>%
   select(TotalExpense, TotalEmployee, TotalAssests, GrossReceipts, CEOCompensation)
 
-plot(dat.univ.att)
-
-
+#plot(dat.univ.att)
 
 med.univ <- data.frame(Vals = apply(dat.univ.att,2,median),
                       Vars = c("TotalExpense", "TotalEmployee", "TotalAssests", "GrossReceipts", "CEOCompensation"))
@@ -96,10 +92,11 @@ View(dat.univ[row.num, ])
 #https://www.newarktrust.org
 EIN.univ <- dat.univ$EIN[row.num]
 
-cbind(dat.univ$EIN, dat.univ.att)  %>% 
-  arrange(dist.2) %>%
-  slice(1:5)
-
+dat.univ$med.dist <- dat.univ.att$dist.2
+dat.univ %>% 
+  arrange(med.dist) %>%
+  slice(1:5) %>%
+  View()
 
 univ.org <- data.frame(Vals =  unlist(dat.univ.att[row.num, c("TotalExpense", "TotalEmployee", "TotalAssests", "GrossReceipts", "CEOCompensation")]),
                       Vars =  c("TotalExpense", "TotalEmployee", "TotalAssests", "GrossReceipts", "CEOCompensation"))
@@ -125,14 +122,12 @@ cbind(dat.univ$EIN, dat.univ.att) %>%
 dat.hosp <- dat.final %>%
   filter(HOSP) 
 
-summary(dat.hosp)
+#summary(dat.hosp)
 
 dat.hosp.att <- dat.hosp %>%
   select(TotalExpense, TotalEmployee, TotalAssests, GrossReceipts, CEOCompensation)
 
-plot(dat.hosp.att)
-
-
+#plot(dat.hosp.att)
 
 med.hosp <- data.frame(Vals = apply(dat.hosp.att,2,median),
                        Vars = c("TotalExpense", "TotalEmployee", "TotalAssests", "GrossReceipts", "CEOCompensation"))
@@ -149,9 +144,11 @@ View(dat.hosp[row.num, ])
 #https://www.newarktrust.org
 EIN.hosp <- dat.hosp$EIN[row.num]
 
-cbind(dat.hosp$EIN, dat.hosp.att)  %>% 
-  arrange(dist.2) %>%
-  slice(1:5)
+dat.hosp$med.dist <- dat.hosp.att$dist.2
+dat.hosp%>% 
+  arrange(med.dist) %>%
+  slice(1:5) %>%
+  View()
 
 
 hosp.org <- data.frame(Vals =  unlist(dat.hosp.att[row.num, c("TotalExpense", "TotalEmployee", "TotalAssests", "GrossReceipts", "CEOCompensation")]),
@@ -179,14 +176,12 @@ cbind(dat.hosp$EIN, dat.hosp.att) %>%
 dat.health <- dat.final %>%
   filter(MajorGroup == 4 & !HOSP) 
 
-summary(dat.health)
+#summary(dat.health)
 
 dat.health.att <- dat.health %>%
   select(TotalExpense, TotalEmployee, TotalAssests, GrossReceipts, CEOCompensation)
 
-plot(dat.health.att)
-
-
+#plot(dat.health.att)
 
 med.health <- data.frame(Vals = apply(dat.health.att,2,median),
                        Vars = c("TotalExpense", "TotalEmployee", "TotalAssests", "GrossReceipts", "CEOCompensation"))
@@ -203,9 +198,11 @@ View(dat.health[row.num, ])
 #https://www.newarktrust.org
 EIN.health <- dat.health$EIN[row.num]
 
-cbind(dat.health$EIN, dat.health.att)  %>% 
-  arrange(dist.2) %>%
-  slice(1:5)
+dat.health$med.dist <- dat.health.att$dist.2
+dat.health%>% 
+  arrange(med.dist) %>%
+  slice(1:5) %>%
+  View()
 
 
 health.org <- data.frame(Vals =  unlist(dat.health.att[row.num, c("TotalExpense", "TotalEmployee", "TotalAssests", "GrossReceipts", "CEOCompensation")]),
@@ -230,7 +227,8 @@ cbind(dat.health$EIN, dat.health.att) %>%
 ### Arts Administrator 
 ############################
 dat.arts <- dat.final %>%
-  filter(MajorGroup == 1) 
+  filter(MajorGroup == 1)  %>%
+  filter( sub('.', '', NTEE.CC) %in% c(23:27, 34, 40, 50:80) )  
 
 summary(dat.arts)
 
@@ -256,9 +254,11 @@ View(dat.arts[row.num, ])
 #https://www.newarktrust.org
 EIN.arts <- dat.arts$EIN[row.num]
 
-cbind(dat.arts$EIN, dat.arts.att)  %>% 
-  arrange(dist.2) %>%
-  slice(1:5)
+dat.arts$med.dist <- dat.arts.att$dist.2
+dat.arts%>% 
+  arrange(med.dist) %>%
+  slice(1:5) %>%
+  View()
 
 
 arts.org <- data.frame(Vals =  unlist(dat.arts.att[row.num, c("TotalExpense", "TotalEmployee", "TotalAssests", "GrossReceipts", "CEOCompensation")]),
@@ -284,7 +284,7 @@ cbind(dat.arts$EIN, dat.arts.att) %>%
 ### Specialty Orgs 03 - Professional Societies/Associations
 ##########################
 dat.s03 <- dat.final %>%
-  filter( sub('.', '', NTEE.CC) == "03" ) 
+  filter( sub('.', '', NTEE.CC) == "03" )  
 
 summary(dat.s03)
 
@@ -310,9 +310,11 @@ View(dat.s03[row.num, ])
 #https://www.newarktrust.org
 EIN.s03 <- dat.s03$EIN[row.num]
 
-cbind(dat.s03$EIN, dat.s03.att)  %>% 
-  arrange(dist.2) %>%
-  slice(1:5)
+dat.s03$med.dist <- dat.s03.att$dist.2
+dat.s03%>% 
+  arrange(med.dist) %>%
+  slice(1:5) %>%
+  View()
 
 
 s03.org <- data.frame(Vals =  unlist(dat.s03.att[row.num, c("TotalExpense", "TotalEmployee", "TotalAssests", "GrossReceipts", "CEOCompensation")]),
@@ -335,7 +337,7 @@ cbind(dat.s03$EIN, dat.s03.att) %>%
 
 
 #########################
-### Specialty Orgs 05 - Professional Societies/Associations
+### Specialty Orgs 05 - Research Institutes and/or Public Policy Analysis
 ##########################
 dat.s05 <- dat.final %>%
   filter( sub('.', '', NTEE.CC) == "05" ) 
@@ -364,10 +366,11 @@ View(dat.s05[row.num, ])
 #https://www.newarktrust.org
 EIN.s05 <- dat.s05$EIN[row.num]
 
-cbind(dat.s05$EIN, dat.s05.att)  %>% 
-  arrange(dist.2) %>%
-  slice(1:5)
-
+dat.s05$med.dist <- dat.s05.att$dist.2
+dat.s05%>% 
+  arrange(med.dist) %>%
+  slice(1:5) %>%
+  View()
 
 s05.org <- data.frame(Vals =  unlist(dat.s05.att[row.num, c("TotalExpense", "TotalEmployee", "TotalAssests", "GrossReceipts", "CEOCompensation")]),
                       Vars =  c("TotalExpense", "TotalEmployee", "TotalAssests", "GrossReceipts", "CEOCompensation"))
@@ -386,3 +389,73 @@ cbind(dat.s05$EIN, dat.s05.att) %>%
   geom_vline(aes(xintercept = Vals), data=s05.org, col = "red") +
   facet_wrap( ~Vars, scales = "free") +
   ggtitle(" Specality 05 ")
+
+
+
+
+
+############################################################
+### Orgs to pick 
+############################################################
+
+### EDU
+EIN.edu.final <- 237392118
+edu.select <- dat.edu[ dat.edu$EIN == EIN.edu, ]
+edu.select$url <- "https://pipershill.org"
+
+### Univ
+EIN.univ.final <- 350868101
+univ.select <- dat.univ[ dat.univ$EIN == EIN.univ, ]
+univ.select$url <- "https://www.huntington.edu"
+
+### Hosp
+EIN.hosp.final <- 160743979
+hosp.select <- dat.hosp[ dat.hosp$EIN == EIN.hosp, ]
+hosp.select$url <- "https://www.urmc.rochester.edu/noyes.aspx" #affiliated with the university of Rodchester
+
+#this is more of a "stand alone" hospital
+# 390808442
+#https://www.healthpartners.com/care/hospitals/westfields/
+
+### Health
+EIN.health.final <- 208969896
+health.select <- dat.health[ dat.health$EIN == EIN.health, ]
+health.select$url <- "https://www.google.com/search?client=safari&rls=en&q=BROWN+COUNTY+ORAL+HEALTH+PARTNERSHIP&ie=UTF-8&oe=UTF-8" 
+
+### Arts
+EIN.arts.final <- 260317963
+arts.select <- dat.arts[ dat.arts$EIN == EIN.arts, ]
+arts.select$url <- "https://www.redlineart.org"
+
+### s03
+EIN.s03.final <- 943019570
+s03.select <- dat.s03[ dat.s03$EIN == EIN.s03, ]
+s03.select$url <- "https://www.proteinsociety.org/page/about-us"
+
+### s05
+#Research Institute 
+EIN.s05.final <- 205935069
+s05.select <- dat.s05[ dat.s05$EIN == EIN.s05, ]
+s05.select$url <- "https://www.cerf.science"
+
+#This one is more "Public Policy Analysis"
+#NAME = THE WASHINGTON STATE BUDGET AND POLICY *CENTER*
+#https://budgetandpolicy.org
+#721612982
+
+
+############################################################
+#### Make final data set of test orgs 
+############################################################
+orgs.test <- rbind(edu.select, 
+                   univ.select,
+                   health.select,
+                   hosp.select,
+                   arts.select,
+                   s03.select, 
+                   s05.select)
+
+View(orgs.test)
+
+write.csv(dat.testing, "unit-testing/test-orgs.csv")
+
