@@ -5,6 +5,7 @@ params:
   org: NA
   search: NA
   hard: NA
+  testorg: NA
 ---
 
 
@@ -20,9 +21,10 @@ setwd("..")
 org <- params$org
 search <- params$search
 hard <- params$hard
+test.org <- params$testorg
 
 #get filtered data
-dat.filtered <- dat_filtering_hard(search, hard)
+dat.filtered <- dat_filtering_hard(search, hard, test.org$EIN)
 
 ## Needed consants
 region <- data.table::data.table(state = sort(c(state.abb, "PR", "DC")),
@@ -32,19 +34,11 @@ region <- data.table::data.table(state = sort(c(state.abb, "PR", "DC")),
                                             1, 1, 8, 8, 1, 3, 7, 9, 1, 5, 
                                             1, 5, 4, 6, 7, 8, 5, 1, 8, 3, 
                                             5, 8))
-```
 
-
-
-
-```{r}
 #get results 
 results <- HEOM_with_weights(org, search, dat.filtered)
 
 
-```
-
-```{r}
 #getting weighted average 
 d_i <- results$dist
 sum_w <- sum(1 - d_i)
@@ -118,7 +112,7 @@ resids <- mod$residuals
 per <- resids / dat.model$CEOCompensation / 100
 quants <- quantile(per, c(0.10, 0.90)) #get rid of the bonus years
 
-suggested.range<- weighted.average + weighted.average * quants
+suggested.range <- weighted.average + weighted.average * quants
 
 pay.min <- dollarize(suggested.range[1])
 pay.max <- dollarize(suggested.range[2])
@@ -211,7 +205,8 @@ get.ntee.cc <- function(cc){
 }
 
 
-org.table <- data.frame(Attributes = c("State", 
+org.table <- data.frame(Attributes = c("Name",
+                                       "State", 
                                        "City Type", 
                                        "Broad Category", 
                                        "Major Group", 
@@ -220,7 +215,8 @@ org.table <- data.frame(Attributes = c("State",
                                        "University?", 
                                        "Total Expenses", 
                                        "Total Employees"), 
-                        Input = c(org$State,
+                        Input = c(test.org$Name, 
+                                  org$State,
                                   org$Loc,
                                   get.major.group(org$MajorGroup), 
                                   get.ntee(org$NTEE),
@@ -245,34 +241,34 @@ org.table %>%
 
 
 ```{r SearchTable, echo=FALSE, message=FALSE, warning=FALSE}
-search.table <- data.frame(Attributes = c("State", 
-                                       "City Type", 
-                                       "Broad Category", 
-                                       "Major Group", 
-                                       "Specality Orginization?", 
-                                       "Hospital?", 
-                                       "University?", 
-                                       "Total Expenses", 
-                                       "Total Employees"), 
-                        Input = c(paste(search$State, collapse = "; "),
-                                  paste(search$Loc, collapse = ";"),
-                                  paste(unlist(lapply(search$MajorGroup, get.major.group )), collapse = "; "), 
-                                  paste(unlist(lapply(search$NTEE, get.ntee )), collapse = "; "),
-                                  paste(unlist(lapply(search$NTEE.CC, get.ntee.cc )), collapse = "; "),
-                                  ifelse(search$HOSP == TRUE, "Yes", "No"), 
-                                  ifelse(search$UNIV == TRUE, "Yes", "No"),
-                                  paste(dollarize(search$TotalExpense)[1], "to", dollarize(search$TotalExpense[2])),
-                                  paste(search$TotalEmployee[1], "to", search$TotalEmployee[2])), 
-                        Hard = c(ifelse(hard$State == TRUE, "Hard", "Soft"), 
-                                 ifelse(hard$Loc == TRUE, "Hard", "Soft"),
-                                 ifelse(hard$MajorGroup == TRUE, "Hard", "Soft"),
-                                 ifelse(hard$NTEE == TRUE, "Hard", "Soft"),
-                                 ifelse(hard$NTEE.CC == TRUE, "Hard", "Soft"),
-                                 "N/A", 
-                                 "N/A", 
-                                 ifelse(hard$TotalExpense == TRUE, "Hard", "Soft"),
-                                 ifelse(hard$TotalEmployee == TRUE, "Hard", "Soft")))
-
+search.table <- data.frame(
+  Attributes = c("State", 
+                 "City Type", 
+                 "Broad Category", 
+                 "Major Group", 
+                 "Specality Orginization?", 
+                 "Hospital?", 
+                 "University?", 
+                 "Total Expenses", 
+                 "Total Employees"), 
+  Input = c(paste(search$State, collapse = "; "),
+            paste(search$Loc, collapse = ";"),
+            paste(unlist(lapply(search$MajorGroup, get.major.group )), collapse = "; "), 
+            paste(unlist(lapply(search$NTEE, get.ntee )), collapse = "; "),
+            paste(unlist(lapply(search$NTEE.CC, get.ntee.cc )), collapse = "; "),
+            ifelse(search$HOSP == TRUE, "Yes", "No"), 
+            ifelse(search$UNIV == TRUE, "Yes", "No"),
+            paste(dollarize(search$TotalExpense)[1], "to", dollarize(search$TotalExpense[2])),
+            paste(search$TotalEmployee[1], "to", search$TotalEmployee[2])), 
+  Hard = c(ifelse(hard$State == TRUE, "Hard", "Soft"), 
+           ifelse(hard$Loc == TRUE, "Hard", "Soft"),
+           ifelse(hard$MajorGroup == TRUE, "Hard", "Soft"),
+           ifelse(hard$NTEE == TRUE, "Hard", "Soft"),
+           ifelse(hard$NTEE.CC == TRUE, "Hard", "Soft"),
+           "N/A", 
+           "N/A", 
+           ifelse(hard$TotalExpense == TRUE, "Hard", "Soft"),
+           ifelse(hard$TotalEmployee == TRUE, "Hard", "Soft")))
 search.table %>%
   knitr::kable(col.names = c("Attribute", "Search Critera", "Hard or Soft Filtering"),
                caption = "Your Search Criteria",
@@ -309,7 +305,7 @@ tab.temp.mg %>%
                                 `8` = "Religion Related",
                                 `9` = "Mutual/Membership Benefit",
                                 `10` = "Unknown/Unclassified")) %>%
-  mutate(Percentage = round(as.numeric(Freq) / sum(Freq), 2 ))%>%
+  mutate(Percentage = round(as.numeric(Freq) / sum(Freq), 2 ) * 100)%>%
   knitr::kable(col.names = c("Broad Category", "Count", "Percentage"),
                caption = "Nonprofits in Comparison Set by Broad Category",
                #booktabs = T,
@@ -355,7 +351,7 @@ tab.temp.ntee %>%
           "X" = "Religion Related", 
           "Y" = "Mutual & Membership Benefit" , 
           "Z" = "Unknown, Unclassified" )) %>%
-  mutate(Percentage = round(as.numeric(Freq) / sum(Freq), 2 )) %>%
+  mutate(Percentage = round(as.numeric(Freq) / sum(Freq), 2 ) * 100) %>%
   arrange(NTEE) %>%
   knitr::kable(col.names = c("Major Group", "Count", "Percentage"),
                caption = "Nonprofits in Comparison Set by Major Group",
@@ -367,7 +363,64 @@ tab.temp.ntee %>%
 
 ```
 
+\newpage 
 
+```{r LocationType, echo=FALSE, warning=F, message=F}
+dat.filtered %>%
+  select(LocationType) %>%
+  group_by(LocationType) %>%
+  summarize(Count = n()) %>%
+  mutate(Percent = round(Count / dim(dat.filtered)[1], 2)* 100) %>%
+  knitr::kable(caption = "Nonprofits in Comparison Set by City Type",
+               #booktabs = T,
+               format = "latex") %>%
+  kableExtra::kable_styling(bootstrap_options = "striped",
+                            full_width = F,
+                            latex_options = "hold_position")
+
+```
+
+
+
+```{r Gender, echo=FALSE, warning=F, message=F}
+dat.filtered %>%
+  select(Gender) %>%
+  group_by(Gender) %>%
+  summarize(Count = n()) %>%
+  mutate(Percent = round(Count / dim(dat.filtered)[1], 2)* 100) %>%
+  knitr::kable(caption = "Nonprofits in Comparison Set by Gender",
+               #booktabs = T,
+               format = "latex") %>%
+  kableExtra::kable_styling(bootstrap_options = "striped",
+                            full_width = F,
+                            latex_options = "hold_position")
+
+```
+
+
+```{r States, echo=FALSE, warning=F, message=F}
+tab.state <- dat.filtered %>%
+  select(State) %>%
+  group_by(State) %>%
+  summarize(Count = n()) %>%
+  mutate(Percent = round(Count / dim(dat.filtered)[1], 2)* 100)
+
+list(tab.state[1:25, ], tab.state[26:50, ]) %>%
+  knitr::kable(caption = "Nonprofits in Comparison Set by State",
+               #booktabs = T,
+               format = "latex") %>%
+  kableExtra::kable_styling(bootstrap_options = "striped",
+                            full_width = F,
+                            latex_options = "hold_position")
+
+```
+
+
+
+
+
+
+\newpage
 \newpage
 
 ```{r CEOhist, echo=FALSE, warning=F, message=F}
@@ -380,7 +433,69 @@ ggplot(data = dat.filtered) +
   ggplot2::xlab("CEO Total Pay") + 
   ggplot2::ylab("Count") +
   ggplot2::xlim(0, 1000000) + 
-  labs(caption = paste("Note, there were", sum(dat.filtered$CEOCompensation > 100000) , "nonprofits who paid there CEO more than $1,000,000 that are not displayed on this plot."))
+  labs(caption = paste("Note, there were", sum(dat.filtered$CEOCompensation > 1000000) , "nonprofits who paid there CEO more than $1,000,000 that are not displayed on this plot."))
   
 ```
+
+\newpage 
+
+```{r CorrPlot, echo=F, warning=F, message=F}
+# plot(dat.filtered, 
+#      main = "Correlation of Variables")
+
+```
+
+\newpage
+```{r RelativePlots, echo=F, warning=F, message=F }
+
+wanted.cols <- c("TotalExpense", "TotalEmployee", "TotalAssests", "GrossReceipts", "CEOCompensation")
+vertical.bars <- data.frame( Vars =  wanted.cols,
+                             Vals = unname(unlist((test.org[ , wanted.cols]))))
+
+
+estimated.pay <- data.frame( Vars = "CEOCompensation" ,
+                             Vals = weighted.average)
+
+
+#Where is Your Org compared to other orgs? 
+results %>%
+  select(TotalExpense, TotalEmployee, TotalAssests, GrossReceipts, EIN, CEOCompensation, dist) %>%
+  filter(TotalExpense <= quantile(TotalExpense, 0.95)) %>%
+  filter(TotalEmployee <= quantile(TotalEmployee, 0.95)) %>%
+  filter(TotalAssests <= quantile(TotalAssests, 0.95)) %>%
+  filter(GrossReceipts <= quantile(GrossReceipts, 0.95)) %>%
+  filter(CEOCompensation <= quantile(CEOCompensation, 0.95)) %>%
+  pivot_longer(!"EIN", names_to = "Vars", values_to = "Vals") %>%
+  ggplot(aes(x = Vals)) + 
+  geom_density()+
+  geom_vline(aes(xintercept = Vals), data = vertical.bars, col = "red") +
+  geom_vline(aes(xintercept = Vals), data = estimated.pay, col = "blue") +
+  facet_wrap( ~Vars, scales = "free") +
+  ggtitle("Where is your Org compared to the Orgs in the Comparison Set") +
+  labs(subtitle = "Lower 95% of each variable is displayed",
+       caption = "red = actual org values, blue = weighted average")
+
+
+```
+
+```{r CEOPlot, echo=F, warning=F, message=F }
+results %>%
+  select(CEOCompensation) %>%
+  filter(CEOCompensation <= quantile(CEOCompensation, 0.95)) %>%
+  ggplot(aes(x = CEOCompensation, y = ..density..)) + 
+  geom_density() + 
+  geom_vline(xintercept = test.org$CEOCompensation, col = "red") +
+  geom_vline(xintercept = weighted.average, col = "green") +
+  geom_vline(xintercept = suggested.range[1], col = "blue") +
+  geom_vline(xintercept = suggested.range[2], col = "blue") +
+  labs(title = "Actual vs. Suggested CEO Pay",
+              subtitle = "Lower 95% of data displayed",
+              caption = "red = actual pay, green = weighted average, blue = suggested pay range")+
+  xlab("CEO Pay") +
+  ylab(" ")
+
+
+```
+
+
 

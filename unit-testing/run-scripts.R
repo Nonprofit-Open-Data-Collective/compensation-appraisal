@@ -5,7 +5,7 @@
 library(tidyverse)
 
 source("funcs/applying-filters-func.R")
-source("funcs/dat-filtering-hard.R")
+source("funcs/dat-filtering-hard-unit-testing.R") #removes test org EIN from comparison set
 source("funcs/distance-metric.R")
 source("funcs/dollarize.R")
 source("funcs/state-distance.R")
@@ -75,7 +75,7 @@ for(i in 1:nrow(dat.testing)){
 
 #Create folder you want inside compensation-appraisal/unit-testing/test-results
 folder.name <- "testA"
-dir.create(paste0("unit-testing/test-results/", folder.name))
+#dir.create(paste0("unit-testing/test-results/", folder.name))
 
 
 #Generate reports (this should take <5 minutes)
@@ -89,6 +89,7 @@ for(i in 1:nrow(dat.testing)){
                      output_file = path.result,
                      params = list( org = orgs.list[[i]],
                                     search = search.list[[i]],
-                                    hard = hard.list[[i]]) )
+                                    hard = hard.list[[i]],
+                                    testorg = dat.testing[i, ]))
   
 }
