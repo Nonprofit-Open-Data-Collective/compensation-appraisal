@@ -7,7 +7,7 @@ set.seed(100)
 dat.test <- read.csv("data-rodeo/dat-shinyapp.csv") %>%
   sample_n(1000)
 
-#Example Test Org
+#Example Test Org 
 test.org <- "B21"
 levels.org <- c("R", "2", "B", "B2", "B21")
 
@@ -48,7 +48,7 @@ for(i in 1:1000){
 }
 
 
-#Calculating Distances 
+#Calculating Distances for all 5 critera
 
 dist <- rep(NA, 1000)
 for(i in 1:1000){ #sum-product 
@@ -66,4 +66,22 @@ test.org
 
 dist[closest.rows]
 
+
+# Calculating distances stopping at level 3
+
+dist3 <- rep(NA, 1000)
+for(i in 1:1000){ #sum-product 
+  match <- levels.org == levels.compare[i, ]
+  dist.each <- as.numeric(!match) * weights$weight
+  dist3[i] <- sum(dist.each[1:3])
+}
+
+#inspecting results 
+closest.rows3 <- which(dist3 == min(dist3))
+closest.orgs3 <- dat.test[closest.rows3, ]
+
+table(closest.orgs3$NTEE.CC)
+test.org
+
+dist3[closest.rows3]
 
