@@ -6,7 +6,7 @@ library(tidyverse)
 
 source("funcs/applying-filters-func.R")
 source("funcs/dat-filtering-hard-unit-testing.R") #removes test org EIN from comparison set
-source("funcs/distance-metric.R")
+source("funcs/distance-metric-unit-testing.R")
 source("funcs/dollarize.R")
 source("funcs/state-distance.R")
 
@@ -41,10 +41,10 @@ for(i in 1:nrow(dat.testing)){
 
 search.list <- list()
 for(i in 1:nrow(dat.testing)){
-  search.list[[i]] <- list(State = c("VA", "DC", "MD"),
-                           MajorGroup = 2,
-                           Loc = c("Metropolitan"),
-                           NTEE = c("B"),
+  search.list[[i]] <- list(State = orgs.list[[i]]$State,
+                           MajorGroup = orgs.list[[i]]$MajorGroup,
+                           Loc = orgs.list[[i]]$Loc,
+                           NTEE = orgs.list[[i]]$NTEE,
                            NTEE.CC = NA, 
                            UNIV = 1,
                            HOSP = 1,
@@ -60,13 +60,13 @@ for(i in 1:nrow(dat.testing)){
 hard.list <- list()
 for(i in 1:nrow(dat.testing)){
   hard.list[[i]] <- list(State = FALSE,
-                                      Loc = FALSE,
-                                      MajorGroup = FALSE,
-                                      NTEE = FALSE, 
-                                      NTEE.CC = FALSE,
-                                      TotalExpense = FALSE,
-                                      TotalEmployee = FALSE)
-  
+                         Loc = FALSE,
+                         MajorGroup = TRUE,
+                         NTEE = TRUE, 
+                         NTEE.CC = FALSE,
+                         TotalExpense = FALSE,
+                         TotalEmployee = FALSE)
+
 }
 
 ###########################
@@ -74,7 +74,7 @@ for(i in 1:nrow(dat.testing)){
 ##########################
 
 #Create folder you want inside compensation-appraisal/unit-testing/test-results
-folder.name <- "testA"
+folder.name <- "testB"
 #dir.create(paste0("unit-testing/test-results/", folder.name))
 
 

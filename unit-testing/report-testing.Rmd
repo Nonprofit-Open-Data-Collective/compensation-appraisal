@@ -11,6 +11,7 @@ params:
 
 
 ```{r HEOM, echo=FALSE, warning=F, message=F}
+library(knitr)
 
 #Set wd to be repo folder 
 setwd("..")
@@ -36,7 +37,10 @@ region <- data.table::data.table(state = sort(c(state.abb, "PR", "DC")),
                                             5, 8))
 
 #get results 
-results <- HEOM_with_weights(org, search, dat.filtered)
+all.results <- HEOM_with_weights(org, search, dat.filtered)
+results <- all.results[[1]]
+distance.matrix <- all.results[[2]]
+
 
 
 #getting weighted average 
@@ -461,16 +465,16 @@ estimated.pay <- data.frame( Vars = "CEOCompensation" ,
 results %>%
   select(TotalExpense, TotalEmployee, TotalAssests, GrossReceipts, EIN, CEOCompensation, dist) %>%
   filter(TotalExpense <= quantile(TotalExpense, 0.95)) %>%
-  filter(TotalEmployee <= quantile(TotalEmployee, 0.95)) %>%
+  #filter(TotalEmployee <= quantile(TotalEmployee, 0.95)) %>%
   filter(TotalAssests <= quantile(TotalAssests, 0.95)) %>%
   filter(GrossReceipts <= quantile(GrossReceipts, 0.95)) %>%
   filter(CEOCompensation <= quantile(CEOCompensation, 0.95)) %>%
   pivot_longer(!"EIN", names_to = "Vars", values_to = "Vals") %>%
   ggplot(aes(x = Vals)) + 
-  geom_density()+
+  geom_histogram()+
   geom_vline(aes(xintercept = Vals), data = vertical.bars, col = "red") +
   geom_vline(aes(xintercept = Vals), data = estimated.pay, col = "blue") +
-  facet_wrap( ~Vars, scales = "free") +
+  facet_wrap( ~Vars, scales = "free", ncol =2) +
   ggtitle("Where is your Org compared to the Orgs in the Comparison Set") +
   labs(subtitle = "Lower 95% of each variable is displayed",
        caption = "red = actual org values, blue = weighted average")
@@ -487,15 +491,68 @@ results %>%
   geom_vline(xintercept = test.org$CEOCompensation, col = "red") +
   geom_vline(xintercept = weighted.average, col = "green") +
   geom_vline(xintercept = suggested.range[1], col = "blue") +
-  geom_vline(xintercept = suggested.range[2], col = "blue") +
+  geom_vline(xintercept = suggested.range[2], col = "green") +
   labs(title = "Actual vs. Suggested CEO Pay",
               subtitle = "Lower 95% of data displayed",
-              caption = "red = actual pay, green = weighted average, blue = suggested pay range")+
+              caption = "red = actual pay, green = weighted average, green = suggested pay range")+
   xlab("CEO Pay") +
   ylab(" ")
 
 
 ```
 
+\newpage
 
+```{r DistanceMatrix, echo=F, warning=F, message=F }
+#Average Distance score by attribute 
+D.average <- colSums(distance.matrix) / dim(distance.matrix)[1]
+
+
+#Average percent of total score by attribute 
+dists <- results$dist
+
+D.percent <- matrix(0, ncol = dim(distance.matrix)[2], nrow = dim(distance.matrix)[1])
+for(i in 1:( dim(distance.matrix)[1])){
+  for(j in 1:(dim(distance.matrix)[2])){
+    D.percent[i,j] <- distance.matrix[i, j] / dists[i]
+  }
+}
+
+#D.percent.average <- colSums(D.percent) / dim(distance.matrix)[1]
+names(D.percent.average) <- names(D.average)
+
+
+D.corr <- rep(0, 9)
+for(i in 1:9){
+  D.corr[i] <- cor(distance.matrix[, i], dists)
+}
+
+
+D.tab <- data.frame(Attribute = names(D.average),
+                    Average = D.average, 
+                    Percent = D.percent.average,
+                    Correlation = D.corr)
+
+rownames(D.tab ) <- c()
+D.tab
+
+
+
+
+distance.matrix %>%
+  pivot_longer(everything(), names_to = "Attribute", values_to = "Value") %>%
+  ggplot(aes(x = Value)) +
+  geom_histogram(binwidth = 0.05) +
+  facet_wrap( ~ Attribute, scales = "free") +
+  ggtitle("Histogram of Distance of Each Attribute")
+
+cbind(distance.matrix, dists) %>%
+  select(-c(MajorGroup, NTEE, NTEE.CC, UNIV, HOSP, Loc)) %>%
+  plot(main = "Correlation of Distances")
+
+cbind(distance.matrix, dists) %>%
+  select(-c(MajorGroup, NTEE, NTEE.CC, UNIV, HOSP, Loc)) %>%
+  cor()
+
+```
 

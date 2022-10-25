@@ -400,17 +400,17 @@ cbind(dat.s05$EIN, dat.s05.att) %>%
 
 ### EDU
 EIN.edu.final <- 237392118
-edu.select <- dat.edu[ dat.edu$EIN == EIN.edu, ]
+edu.select <- dat.edu[ dat.edu$EIN == EIN.edu.final, ]
 edu.select$url <- "https://pipershill.org"
 
 ### Univ
 EIN.univ.final <- 350868101
-univ.select <- dat.univ[ dat.univ$EIN == EIN.univ, ]
+univ.select <- dat.univ[ dat.univ$EIN == EIN.univ.final, ]
 univ.select$url <- "https://www.huntington.edu"
 
 ### Hosp
 EIN.hosp.final <- 160743979
-hosp.select <- dat.hosp[ dat.hosp$EIN == EIN.hosp, ]
+hosp.select <- dat.hosp[ dat.hosp$EIN == EIN.hosp.final, ]
 hosp.select$url <- "https://www.urmc.rochester.edu/noyes.aspx" #affiliated with the university of Rodchester
 
 #this is more of a "stand alone" hospital
@@ -419,23 +419,23 @@ hosp.select$url <- "https://www.urmc.rochester.edu/noyes.aspx" #affiliated with 
 
 ### Health
 EIN.health.final <- 208969896
-health.select <- dat.health[ dat.health$EIN == EIN.health, ]
-health.select$url <- "https://www.google.com/search?client=safari&rls=en&q=BROWN+COUNTY+ORAL+HEALTH+PARTNERSHIP&ie=UTF-8&oe=UTF-8" 
+health.select <- dat.health[ dat.health$EIN == EIN.health.final, ]
+health.select$url <- "https://smilegb.org"
 
 ### Arts
 EIN.arts.final <- 260317963
-arts.select <- dat.arts[ dat.arts$EIN == EIN.arts, ]
+arts.select <- dat.arts[ dat.arts$EIN == EIN.arts.final, ]
 arts.select$url <- "https://www.redlineart.org"
 
 ### s03
 EIN.s03.final <- 943019570
-s03.select <- dat.s03[ dat.s03$EIN == EIN.s03, ]
+s03.select <- dat.s03[ dat.s03$EIN == EIN.s03.final, ]
 s03.select$url <- "https://www.proteinsociety.org/page/about-us"
 
 ### s05
 #Research Institute 
 EIN.s05.final <- 205935069
-s05.select <- dat.s05[ dat.s05$EIN == EIN.s05, ]
+s05.select <- dat.s05[ dat.s05$EIN == EIN.s05.final, ]
 s05.select$url <- "https://www.cerf.science"
 
 #This one is more "Public Policy Analysis"
