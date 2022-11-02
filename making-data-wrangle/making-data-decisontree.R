@@ -32,7 +32,8 @@ dat1 <-
   mutate(city.type = LocationType) %>%
 
   #get rid of unneeded things 
-  select(EIN, m1, m2, m3, m4, m5, us.state, city.type)
+  select(EIN, m1, m2, m3, m4, m5, us.state, city.type) %>%
+  distinct()
 
 
 
@@ -60,3 +61,4 @@ View(dat1)
 
 ## Saving -------------------------
 write_csv(dat1, "data-wrangle/mission-info.csv")
+write_csv(dat1, "data-wrangle/state-network.csv")
