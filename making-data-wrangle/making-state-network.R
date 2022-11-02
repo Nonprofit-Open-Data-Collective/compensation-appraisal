@@ -44,6 +44,7 @@ state_list <-
                      1, 8, 1, 5, 4, 3, 7, 9, 1, 5,  #starts with new jersy
                      1, 5, 4, 6, 7, 8, 1, 5, 8, 5, 
                      3, 8  )) %>%
+  mutate(abb = c(state.abb[1:8], "DC", state.abb[9:38], "PR", state.abb[39:50])) %>%
   select(-1) 
   
 
@@ -59,7 +60,7 @@ for(i in 1:52){
 g <- graph_from_adjacency_matrix(AdjMat, mode = "undirected" )
 
 state_dist <- as.data.frame(distances(g))
-colnames(state_dist) <- rownames(state_dist) <- state_list$state
+colnames(state_dist) <- rownames(state_dist) <- state_list$abb
 
 ### Save Tables -----------------------------------
 write_csv(state_dist, "data-wrangle/state-distance-matrix.csv")
