@@ -27,8 +27,12 @@ dat1 <-
                         m1 == "S" & nchar(NTEE.CC) > 3 ~  paste0(m3, substr(NTEE.CC, 4, 5)),
                         m1 == "S" & nchar(NTEE.CC) == 3 ~ paste0(m3, two.digit ))) %>%
   
+  ### Geography
+  mutate(us.state = State != "PR" ) %>%
+  mutate(city.type = LocationType) %>%
+
   #get rid of unneeded things 
-  select(EIN, m1, m2, m3, m4, m5)
+  select(EIN, m1, m2, m3, m4, m5, us.state, city.type)
 
 
 
