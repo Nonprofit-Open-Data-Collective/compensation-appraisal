@@ -1,9 +1,9 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.9.18)  20 SEP 2022 20:51
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.9.18)  4 OCT 2022 09:54
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**test-results/testA/report-testing-org-6.tex
-(./test-results/testA/report-testing-org-6.tex
+**test-results/testB/report-testing-org-1480.tex
+(./test-results/testB/report-testing-org-1480.tex
 LaTeX2e <2022-06-01> patch level 5
 L3 programming layer <2022-08-30> (/Users/oliviabeck/Library/TinyTeX/texmf-dist/tex/latex/base/article.cls
 Document Class: article 2021/10/04 v1.4n Standard LaTeX document class
@@ -147,7 +147,9 @@ File: color.cfg 2016/01/02 v1.6 sample color configuration
 )
 Package xcolor Info: Driver file: pdftex.def on input line 227.
 (/Users/oliviabeck/Library/TinyTeX/texmf-dist/tex/latex/graphics-def/pdftex.def
-File: pdftex.def 2020/10/05 v1.2a Graphics/color driver for pdftex
+File: pdftex.def 2022/09/22 v1.2b Graphics/color driver for pdftex
+\stockwidth=\dimen148
+\stockheight=\dimen149
 ) (/Users/oliviabeck/Library/TinyTeX/texmf-dist/tex/latex/graphics/mathcolor.ltx)
 Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1353.
 Package xcolor Info: Model `hsb' substituted by `rgb' on input line 1357.
@@ -159,7 +161,7 @@ Package xcolor Info: Model `HSB' substituted by `hsb' on input line 1374.
 Package xcolor Info: Model `Gray' substituted by `gray' on input line 1375.
 Package xcolor Info: Model `wave' substituted by `hsb' on input line 1376.
 ) (/Users/oliviabeck/Library/TinyTeX/texmf-dist/tex/latex/hyperref/hyperref.sty
-Package: hyperref 2022-06-20 v7.00s Hypertext links for LaTeX
+Package: hyperref 2022-09-22 v7.00t Hypertext links for LaTeX
 (/Users/oliviabeck/Library/TinyTeX/texmf-dist/tex/generic/ltxcmds/ltxcmds.sty
 Package: ltxcmds 2020-05-10 v1.25 LaTeX kernel commands for general use (HO)
 ) (/Users/oliviabeck/Library/TinyTeX/texmf-dist/tex/generic/pdftexcmds/pdftexcmds.sty
@@ -196,11 +198,11 @@ Package: kvoptions 2022-06-15 v3.15 Key value format for package options (HO)
 ))
 \c@section@level=\count271
 )
-\@linkdim=\dimen148
+\@linkdim=\dimen150
 \Hy@linkcounter=\count272
 \Hy@pagecounter=\count273
 (/Users/oliviabeck/Library/TinyTeX/texmf-dist/tex/latex/hyperref/pd1enc.def
-File: pd1enc.def 2022-06-20 v7.00s Hyperref: PDFDocEncoding definition (HO)
+File: pd1enc.def 2022-09-22 v7.00t Hyperref: PDFDocEncoding definition (HO)
 Now handling font encoding PD1 ...
 ... no UTF-8 mapping file for font encoding PD1
 ) (/Users/oliviabeck/Library/TinyTeX/texmf-dist/tex/generic/intcalc/intcalc.sty
@@ -210,7 +212,7 @@ Package: etexcmds 2019/12/15 v1.7 Avoid name clashes with e-TeX commands (HO)
 )
 \Hy@SavedSpaceFactor=\count274
 (/Users/oliviabeck/Library/TinyTeX/texmf-dist/tex/latex/hyperref/puenc.def
-File: puenc.def 2022-06-20 v7.00s Hyperref: PDF Unicode definition (HO)
+File: puenc.def 2022-09-22 v7.00t Hyperref: PDF Unicode definition (HO)
 Now handling font encoding PU ...
 ... no UTF-8 mapping file for font encoding PU
 )
@@ -221,29 +223,29 @@ Package hyperref Info: Hyper index ON on input line 4170.
 Package hyperref Info: Plain pages OFF on input line 4177.
 Package hyperref Info: Backreferencing OFF on input line 4182.
 Package hyperref Info: Implicit mode ON; LaTeX internals redefined.
-Package hyperref Info: Bookmarks ON on input line 4408.
+Package hyperref Info: Bookmarks ON on input line 4410.
 \c@Hy@tempcnt=\count275
 (/Users/oliviabeck/Library/TinyTeX/texmf-dist/tex/latex/url/url.sty
 \Urlmuskip=\muskip17
 Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
 )
-LaTeX Info: Redefining \url on input line 4746.
-\XeTeXLinkMargin=\dimen149
+LaTeX Info: Redefining \url on input line 4748.
+\XeTeXLinkMargin=\dimen151
 (/Users/oliviabeck/Library/TinyTeX/texmf-dist/tex/generic/bitset/bitset.sty
 Package: bitset 2019/12/09 v1.3 Handle bit-vector datatype (HO)
 (/Users/oliviabeck/Library/TinyTeX/texmf-dist/tex/generic/bigintcalc/bigintcalc.sty
 Package: bigintcalc 2019/12/15 v1.5 Expandable calculations on big integers (HO)
 ))
 \Fld@menulength=\count276
-\Field@Width=\dimen150
-\Fld@charsize=\dimen151
-Package hyperref Info: Hyper figures OFF on input line 6024.
-Package hyperref Info: Link nesting OFF on input line 6029.
-Package hyperref Info: Hyper index ON on input line 6032.
-Package hyperref Info: backreferencing OFF on input line 6039.
-Package hyperref Info: Link coloring OFF on input line 6044.
-Package hyperref Info: Link coloring with OCG OFF on input line 6049.
-Package hyperref Info: PDF/A mode OFF on input line 6054.
+\Field@Width=\dimen152
+\Fld@charsize=\dimen153
+Package hyperref Info: Hyper figures OFF on input line 6027.
+Package hyperref Info: Link nesting OFF on input line 6032.
+Package hyperref Info: Hyper index ON on input line 6035.
+Package hyperref Info: backreferencing OFF on input line 6042.
+Package hyperref Info: Link coloring OFF on input line 6047.
+Package hyperref Info: Link coloring with OCG OFF on input line 6052.
+Package hyperref Info: PDF/A mode OFF on input line 6057.
 (/Users/oliviabeck/Library/TinyTeX/texmf-dist/tex/latex/base/atbegshi-ltx.sty
 Package: atbegshi-ltx 2021/01/10 v1.0c Emulation of the original atbegshi
 package with kernel methods
@@ -254,7 +256,7 @@ package with kernel methods
 )
 Package hyperref Info: Driver (autodetected): hpdftex.
 (/Users/oliviabeck/Library/TinyTeX/texmf-dist/tex/latex/hyperref/hpdftex.def
-File: hpdftex.def 2022-06-20 v7.00s Hyperref driver for pdfTeX
+File: hpdftex.def 2022-09-22 v7.00t Hyperref driver for pdfTeX
 (/Users/oliviabeck/Library/TinyTeX/texmf-dist/tex/latex/base/atveryend-ltx.sty
 Package: atveryend-ltx 2020/08/19 v1.0a Emulation of the original atveryend package
 with kernel methods
@@ -277,14 +279,14 @@ Package: ifvtex 2019/10/25 v1.7 ifvtex legacy package. Use iftex instead.
 \Gm@cnth=\count282
 \Gm@cntv=\count283
 \c@Gm@tempcnt=\count284
-\Gm@bindingoffset=\dimen152
-\Gm@wd@mp=\dimen153
-\Gm@odd@mp=\dimen154
-\Gm@even@mp=\dimen155
-\Gm@layoutwidth=\dimen156
-\Gm@layoutheight=\dimen157
-\Gm@layouthoffset=\dimen158
-\Gm@layoutvoffset=\dimen159
+\Gm@bindingoffset=\dimen154
+\Gm@wd@mp=\dimen155
+\Gm@odd@mp=\dimen156
+\Gm@even@mp=\dimen157
+\Gm@layoutwidth=\dimen158
+\Gm@layoutheight=\dimen159
+\Gm@layouthoffset=\dimen160
+\Gm@layoutvoffset=\dimen161
 \Gm@dimlist=\toks24
 ) (/Users/oliviabeck/Library/TinyTeX/texmf-dist/tex/latex/fancyvrb/fancyvrb.sty
 Package: fancyvrb 2022/06/06 4.5 verbatim text (tvz,hv)
@@ -297,10 +299,10 @@ Package: fancyvrb 2022/06/06 4.5 verbatim text (tvz,hv)
 ) (/Users/oliviabeck/Library/TinyTeX/texmf-dist/tex/latex/framed/framed.sty
 Package: framed 2011/10/22 v 0.96: framed or shaded text with page breaks
 \OuterFrameSep=\skip53
-\fb@frw=\dimen160
-\fb@frh=\dimen161
-\FrameRule=\dimen162
-\FrameSep=\dimen163
+\fb@frw=\dimen162
+\fb@frh=\dimen163
+\FrameRule=\dimen164
+\FrameSep=\dimen165
 ) (/Users/oliviabeck/Library/TinyTeX/texmf-dist/tex/latex/graphics/graphicx.sty
 Package: graphicx 2021/09/16 v1.2d Enhanced LaTeX Graphics (DPC,SPQR)
 (/Users/oliviabeck/Library/TinyTeX/texmf-dist/tex/latex/graphics/graphics.sty
@@ -312,14 +314,14 @@ File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
 )
 Package graphics Info: Driver file: pdftex.def on input line 107.
 )
-\Gin@req@height=\dimen164
-\Gin@req@width=\dimen165
+\Gin@req@height=\dimen166
+\Gin@req@width=\dimen167
 ) (/Users/oliviabeck/Library/TinyTeX/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
 File: l3backend-pdftex.def 2022-08-30 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count288
 \l__pdf_internal_box=\box54
-) (./report-testing-org-6.aux)
-\openout1 = `report-testing-org-6.aux'.
+) (./report-testing-org-1480.aux)
+\openout1 = `report-testing-org-1480.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 109.
 LaTeX Font Info:    ... okay on input line 109.
@@ -346,9 +348,9 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 48
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Live
 ))
 Package hyperref Info: Link coloring OFF on input line 109.
-(./report-testing-org-6.out) (./report-testing-org-6.out)
+(./report-testing-org-1480.out) (./report-testing-org-1480.out)
 \@outlinefile=\write4
-\openout4 = `report-testing-org-6.out'.
+\openout4 = `report-testing-org-1480.out'.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -414,50 +416,77 @@ LaTeX Font Info:    Trying to load font information for U+msb on input line 111.
 (/Users/oliviabeck/Library/TinyTeX/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 113.
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <10> on input line 126.
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <7> on input line 126.
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <5> on input line 126.
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+[1
+
+{/Users/oliviabeck/Library/TinyTeX/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [2] [3]
+<test-results/testB/report-testing-org-1480_files/figure-latex/CEOhist-1.pdf, id=43, 459.7175pt x 316.18124pt>
+File: test-results/testB/report-testing-org-1480_files/figure-latex/CEOhist-1.pdf Graphic file (type pdf)
+<use test-results/testB/report-testing-org-1480_files/figure-latex/CEOhist-1.pdf>
+Package pdftex.def Info: test-results/testB/report-testing-org-1480_files/figure-latex/CEOhist-1.pdf  used on input line 373.
+(pdftex.def)             Requested size: 459.74442pt x 316.19975pt.
+[4 <./test-results/testB/report-testing-org-1480_files/figure-latex/CEOhist-1.pdf>]
+<test-results/testB/report-testing-org-1480_files/figure-latex/RelativePlots-1.pdf, id=55, 461.725pt x 316.18124pt>
+File: test-results/testB/report-testing-org-1480_files/figure-latex/RelativePlots-1.pdf Graphic file (type pdf)
+<use test-results/testB/report-testing-org-1480_files/figure-latex/RelativePlots-1.pdf>
+Package pdftex.def Info: test-results/testB/report-testing-org-1480_files/figure-latex/RelativePlots-1.pdf  used on input line 379.
+(pdftex.def)             Requested size: 461.72388pt x 316.18047pt.
+<test-results/testB/report-testing-org-1480_files/figure-latex/CEOPlot-1.pdf, id=56, 463.7325pt x 316.18124pt>
+File: test-results/testB/report-testing-org-1480_files/figure-latex/CEOPlot-1.pdf Graphic file (type pdf)
+<use test-results/testB/report-testing-org-1480_files/figure-latex/CEOPlot-1.pdf>
+Package pdftex.def Info: test-results/testB/report-testing-org-1480_files/figure-latex/CEOPlot-1.pdf  used on input line 381.
+(pdftex.def)             Requested size: 463.73842pt x 316.18529pt.
+[5 <./test-results/testB/report-testing-org-1480_files/figure-latex/RelativePlots-1.pdf> <./test-results/testB/report-testing-org-1480_files/figure-latex/CEOPlot-1.pdf>]
+LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 386.
 (/Users/oliviabeck/Library/TinyTeX/texmf-dist/tex/latex/lm/t1lmtt.fd
 File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
+Overfull \hbox (44.74348pt too wide) in paragraph at lines 398--398
+[]\T1/lmtt/m/n/10 ## logTotalExpense   TotalEmployee           State      MajorGroup            NTEE         NTEE.CC[] 
+ []
+
+
+Overfull \hbox (44.74348pt too wide) in paragraph at lines 398--398
+[]\T1/lmtt/m/n/10 ##      0.15397150      0.50346027      0.79797297      0.00000000      0.00000000      0.00000000[] 
+ []
+
 LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <10> not available
-(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 148.
-[1
+(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 406.
 
-{/Users/oliviabeck/Library/TinyTeX/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10> on input line 225.
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <7> on input line 225.
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <5> on input line 225.
-
-LaTeX Warning: `!h' float specifier changed to `!ht'.
+Overfull \hbox (44.74348pt too wide) in paragraph at lines 422--422
+[]\T1/lmtt/m/n/10 ## logTotalExpense   TotalEmployee           State      MajorGroup            NTEE         NTEE.CC[] 
+ []
 
 
-LaTeX Warning: `!h' float specifier changed to `!ht'.
+Overfull \hbox (44.74348pt too wide) in paragraph at lines 422--422
+[]\T1/lmtt/m/n/10 ##      0.54595086      1.77051189      2.87516382      0.00000000      0.00000000      0.00000000[] 
+ []
 
-[2] [3] [4]
-<test-results/testA/report-testing-org-6_files/figure-latex/CEOhist-1.pdf, id=47, 459.7175pt x 316.18124pt>
-File: test-results/testA/report-testing-org-6_files/figure-latex/CEOhist-1.pdf Graphic file (type pdf)
-<use test-results/testA/report-testing-org-6_files/figure-latex/CEOhist-1.pdf>
-Package pdftex.def Info: test-results/testA/report-testing-org-6_files/figure-latex/CEOhist-1.pdf  used on input line 384.
-(pdftex.def)             Requested size: 459.74442pt x 316.19975pt.
-[5 <./test-results/testA/report-testing-org-6_files/figure-latex/CEOhist-1.pdf>] (./report-testing-org-6.aux)
-Package rerunfilecheck Info: File `report-testing-org-6.out' has not changed.
+[6] (./report-testing-org-1480.aux)
+Package rerunfilecheck Info: File `report-testing-org-1480.out' has not changed.
 (rerunfilecheck)             Checksum: DC582E771F64BCA1AB907FB717E5767D;460.
  ) 
 Here is how much of TeX's memory you used:
- 11019 strings out of 477035
- 173181 string characters out of 5827136
- 518458 words of memory out of 5000000
- 31970 multiletter control sequences out of 15000+600000
+ 11046 strings out of 477035
+ 174626 string characters out of 5827136
+ 527810 words of memory out of 5000000
+ 31991 multiletter control sequences out of 15000+600000
  509503 words of font info for 67 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 72i,9n,77p,328b,469s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 72i,9n,77p,367b,439s stack positions out of 10000i,1000n,20000p,200000b,200000s
 {/Users/oliviabeck/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}</Users/oliviabeck/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx10.pfb></Users/oliviabeck/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx12.pfb></Users/oliviabeck/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr10.pfb></Users/oliviabeck/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr17.pfb></Users/oliviabeck/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtk10.pfb></Users/oliviabeck/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtt10.pfb></Users/oliviabeck/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtti10.pfb>
-Output written on report-testing-org-6.pdf (5 pages, 195081 bytes).
+Output written on report-testing-org-1480.pdf (6 pages, 215023 bytes).
 PDF statistics:
- 96 PDF objects out of 1000 (max. 8388607)
- 71 compressed objects within 1 object stream
- 16 named destinations out of 1000 (max. 500000)
- 30 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 120 PDF objects out of 1000 (max. 8388607)
+ 88 compressed objects within 1 object stream
+ 20 named destinations out of 1000 (max. 500000)
+ 40 words of extra memory for PDF output out of 10000 (max. 10000000)
 

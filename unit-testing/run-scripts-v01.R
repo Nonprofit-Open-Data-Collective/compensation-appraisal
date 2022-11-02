@@ -6,9 +6,8 @@ library(tidyverse)
 
 source("funcs/applying-filters-func.R")
 source("funcs/dat-filtering-hard-unit-testing.R") #removes test org EIN from comparison set
-source("funcs/distance-metric-unit-testing.R")
+source("funcs-testing/distance-metric-v01.R")
 source("funcs/dollarize.R")
-#source("funcs/state-distance.R")
 
 
 dat.testing <- read_csv("unit-testing/test-orgs.csv")
@@ -29,7 +28,8 @@ for(i in 1:nrow(dat.testing)){
                     UNIV = temp.dat$UNIV,
                     HOSP = temp.dat$HOSP,
                     TotalExpense = temp.dat$TotalExpense,
-                    TotalEmployee = temp.dat$TotalEmployee
+                    TotalEmployee = temp.dat$TotalEmployee,
+                    CEOCompensation = temp.dat$CEOCompensation
   )
   orgs.list[[i]] <- temp.list
 }
@@ -74,8 +74,8 @@ for(i in 1:nrow(dat.testing)){
 ##########################
 
 #Create folder you want inside compensation-appraisal/unit-testing/test-results
-folder.name <- "testB"
-#dir.create(paste0("unit-testing/test-results/", folder.name))
+folder.name <- "v01"
+dir.create(paste0("unit-testing/test-results/", folder.name))
 
 
 #Generate reports (this should take <5 minutes)
@@ -85,7 +85,7 @@ for(i in 1:nrow(dat.testing)){
   path.result <-  paste0("test-results/", folder.name, "/report-testing-org-", i, ".pdf")
   
   #render document
-  rmarkdown::render( input='unit-testing/report-testing.Rmd', 
+  rmarkdown::render( input='unit-testing/report-testing-v01.Rmd', 
                      output_file = path.result,
                      params = list( org = orgs.list[[i]],
                                     search = search.list[[i]],
