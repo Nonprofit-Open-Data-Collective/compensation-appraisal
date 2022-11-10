@@ -49,7 +49,7 @@ for(i in 1:nrow(dat.testing)){
                            UNIV = 1,
                            HOSP = 1,
                            TotalExpense = c(1000000, 6000000),
-                           TotalEmployee = c(0, 100))
+                           TotalEmployee = NA)
 }
 
 

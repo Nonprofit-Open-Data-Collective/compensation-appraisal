@@ -45,18 +45,18 @@ View(dat1)
 # #Checking the regular orgs worked
 # # They are good 
 # # ask Jesse about 3rd digit in regular orgs
-# dat1 %>%
-#   filter(m1 =="R") %>%
-#   select(NTEE.CC, two.digit, tens, ones, m1, m2, m3, m4, m5) %>%
-#   mutate(check = (NTEE.CC != m5)) %>%
-#   filter(check) %>%
-#   View 
+dat1 %>%
+  filter(m1 =="R") %>%
+  select(two.digit, tens, ones, m1, m2, m3, m4, m5) %>%
+  mutate(check = (NTEE.CC != m5)) %>%
+  filter(check) %>%
+  View
 # 
 # #Checking Specialty Orgs worked
-# dat1 %>%
-#   filter(m1 =="S") %>%
-#   select(NTEE.CC, two.digit, tens, ones, m1, m2, m3, m4, m5) %>%
-#   View()
+dat1 %>%
+  filter(m1 =="S") %>%
+  select(two.digit, tens, ones, m1, m2, m3, m4, m5) %>%
+  View()
 
 
 ## Saving -------------------------

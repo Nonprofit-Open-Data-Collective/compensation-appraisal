@@ -59,9 +59,8 @@ for(i in 1:52){
 
 g <- graph_from_adjacency_matrix(AdjMat, mode = "undirected" )
 
-state_dist <- as.data.frame(distances(g))
+state_dist <- as.data.frame(distances(g)) / max(distances(g))
 colnames(state_dist) <- rownames(state_dist) <- state_list$abb
 
 ### Save Tables -----------------------------------
 write_csv(state_dist, "data-wrangle/state-distance-matrix.csv")
-write_csv(state_list, "data-wrangle/state-information.csv")
