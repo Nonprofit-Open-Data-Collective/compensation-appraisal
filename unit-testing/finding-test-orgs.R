@@ -453,7 +453,10 @@ orgs.test <- rbind(edu.select,
                    hosp.select,
                    arts.select,
                    s03.select, 
-                   s05.select)
+                   s05.select) %>%
+  #hosp and univ change levels 
+    mutate(MajorGroup = ifelse(HOSP, 12, MajorGroup),
+           MajorGroup = ifelse(UNIV, 11, MajorGroup))
 
 View(orgs.test)
 
