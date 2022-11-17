@@ -1,0 +1,205 @@
+---
+title: "Version-03 Weights Comparison Results"
+output: html_document
+params:
+  dat: NA
+  weights: NA
+  test.orgs: NA
+---
+
+```{r, echo = F}
+library(tidyverse)
+library(kableExtra)
+
+dat <- params$dat
+weights <- params$weights
+test.orgs <- params$test.orgs
+
+options(knitr.kable.NA = '')
+
+```
+
+
+## Test Organizations
+
+```{r test.org.chars, echo = F}
+
+
+### Make table of test orgs 
+
+test.orgs <- test.orgs %>%
+  select(EIN, Name, State, MajorGroup, NTEE.CC, TotalExpense, CEOCompensation) %>%
+  mutate(TestOrgNumber = row_number()) %>%
+  relocate(TestOrgNumber)
+
+test.orgs %>%
+  kbl(caption = "Test Organizations")%>%
+  kable_styling()
+
+
+```
+
+## Weight Sets
+
+```{r weight.sets, echo=FALSE}
+
+#Make Weights Table 
+for(i in 1:nrow(weights)){
+  w <- unlist(weights[i, ])
+  weight.table <- data.frame(level = 1:5,
+             geo = c(w[2:4], NA, NA),
+             r.mission = c(w[5:8], NA),
+             s.mission = w[9:13] )
+  rownames(weight.table) <- c()
+  
+  weight.table%>%
+    kbl(caption = paste("Weight Set", i)) %>%
+    kable_styling() %>%
+    print()
+  cat("\n")
+}
+
+```
+
+## Basic Comparison Plots
+
+
+```{r plots, echo=FALSE}
+
+#relevel EIN's to org# from above table
+dat <- dat %>%
+  mutate(Test.Org = as.factor(Test.Org)) 
+
+levels(dat$Test.Org) <- as.character(test.orgs$TestOrgNumber)
+
+
+dat %>%
+  select(dist, Weights.Set, Test.Org) %>%
+  ggplot(aes(x = dist)) + 
+  geom_density()+
+  facet_grid(as.factor(Test.Org) ~ Weights.Set) +  #labeller = label_both
+  ggtitle("Total Distace By Weights Set for each Test Org") +
+  theme(strip.text.y = element_text(size = 5))+
+  xlab("total distance ")
+
+
+dat %>%
+  select(dist.log.expense, Weights.Set, Test.Org) %>%
+  ggplot(aes(x = dist.log.expense)) + 
+  geom_density()+
+  facet_grid(as.factor(Test.Org) ~ Weights.Set) + 
+  ggtitle("log(Expense) Distace By Weights Set for each Test Org") +
+  theme(strip.text.y = element_text(size = 5)) +
+  xlab("log(Expense) distance")
+
+
+dat %>%
+  select(dist.geo, Weights.Set, Test.Org) %>%
+  ggplot(aes(x = dist.geo)) + 
+  geom_density()+
+  facet_grid(as.factor(Test.Org) ~ Weights.Set) + 
+  ggtitle("Geographic Distace By Weights Set for each Test Org") +
+  theme(strip.text.y = element_text(size = 5))+
+  xlab("geographic distance ")
+
+dat %>%
+  select(dist.mission, Weights.Set, Test.Org) %>%
+  ggplot(aes(x = dist.mission)) + 
+  geom_density()+
+  facet_grid(as.factor(Test.Org) ~ Weights.Set) + 
+  ggtitle("Mission Distace By Weights Set for each Test Org") +
+  theme(strip.text.y = element_text(size = 5))+
+  xlab("mission distance ")
+
+```
+
+
+## Correlation Plots
+
+```{r corr, echo = F, warning=FALSE}
+
+panel.cor <- function(x, y, digits=2, prefix="", cex.cor)
+{
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(0, 1, 0, 1))
+    r <- cor(x, y, use="pairwise.complete.obs")
+    txt <- format(c(r, 0.123456789), digits=digits)[1]
+    txt <- paste(prefix, txt, sep="")
+    if(missing(cex.cor)) cex <- 0.8/strwidth(txt)
+    
+    test <- cor.test(x,y)
+    # borrowed from printCoefmat
+    Signif <- symnum(test$p.value, corr = FALSE, na = FALSE,
+                  cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1),
+                  symbols = c("***", "**", "*", ".", " "))
+    
+    text(0.5, 0.5, txt, cex = 2 )
+    text(.7, .8, Signif, cex=3, col=2)
+}
+panel.smooth <- function (x, y, col = par("col"), bg = NA, pch = par("pch"), 
+  cex = 1, col.smooth = "red", span = 2/3, iter = 3, ...) 
+{
+  points(x, y, pch = 19, col = gray(0.5,0.5), 
+         bg = bg, cex = 1.7)
+  ok <- is.finite(x) & is.finite(y)
+  if (any(ok)) 
+    lines(stats::lowess(x[ok], y[ok], f = span, iter = iter), 
+      col = col.smooth, lwd=2, ...)
+}
+
+
+
+
+par(mfrow= c(nrow(test.orgs), nrow(weights)))
+
+for(i in 1:nrow(test.orgs)){
+  for(j in 1:nrow(weights)){
+    dat.temp <- dat %>%
+      filter(Test.Org == i & Weights.Set == j) %>%
+      select(c("dist","dist.geo","dist.mission","dist.log.expense"))
+    pairs( dat.temp, 
+       lower.panel=panel.smooth, upper.panel=panel.cor ,
+       main = paste("Weights Set", j, "and Test Org", i))
+    
+  }
+}
+
+
+
+```
+
+## Subway plot 
+
+
+```{r subway, echo = F, eval = F}
+dat.subway <- dat %>%
+  filter(Test.Org == 1 ) %>%
+  select(EIN, Weights.Set, Rank,  dist)  %>%
+  arrange(Rank) %>%
+  slice(1:40) %>%#take top 20 of both  
+  pivot_wider(names_from = Weights.Set, values_from = dist) %>%
+  rename(w1 = `1`, 
+         w2 = `2`) 
+
+ID <- dat.subway$EIN
+df <- dat.subway[, 3:4]
+
+ymin <- min(df, na.rm = T)      # what is the largest value in the data frame?
+ymax <- max(df, na.rm = T)      # what is the smallest value in the data frame?
+num.x <- 2          # we have five years of data
+
+plot.new()
+plot.window( xlim=c(0,3), ylim=c(ymin,ymax) )
+
+points( 1:2, df[1,], type="l" ) # school A
+points( 1:2, df[2,], type="l" ) # school B
+points( 1:2, df[3,], type="l" )
+points( 1:2, df[4,], type="l" )
+points( 1:2, df[5,], type="l" )
+points( 1:2, df[6,], type="l" )
+points( 1:2, df[7,], type="l" )
+points( 1:2, df[8,], type="l" )
+points( 1:2, df[9,], type="l" )
+points( 1:2, df[10,], type="l" )
+
+```
