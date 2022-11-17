@@ -1,7 +1,7 @@
 ### Generate Comparison set 
 
 ## Name the folder you want to save the final data set in
-folder.name <- "v03-test4"
+folder.name <- "v03-test1"
 
 ## Setting up the weights ------------------------------------------------
 #Create 3 data frames geo.weights, r.weights, and s.weights
