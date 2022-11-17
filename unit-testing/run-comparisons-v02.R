@@ -1,7 +1,7 @@
 ### Generate Comparison set 
 
 ## Name the folder you want to save the final data set in
-folder.name <- "all-testing-8"
+folder.name <- "all-testing-9"
 
 ## Setting up the weights ------------------------------------------------
 #Create 3 data frames geo.weights, r.weights, and s.weights
@@ -33,6 +33,6 @@ s.mission.weights[2, ] <- c(3,2,1,1)
 
 
 ## Run the function-- don't change anything below this line, just run it -----------
-source("funcs-testing/generate-comparison-dataset.R")
+source("funcs-testing/generate-comparison-dataset-v02.R")
 generate_comparisons(geo.weighs, r.mission.weights, s.mission.weights, folder.name)
 
