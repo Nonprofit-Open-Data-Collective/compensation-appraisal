@@ -30,6 +30,17 @@ dat_filtering_hard <- function(search.criteria,
   ### Get data
   dat.filtered <- read_csv("data-rodeo/dat-shinyapp.csv")
   
+  
+  #Remove duplicated EIN's 
+  #these orgs should have been flagged as transition years but they were not
+  duplicate.EIN <- dat.filtered %>%
+    group_by(EIN, FormYr) %>%
+    summarise(total = n()) %>%
+    filter(total > 1) %>%
+    select(EIN)
+  
+  dat.filtered <- dat.filtered[!(dat.filtered$EIN %in% duplicate.EIN$EIN), ]
+  
   #remove EIN of test org
   dat.filtered <- dat.filtered %>%
     filter(EIN != test.org.ein)
