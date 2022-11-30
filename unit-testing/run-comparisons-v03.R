@@ -8,7 +8,7 @@ folder.name <- "v03-test1"
 #each row is a new combination weights you want to run 
 
 
-## initialize - don't touch this ---------------------------------
+## initialize - don't change this, just run it ---------------------------------
 geo.weights <- 
   data.frame(level1 = numeric(),    
              level2 = numeric(),
@@ -39,8 +39,13 @@ geo.weights[2, ] <- c(2,2,1)
 r.mission.weights[2, ] <- c(3,2,1,1)
 s.mission.weights[2, ] <- c(3,2,1,1,0.5)
 
+#set 3
+geo.weights[3, ] <- c(5,2,1)
+r.mission.weights[3, ] <- c(5,2,1,1)
+s.mission.weights[3, ] <- c(5,2,1,1,0.5)
 
-## Run the function-- don't change anything below this line, just run it -----------
+
+## Run the Scripts-- don't change anything below this line, just run it -----------
 source("funcs-testing/generate-comparison-dataset-v03.R")
 generate_comparisons(geo.weighs, r.mission.weights, s.mission.weights, folder.name)
 

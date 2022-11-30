@@ -11,11 +11,18 @@ params:
 library(tidyverse)
 library(kableExtra)
 
-dat <- params$dat
+dat <- params$dat 
 weights <- params$weights
 test.orgs <- params$test.orgs
 
 options(knitr.kable.NA = '')
+
+
+### For testing purposes 
+## from generate-comparison-dataset-v03.R
+# dat <- dat.ret
+# weights <- dat.weights
+# test.orgs <- dat.testing
 
 ```
 
@@ -52,19 +59,26 @@ for(i in 1:nrow(weights)){
              s.mission = w[9:13] )
   rownames(weight.table) <- c()
   
-  weight.table%>%
-    kbl(caption = paste("Weight Set", i)) %>%
-    kable_styling() %>%
-    print()
-  cat("\n")
+  # cat("here \n")
+  # weight.table%>%
+  #   kbl(caption = paste("Weight Set", i)) %>%
+  #   kable_styling() %>%
+  #   print()
+  # cat("there \n")
+  
+  print(paste("Weight Set", i))
+  print(weight.table)
 }
 
 ```
 
 ## Basic Comparison Plots
 
+X facet is weight set number, Y facet is test org number.
+
 
 ```{r plots, echo=FALSE}
+#par(mfrow= c(1,1))
 
 #relevel EIN's to org# from above table
 dat <- dat %>%
@@ -150,7 +164,7 @@ panel.smooth <- function (x, y, col = par("col"), bg = NA, pch = par("pch"),
 
 
 
-par(mfrow= c(nrow(test.orgs), nrow(weights)))
+#par(mfrow= c(nrow(test.orgs), nrow(weights)))
 
 for(i in 1:nrow(test.orgs)){
   for(j in 1:nrow(weights)){
@@ -164,14 +178,17 @@ for(i in 1:nrow(test.orgs)){
   }
 }
 
-
+#par(mfrow = c(1,1))
 
 ```
 
 ## Subway plot 
 
+This section is not currently working. 
+
 
 ```{r subway, echo = F, eval = F}
+
 dat.subway <- dat %>%
   filter(Test.Org == 1 ) %>%
   select(EIN, Weights.Set, Rank,  dist)  %>%
@@ -201,5 +218,132 @@ points( 1:2, df[7,], type="l" )
 points( 1:2, df[8,], type="l" )
 points( 1:2, df[9,], type="l" )
 points( 1:2, df[10,], type="l" )
+
+```
+
+## Proxy Subway plot
+
+```{r,  echo = F, eval = F}
+num.weights <- nrow(weights)
+
+for(i in 1:7){
+  plot.combos <- as.data.frame(t(utils::combn(1:num.weights, 2)))
+  colnames(plot.combos) <- c("w1", "w2")
+
+  plot.combos$rank.cor <- plot.combos$dist.cor <-  0
+  
+  
+  for(j in 1:nrow(plot.combos)){
+  dat1 <- dat %>%
+    filter(Weights.Set == plot.combos[j, 1]) %>%
+    filter(Test.Org == i) %>%
+    select(EIN, Rank, dist) 
+  
+  dat2 <- dat %>%
+    filter(Weights.Set == plot.combos[j, 2])%>%
+    filter(Test.Org == i) %>%
+    select(EIN, Rank, dist)
+  
+  dat.full <- full_join(dat1, dat2, by = "EIN")
+
+  plot.combos$rank.cor[j] <- round(cor(dat.full$Rank.x, dat.full$Rank.y), 5)
+  plot.combos$dist.cor[j] <- round(cor(dat.full$dist.x, dat.full$dist.y), 5)
+
+  
+  }
+  
+  colnames(plot.combos) <- c("First Weight Set", "Second Weight Set", "corr(Distance)", "cor(Rank)")
+  print("Correlations for Test Org", i)
+  print(plot.combos)
+  
+  
+}
+
+
+
+
+
+```
+
+
+
+```{r, message = F, echo = F}
+
+num.weights <- nrow(weights)
+
+plot.combos <- as.data.frame(t(utils::combn(1:num.weights, 2)))
+colnames(plot.combos) <- c("w1", "w2")
+
+plot.combos$rank.cor <- plot.combos$dist.cor <-  0
+
+
+#par(mfrow= c(nrow(test.orgs), nrow(plot.combos)))
+
+#i = test org
+#j = weight set 
+for(i in 1:7){
+  plot.combos <- as.data.frame(t(utils::combn(1:num.weights, 2)))
+  colnames(plot.combos) <- c("w1", "w2")
+
+  plot.combos$rank.cor <- plot.combos$dist.cor <-  0
+  
+  
+  for(j in 1:nrow(plot.combos)){
+  dat1 <- dat %>%
+    filter(Weights.Set == plot.combos[j, 1]) %>%
+    filter(Test.Org == i) %>%
+    select(EIN, Rank, dist) 
+  
+  dat2 <- dat %>%
+    filter(Weights.Set == plot.combos[j, 2])%>%
+    filter(Test.Org == i) %>%
+    select(EIN, Rank, dist)
+  
+  dat.full <- full_join(dat1, dat2, by = "EIN")
+
+  plot.combos$rank.cor[j] <- round(cor(dat.full$Rank.x, dat.full$Rank.y), 5)
+  plot.combos$dist.cor[j] <- round(cor(dat.full$dist.x, dat.full$dist.y), 5)
+
+  
+  p1<- dat.full %>%
+    ggplot(aes(x = Rank.x, y = Rank.y))+
+    geom_point(alpha = 0.5) +
+    geom_abline(col = "red") +
+    xlab(paste("Ranks from weight set", plot.combos[j, 1])) +
+    ylab(paste("Ranks from weight set", plot.combos[j, 2])) +
+    ggtitle(paste("Comparing Distance Ranks for Test Org", i, "and weight sets",plot.combos[j, 1], "and", plot.combos[j, 2] )) +
+    annotate(geom="text", x=2000, y=10000, label=paste("Correlation =",plot.combos$rank.cor[j] ),
+              color="red") 
+  print(p1)
+  
+  p2<- dat.full %>%
+    ggplot(aes(x = dist.x, y = dist.y))+
+    geom_point(alpha = 0.1) +
+    geom_abline(col = "red") +
+    xlab(paste("Distance from weight set", plot.combos[j, 1])) +
+    ylab(paste("Distance from weight set", plot.combos[j, 2])) +
+    ggtitle(paste("Comparing Distance Values for Test Org", i, "and weight sets",plot.combos[j, 1], "and", plot.combos[j, 2] )) +
+    annotate(geom="text", x=0.2, y=0.8, label=paste("Correlation =", plot.combos$dist.cor[j]),
+              color="red")
+  print(p2)
+  }
+  
+  # plot.combos %>%
+  # kbl(caption = paste("Correlation Results for Test Org", i),
+  #     col.names = c("First Weight Set Number",
+  #                   "Second Weight Set Number",
+  #                   "Correlation for Distance", 
+  #                   "Correlation for Rank")) %>%
+  #   kable_styling() %>%
+  #   print()
+  
+  colnames(plot.combos) <- c("First Weight Set", "Second Weight Set", "corr(Distance)", "cor(Rank)")
+  print(paste("Correlations for Test Org", i))
+  print(plot.combos)
+
+
+}
+
+
 
 ```
