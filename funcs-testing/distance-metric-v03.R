@@ -76,6 +76,8 @@ HEOM_with_weights <- function(org, search, dat.filtered, weights){
     s.further.tens.needed <- TRUE
     }
     
+  #needed constat
+  r.log.expense <- max(dat.filtered$log.expense) -  min(dat.filtered$log.expense) #range
 
   #for loop
   for(i in 1:n){
@@ -85,7 +87,6 @@ HEOM_with_weights <- function(org, search, dat.filtered, weights){
     if(is.na(dat.filtered$TotalExpense[i])){
       D[i, "logTotalExpense"] <- 1
     }else{
-      r.log.expense <- max(dat.filtered$log.expense) -  min(dat.filtered$log.expense) #range
       D[i, "logTotalExpense"] <- abs(dat.filtered$log.expense[i] - log(org$TotalExpense, 10)) / r.log.expense
     }
     
@@ -155,11 +156,14 @@ HEOM_with_weights <- function(org, search, dat.filtered, weights){
   dat.filtered$dist <- rowSums(D) / A #normalize by number of matched attributes.
   
   dat.ret <- dat.filtered %>%
+    dplyr::mutate(row.ID = row_number()) %>%
     dplyr::arrange(dist) %>%
     dplyr::select(-c(log.expense))%>%
     #slice(1:100) %>%
     dplyr::mutate(Rank = row_number()) %>%
-    dplyr::relocate(Rank)
+    dplyr::relocate(Rank)%>%
+    dplyr::arrange(row.ID) %>%
+    dplyr::select(-row.ID)
   
   ret <- list(dat = dat.ret,
               distance.matrix = D)
@@ -169,18 +173,18 @@ HEOM_with_weights <- function(org, search, dat.filtered, weights){
 
 ##### Testing ----------------------------------------------------------
 
-# org <- orgs.list[[2]]
-# search <- search.list[[2]]
-# hard <- hard.list[[2]]
-# dat.filtered <- dat_filtering_hard(search, hard, 410993136)
-# 
-# weights <- list(geo.weight = data.frame(level = c(1, 2, 3),
-#                                         weight = c(6, 6, 1) / 24 ), #max(state_dist) = 12)
-#                 r.mission.weights = data.frame(level = c(1, 2, 3, 4),
-#                                                weight = c(5, 2, 1, 0.5) / 8.50),
-#                 s.mission.weights = data.frame(level = c(1, 2, 3, 4, 5),
-#                                                 weight = c(5, 2, 1, 0.5, 0.25) / 8.75))
-# 
+org <- orgs.list[[7]]
+search <- search.list[[7]]
+hard <- hard.list[[7]]
+dat.filtered <- dat_filtering_hard(search, hard, 410993136)
+
+weights <- list(geo.weight = data.frame(level = c(1, 2, 3),
+                                        weight = c(6, 6, 1) / 24 ), #max(state_dist) = 12)
+                r.mission.weights = data.frame(level = c(1, 2, 3, 4),
+                                               weight = c(5, 2, 1, 0.5) / 8.50),
+                s.mission.weights = data.frame(level = c(1, 2, 3, 4, 5),
+                                                weight = c(5, 2, 1, 0.5, 0.25) / 8.75))
+
 # # # ### Do the distances 
 # # state_dist <- read_csv("data-wrangle/state-distance-matrix.csv")
 # # mission_info <- read_csv("data-wrangle/mission-info.csv")
