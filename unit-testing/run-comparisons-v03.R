@@ -1,7 +1,7 @@
 ### Generate Comparison set 
 
 ## Name the folder you want to save the final data set in
-folder.name <- "v03-test14"
+folder.name <- "v03-test15"
 
 ## Setting up the weights ------------------------------------------------
 #Create 3 data frames geo.weights, r.weights, and s.weights
@@ -30,19 +30,22 @@ s.mission.weights <-
 
 ## Enter in the combination of weights you want to use as rows-----------------------
 #set 1
-geo.weights[1, ] <- c(1,1,1)
-r.mission.weights[1, ] <- c(1,1,1,1)
-s.mission.weights[1, ] <- c(1,1,1,1,1)
+weight.set.ID <- 1
+geo.weights[weight.set.ID, ] <- c(1,1,1)
+r.mission.weights[weight.set.ID, ] <- c(1,1,1,1)
+s.mission.weights[weight.set.ID, ] <- c(1,1,1,1,1)
 
 #set 2 
-geo.weights[2, ] <- c(2,2,1)
-r.mission.weights[2, ] <- c(3,2,1,1)
-s.mission.weights[2, ] <- c(3,2,1,1,0.5)
+weight.set.ID <- 2
+geo.weights[weight.set.ID, ] <- c(2,2,1)
+r.mission.weights[weight.set.ID, ] <- c(3,2,1,1)
+s.mission.weights[weight.set.ID, ] <- c(3,2,1,1,0.5)
 
 #set 3
-geo.weights[3, ] <- c(5,2,1)
-r.mission.weights[3, ] <- c(5,2,1,1)
-s.mission.weights[3, ] <- c(5,2,1,1,0.5)
+weight.set.ID <- 3
+geo.weights[weight.set.ID, ] <- c(5,2,1)
+r.mission.weights[weight.set.ID, ] <- c(5,2,1,1)
+s.mission.weights[weight.set.ID, ] <- c(5,2,1,1,0.5)
 
 
 ## Run the Scripts-- don't change anything below this line, just run it -----------
