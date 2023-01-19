@@ -5,15 +5,23 @@ params:
   dat: NA
   weights: NA
   test.orgs: NA
+  current.dir: NA
+  folder.name: NA
 ---
 
 ```{r, echo = F}
+require(data.table)
+require(knitr)
 library(tidyverse)
-library(kableExtra)
+library(gridExtra)
+library(egg)
 
 dat <- params$dat 
 weights <- params$weights
 test.orgs <- params$test.orgs
+current.dir <- params$current.dir
+folder.name <- params$folder.name
+
 
 options(knitr.kable.NA = '')
 
@@ -40,17 +48,14 @@ test.orgs <- test.orgs %>%
   relocate(TestOrgNumber)
 
 test.orgs %>%
-  kbl(caption = "Test Organizations")%>%
-  kable_styling()
+  knitr::kable(caption = "Test Organizations")
 
 
 ```
 
 ## Weight Sets
 
-```{r weight.sets, echo=FALSE}
-
-#Make Weights Table 
+```{r results = "asis", echo = F}
 for(i in 1:nrow(weights)){
   w <- unlist(weights[i, ])
   weight.table <- data.frame(level = 1:5,
@@ -59,79 +64,80 @@ for(i in 1:nrow(weights)){
              s.mission = w[9:13] )
   rownames(weight.table) <- c()
   
-  # cat("here \n")
-  # weight.table%>%
-  #   kbl(caption = paste("Weight Set", i)) %>%
-  #   kable_styling() %>%
-  #   print()
-  # cat("there \n")
-  
-  print(paste("Weight Set", i))
-  print(weight.table)
+  cat("Weight Set", i)
+  print(kable(weight.table))
+  cat("\n")
 }
-
 ```
+
 
 ## Basic Comparison Plots
 
-X facet is weight set number, Y facet is test org number.
+X facet (columns) is weight set number, Y facet (rows) is test org number.
 
 
 ```{r plots, echo=FALSE}
-#par(mfrow= c(1,1))
-
-#relevel EIN's to org# from above table
 dat <- dat %>%
   mutate(Test.Org = as.factor(Test.Org)) 
 
 levels(dat$Test.Org) <- as.character(test.orgs$TestOrgNumber)
 
 
-dat %>%
+p <- list()
+
+p[[1]]<- dat %>%
   select(dist, Weights.Set, Test.Org) %>%
   ggplot(aes(x = dist)) + 
   geom_density()+
   facet_grid(as.factor(Test.Org) ~ Weights.Set) +  #labeller = label_both
   ggtitle("Total Distace By Weights Set for each Test Org") +
   theme(strip.text.y = element_text(size = 5))+
-  xlab("total distance ")
+  xlab("total distance ") + 
+  theme(axis.text.y= element_text(size = 3)) +
+  scale_x_continuous(breaks=c(0,0.5, 1))
 
 
-dat %>%
+p[[2]]<-dat %>%
   select(dist.log.expense, Weights.Set, Test.Org) %>%
   ggplot(aes(x = dist.log.expense)) + 
   geom_density()+
   facet_grid(as.factor(Test.Org) ~ Weights.Set) + 
   ggtitle("log(Expense) Distace By Weights Set for each Test Org") +
   theme(strip.text.y = element_text(size = 5)) +
-  xlab("log(Expense) distance")
+  xlab("log(Expense) distance")+ 
+  theme(axis.text.y= element_text(size = 3)) +
+  scale_x_continuous(breaks=c(0,0.5, 1))
 
 
-dat %>%
+p[[3]]<-dat %>%
   select(dist.geo, Weights.Set, Test.Org) %>%
   ggplot(aes(x = dist.geo)) + 
   geom_density()+
   facet_grid(as.factor(Test.Org) ~ Weights.Set) + 
   ggtitle("Geographic Distace By Weights Set for each Test Org") +
   theme(strip.text.y = element_text(size = 5))+
-  xlab("geographic distance ")
+  xlab("geographic distance ")+ 
+  theme(axis.text.y= element_text(size = 3)) +
+  scale_x_continuous(breaks=c(0,0.5, 1))
 
-dat %>%
+p[[4]]<-dat %>%
   select(dist.mission, Weights.Set, Test.Org) %>%
   ggplot(aes(x = dist.mission)) + 
   geom_density()+
   facet_grid(as.factor(Test.Org) ~ Weights.Set) + 
   ggtitle("Mission Distace By Weights Set for each Test Org") +
   theme(strip.text.y = element_text(size = 5))+
-  xlab("mission distance ")
+  xlab("mission distance ")+ 
+  theme(axis.text.y= element_text(size = 3)) +
+  scale_x_continuous(breaks=c(0,0.5, 1))
 
+do.call(grid.arrange,p)
 ```
 
 
 ## Correlation Plots
 
 ```{r corr, echo = F, warning=FALSE}
-
 panel.cor <- function(x, y, digits=2, prefix="", cex.cor)
 {
     usr <- par("usr"); on.exit(par(usr))
@@ -162,29 +168,60 @@ panel.smooth <- function (x, y, col = par("col"), bg = NA, pch = par("pch"),
 }
 
 
+#make image dir
+image.dir <- paste0(current.dir, "/unit-testing/test-results/", folder.name, "/images")
+dir.create(file.path(image.dir))
 
-
-#par(mfrow= c(nrow(test.orgs), nrow(weights)))
-
+#make cor plots 
 for(i in 1:nrow(test.orgs)){
   for(j in 1:nrow(weights)){
     dat.temp <- dat %>%
       filter(Test.Org == i & Weights.Set == j) %>%
       select(c("dist","dist.geo","dist.mission","dist.log.expense"))
+    
+    jpeg(file = paste0( "rplot",i,j,".jpg"), width = 350, height = 350)
     pairs( dat.temp, 
        lower.panel=panel.smooth, upper.panel=panel.cor ,
        main = paste("Weights Set", j, "and Test Org", i))
-    
+    dev.off()
+
   }
 }
 
-#par(mfrow = c(1,1))
 
 ```
 
-## Subway plot 
 
-This section is not currently working. 
+```{r, results = "asis"}
+directories <- paste0(current.dir)
+
+plots <- list.files(directories, pattern="*.jpg")
+plots <- paste0( directories, "/", plots)
+
+index <- 1
+
+if(length(plots > 0)){
+  p <-paste0('<table border="1">')
+# #create an html table with float left/right, whatever....
+  for(i in seq(1,length(plots),nrow(weights))){
+    p <- paste0(p, '<tr>')
+    
+    for(j in 1:nrow(weights) ){
+      p <- paste0(p, '<td height="450"><img src="',plots[i+j-1],'" height="400" width="400"/></td>')
+    }
+    p <- paste0(p, '</tr>')
+    
+    
+    }
+p <- paste0(p, '</table>')
+}
+
+cat(p)
+
+
+```
+
+
 
 
 ```{r subway, echo = F, eval = F}
@@ -267,7 +304,7 @@ for(i in 1:7){
 
 
 
-```{r, message = F, echo = F}
+```{r, message = F, echo = F, results='asis'}
 
 num.weights <- nrow(weights)
 
@@ -278,10 +315,10 @@ plot.combos$rank.cor <- plot.combos$dist.cor <-  0
 
 
 #par(mfrow= c(nrow(test.orgs), nrow(plot.combos)))
-
 #i = test org
 #j = weight set 
 for(i in 1:7){
+  cat(paste('<br> <font size="+2"> Test Set', i, '</font> <br>'))
   plot.combos <- as.data.frame(t(utils::combn(1:num.weights, 2)))
   colnames(plot.combos) <- c("w1", "w2")
 
@@ -311,10 +348,10 @@ for(i in 1:7){
     geom_abline(col = "red") +
     xlab(paste("Ranks from weight set", plot.combos[j, 1])) +
     ylab(paste("Ranks from weight set", plot.combos[j, 2])) +
-    ggtitle(paste("Comparing Distance Ranks for Test Org", i, "and weight sets",plot.combos[j, 1], "and", plot.combos[j, 2] )) +
+    ggtitle(paste("Comparing Distance Ranks for \n Test Org", i, "and weight sets",plot.combos[j, 1], "and", plot.combos[j, 2] )) +
     annotate(geom="text", x=2000, y=10000, label=paste("Correlation =",plot.combos$rank.cor[j] ),
               color="red") 
-  print(p1)
+  # print(p1)
   
   p2<- dat.full %>%
     ggplot(aes(x = dist.x, y = dist.y))+
@@ -322,10 +359,12 @@ for(i in 1:7){
     geom_abline(col = "red") +
     xlab(paste("Distance from weight set", plot.combos[j, 1])) +
     ylab(paste("Distance from weight set", plot.combos[j, 2])) +
-    ggtitle(paste("Comparing Distance Values for Test Org", i, "and weight sets",plot.combos[j, 1], "and", plot.combos[j, 2] )) +
+    ggtitle(paste("Comparing Distance Values for \n Test Org", i, "and weight sets",plot.combos[j, 1], "and", plot.combos[j, 2] )) +
     annotate(geom="text", x=0.2, y=0.8, label=paste("Correlation =", plot.combos$dist.cor[j]),
               color="red")
-  print(p2)
+  # print(p2)
+  ggarrange(p1, p2, nrow = 1, ncol = 2)
+
   }
   
   # plot.combos %>%
@@ -339,7 +378,7 @@ for(i in 1:7){
   
   colnames(plot.combos) <- c("First Weight Set", "Second Weight Set", "corr(Distance)", "cor(Rank)")
   print(paste("Correlations for Test Org", i))
-  print(plot.combos)
+  print(kable(plot.combos))
 
 
 }

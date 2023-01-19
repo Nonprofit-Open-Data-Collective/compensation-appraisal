@@ -1,7 +1,7 @@
 ### Generate Comparison set 
 
 ## Name the folder you want to save the final data set in
-folder.name <- "v03-test6"
+folder.name <- "v03-test14"
 
 ## Setting up the weights ------------------------------------------------
 #Create 3 data frames geo.weights, r.weights, and s.weights
@@ -49,3 +49,11 @@ s.mission.weights[3, ] <- c(5,2,1,1,0.5)
 source("funcs-testing/generate-comparison-dataset-v03.R")
 generate_comparisons(geo.weighs, r.mission.weights, s.mission.weights, folder.name)
 
+
+## Clean Up 
+#clean up plots 
+directories <- paste0(getwd(), "/unit-testing")
+
+plots <- list.files(directories, pattern="*.jpg")
+plots <- paste0( directories, "/", plots)
+unlink(plots)

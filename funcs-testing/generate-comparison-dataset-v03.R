@@ -130,10 +130,17 @@ generate_comparisons <- function(geo.weighs, r.mission.weights, s.mission.weight
                      output_file = paste0("test-results/", folder.name, "/graphs"),
                      params = list( dat = dat.ret,
                                     weights = dat.weights,
-                                    test.orgs = dat.testing))
+                                    test.orgs = dat.testing,
+                                    current.dir = getwd(), 
+                                    folder.name = folder.name))
 }
 
 
+#clean up plots 
+directories <- paste0(getwd(), "/unit-testing")
 
+plots <- list.files(directories, pattern="*.jpg")
+plots <- paste0( directories, "/", plots)
+unlink(plots)
 
 
