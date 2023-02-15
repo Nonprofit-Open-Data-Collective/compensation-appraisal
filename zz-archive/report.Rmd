@@ -1,0 +1,364 @@
+---
+title: "Urban Institute's CEO Compensation Appraisal Tool Results"
+output: pdf_document
+params:
+  dat.final: NA
+  org: NA
+  search: NA
+  hard: NA
+---
+
+
+
+```{r HEOM, echo=FALSE, warning=F, message=F}
+
+### See pretend-shiny vignette for detailed information
+
+#get parameters 
+dat.final <- params$dat.final
+org <- params$org
+search <- params$search
+hard <- params$hard
+
+#get results 
+results <- HEOM_with_weights(org, search, dat.final)
+
+#getting weighted average 
+d_i <- results$dist
+sum_w <- sum(1 - d_i)
+w_i <- (1-d_i) / sum_w
+#sum(w_i) = 1
+
+weighted.average <- sum(w_i * results$CEOCompensation)
+
+#getting the pay range
+dat.model <- results
+
+#make everything factors
+dat.model$FormYr <- as.factor(dat.model$FormYr )
+dat.model$MajorGroup <- as.factor(dat.model$MajorGroup)
+dat.model$UNIV <- as.factor(dat.model$UNIV )
+dat.model$HOSP <- as.factor(dat.model$HOSP )
+dat.model$State <- as.factor(dat.model$State)
+dat.model$Loc <- as.factor(dat.model$LocationType )
+
+
+
+#only use complete data
+dat.model <- na.omit(dat.model)
+
+form <- "CEOCompensation ~ FormYr + log(TotalAssests+1, 10) + log(GrossReceipts + 1, 10) + log(TotalExpense+1, 10) + log(TotalEmployee+1, 10)"
+
+#if there is more than one major group, add it
+if(length(unique(search$MajorGroup)) > 1){
+  form <- paste(form, " + MajorGroup")
+}
+
+#if there is more than one state, add it
+if(length(unique(search$State)) > 1){
+  form <- paste(form, " + State")
+}
+
+#if we are considering Universities and non-Universities, include UNIV
+if(search$UNIV == 2){
+  form <- paste(form, " + UNIV")
+}
+
+#if we are considering hospitals and non-hospitals, include HOSP
+if(search$HOSP == 2){
+  form <- paste(form, " + HOSP")
+}
+
+
+#if we are considering both Rural and Metro
+if(length(unique(search$Loc)) > 1){
+  form <- paste(form, " + Loc")
+}
+
+#if both male and female in the results set
+if(all( c("F", "M") %in% unique(results$Gender))){
+  #filter out unknown gender
+  dat.model <- dat.model%>%
+    filter(Gender != "U")
+  #update form
+  form <- paste(form, " + Gender")
+}
+
+
+
+#add location and gender
+
+form <- stats::formula(form)
+mod <- lm(form , data = dat.model )
+
+#get residuals as a percentage of their original value
+resids <- mod$residuals
+per <- resids / dat.model$CEOCompensation / 100
+quants <- quantile(per, c(0.10, 0.90)) #get rid of the bonus years
+
+suggested.range<- weighted.average + weighted.average * quants
+
+pay.min <- dollarize(suggested.range[1])
+pay.max <- dollarize(suggested.range[2])
+
+
+
+# other characteristics we need
+n <- dim(dat.final)[1]
+
+
+
+tab.major.group <- table(dat.final$MajorGroup)
+tab.ntee <- table(dat.final$NTEE)
+
+```
+
+## Suggested Pay
+
+Your suggested CEO total pay range is **`r pay.min` - `r pay.max`**. 
+
+## Your Inputs
+
+Here we list the inputs that you provided. 
+
+```{r OrgTable, echo=FALSE, message=FALSE, warning=FALSE}
+
+get.major.group <- function(mg){
+  ret <- case_when(mg == 1 ~ "Arts, Culture, and Humanities",
+                   mg == 2 ~ "Education",
+                   mg == 3 ~ "Environment and Animals",
+                   mg == 4 ~ "Health",
+                   mg == 5 ~ "Human Services",
+                   mg == 6 ~ "International, Foreign Affairs",
+                   mg == 7 ~ "Public, Societal Benefit",
+                   mg == 8 ~ "Religion Related",
+                   mg == 9 ~ "Mutual/Membership Benefit",
+                   mg == 10 ~ "Unknown/Unclassified",
+                   mg == 11 ~ "Hosptial",
+                   mg == 12 ~ "University")
+  return(ret)
+  
+}
+
+get.ntee <- function(ntee){
+  
+  ret <- case_when(ntee == "D" ~ "Animals" ,
+                   ntee == "A" ~ "Arts, Culture, and Humanities", 
+                   ntee == "R" ~ "Civil Rights, Social Action & Advocacy", 
+                   ntee == "S" ~ "Community Improvement & Capacity Building", 
+                   ntee == "I" ~ "Crime & Legal-Related", 
+                   ntee == "B" ~ "Education", 
+                   ntee == "C" ~ "Environment",
+                   ntee == "J" ~ "Employment", 
+                   ntee == "K" ~ "Food, Agriculture & Nutrition", 
+                   ntee == "E" ~ "Health Care",
+                   ntee == "L" ~ "Housing & Shelter", 
+                   ntee == "P" ~ "Human Services", 
+                   ntee == "Q" ~ "International, Foreign Affairs & National Security",
+                   ntee == "H" ~ "Medical Research", 
+                   ntee == "F" ~ "Mental Health & Crisis Intervention", 
+                   ntee == "Y" ~ "Mutual & Membership Benefit", 
+                   ntee == "T" ~ "Philanthropy, Voluntarism & Grantmaking Foundations", 
+                   ntee == "M" ~ "Public Safety, Disaster Preparedness & Relief", 
+                   ntee == "W" ~ "Public & Societal Benefit", 
+                   ntee == "G" ~ "Voluntary Health Associations & Medical Disciplines", 
+                   ntee == "N" ~ "Recreation & Sports", 
+                   ntee == "X" ~ "Religion Related", 
+                   ntee == "U" ~ "Science & Technology", 
+                   ntee == "V" ~ "Social Science", 
+                   ntee == "O" ~ "Youth Development", 
+                   ntee == "Z" ~ "Unknown, Unclassified")
+  
+  return(ret)
+  
+}
+
+
+get.ntee.cc <- function(cc){
+  
+   ret <- case_when(cc == "01" ~ "Alliance/Advocacy Organization", 
+                    cc == "02" ~ "Management and Technical Assistance", 
+                    cc == "03" ~ "Professional Society/Association", 
+                    cc == "05" ~ "Research Institute and/or Public Policy Analysis", 
+                    cc == "11" ~ "Monetary Support - Single Organization", 
+                    cc == "12" ~ "Monetary Support - Multiple Organizations", 
+                    cc == "19" ~ "Nonmonetary Support Not Elsewhere Classified (N.E.C.)",
+                    cc == "00" ~ "Regular nonprofit", 
+                    is.na(cc) ~ "Regular nonprofit")
+   return(ret)
+}
+
+
+org.table <- data.frame(Attributes = c("State", 
+                                       "City Type", 
+                                       "Broad Category", 
+                                       "Major Group", 
+                                       "Specality Orginization?", 
+                                       "Hospital?", 
+                                       "University?", 
+                                       "Total Expenses", 
+                                       "Total Employees"), 
+                        Input = c(org$State,
+                                  org$Loc,
+                                  get.major.group(org$MajorGroup), 
+                                  get.ntee(org$NTEE),
+                                  get.ntee.cc(org$NTEE.CC), 
+                                  ifelse(org$HOSP == TRUE, "Yes", "No"), 
+                                  ifelse(org$UNIV == TRUE, "Yes", "No"),
+                                  dollarize(org$TotalExpense),
+                                  org$TotalEmployee))
+
+
+org.table %>%
+  knitr::kable(col.names = c("Attribute", "Input"),
+               caption = "Your Orginization Inputs",
+               #booktabs = T,
+               format = "latex") %>%
+  kableExtra::kable_styling(bootstrap_options = "striped",
+                            full_width = F,
+                            latex_options = "hold_position")
+
+```
+
+
+
+```{r SearchTable, echo=FALSE, message=FALSE, warning=FALSE}
+search.table <- data.frame(Attributes = c("State", 
+                                       "City Type", 
+                                       "Broad Category", 
+                                       "Major Group", 
+                                       "Specality Orginization?", 
+                                       "Hospital?", 
+                                       "University?", 
+                                       "Total Expenses", 
+                                       "Total Employees"), 
+                        Input = c(paste(search$State, collapse = "; "),
+                                  paste(search$Loc, collapse = ";"),
+                                  paste(unlist(lapply(search$MajorGroup, get.major.group )), collapse = "; "), 
+                                  paste(unlist(lapply(search$NTEE, get.ntee )), collapse = "; "),
+                                  paste(unlist(lapply(search$NTEE.CC, get.ntee.cc )), collapse = "; "),
+                                  ifelse(search$HOSP == TRUE, "Yes", "No"), 
+                                  ifelse(search$UNIV == TRUE, "Yes", "No"),
+                                  paste(dollarize(search$TotalExpense)[1], "to", dollarize(search$TotalExpense[2])),
+                                  paste(search$TotalEmployee[1], "to", search$TotalEmployee[2])), 
+                        Hard = c(ifelse(hard$State == TRUE, "Hard", "Soft"), 
+                                 ifelse(hard$Loc == TRUE, "Hard", "Soft"),
+                                 ifelse(hard$MajorGroup == TRUE, "Hard", "Soft"),
+                                 ifelse(hard$NTEE == TRUE, "Hard", "Soft"),
+                                 ifelse(hard$NTEE.CC == TRUE, "Hard", "Soft"),
+                                 "N/A", 
+                                 "N/A", 
+                                 ifelse(hard$TotalExpense == TRUE, "Hard", "Soft"),
+                                 ifelse(hard$TotalEmployee == TRUE, "Hard", "Soft")))
+
+search.table %>%
+  knitr::kable(col.names = c("Attribute", "Search Critera", "Hard or Soft Filtering"),
+               caption = "Your Search Criteria",
+               #booktabs = T,
+               format = "latex") %>%
+  kableExtra::kable_styling(bootstrap_options = "striped",
+                            full_width = F,
+                            latex_options = c("hold_position","scale_down"))
+
+
+```
+
+
+
+## Characteristics of Your Comparison Set
+
+There were **`r n`** other non-profits in your comparison set. 
+
+```{r MajorGroup, echo=FALSE, warning=F, message=F}
+tab.temp.mg <- tab.major.group %>% as.data.frame()
+
+colnames(tab.temp.mg) <- c("MajorGroup", "Freq")
+
+tab.temp.mg %>%
+  as.data.frame() %>%
+  dplyr::mutate(MajorGroup = dplyr::recode(MajorGroup,
+                               `1` = "Arts, Culture, and Humanities",
+                                `2` =  "Education",
+                                `3` = "Environment and Animals" ,
+                                `4` = "Health",
+                                `5` = "Human Services",
+                                `6` = "International, Foreign Affairs",
+                                `7` = "Public, Societal Benefit",
+                                `8` = "Religion Related",
+                                `9` = "Mutual/Membership Benefit",
+                                `10` = "Unknown/Unclassified")) %>%
+  mutate(Percentage = round(as.numeric(Freq) / sum(Freq), 2 ))%>%
+  knitr::kable(col.names = c("Broad Category", "Count", "Percentage"),
+               caption = "Nonprofits in Comparison Set by Broad Category",
+               #booktabs = T,
+               format = "latex") %>%
+  kableExtra::kable_styling(bootstrap_options = "striped",
+                            full_width = F,
+                            latex_options = "hold_position")
+```
+
+\newpage
+
+```{r NTEE, echo=FALSE, warning=F, message=F}
+tab.temp.ntee <- tab.ntee %>% as.data.frame()
+
+colnames(tab.temp.ntee) <- c("NTEE", "Freq")
+
+tab.temp.ntee %>%
+  as.data.frame() %>%
+  dplyr::mutate(NTEE= dplyr::recode(NTEE,
+          "A" = "Arts, Culture, and Humanities" , 
+          "B" =  "Education", 
+          "C" = "Environment", 
+          "D" = "Animals",
+          "E" =  "Health Care",
+          "F" = "Mental Health & Crisis Intervention" ,
+          "G" = "Voluntary Health Associations & Medical Disciplines",
+          "H" = "Medical Research",
+          "I" = "Crime & Legal-Related" , 
+          "J" = "Employment",
+          "K" = "Food, Agriculture & Nutrition", 
+          "L" = "Housing & Shelter", 
+          "M" = "Public Safety, Disaster Preparedness & Relief" , 
+          "N" = "Recreation & Sports", 
+          "O" = "Youth Development", 
+          "P" =  "Human Services", 
+          "Q" = "International, Foreign Affairs & National Security" , 
+          "R" = "Civil Rights, Social Action & Advocacy", 
+          "S" = "Community Improvement & Capacity Building", 
+          "T" = "Philanthropy, Voluntarism & Grantmaking Foundations", 
+          "U" = "Science & Technology" , 
+          "V" = "Social Science", 
+          "W" = "Public & Societal Benefit", 
+          "X" = "Religion Related", 
+          "Y" = "Mutual & Membership Benefit" , 
+          "Z" = "Unknown, Unclassified" )) %>%
+  mutate(Percentage = round(as.numeric(Freq) / sum(Freq), 2 )) %>%
+  arrange(NTEE) %>%
+  knitr::kable(col.names = c("Major Group", "Count", "Percentage"),
+               caption = "Nonprofits in Comparison Set by Major Group",
+               #booktabs = T,
+               format = "latex") %>%
+  kableExtra::kable_styling(bootstrap_options = "striped",
+                            full_width = F,
+                            latex_options = "hold_position")
+
+```
+
+
+\newpage
+
+```{r CEOhist, echo=FALSE, warning=F, message=F}
+
+ggplot(data = dat.final) +
+  geom_histogram(aes(x = CEOCompensation), 
+                 binwidth = 50000,
+                 fill = "#1696d2") +
+  ggtitle("Histogram of CEO Pay in Your Comparison Set") +
+  ggplot2::xlab("CEO Total Pay") + 
+  ggplot2::ylab("Count") +
+  ggplot2::xlim(0, 1000000) + 
+  labs(caption = paste("Note, there were", sum(dat.final$CEOCompensation > 100000) , "nonprofits who paid there CEO more than $1,000,000 that are not displayed on this plot."))
+  
+```
+

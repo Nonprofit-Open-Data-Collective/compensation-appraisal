@@ -1,0 +1,54 @@
+---
+title: "Version-02 Weights Comparison Results"
+output: html_document
+params:
+  dat: NA
+  weights: NA
+---
+
+```{r, echo = F}
+library(tidyverse)
+
+dat <- params$dat
+weights <- params$weights
+
+
+dat %>%
+  select(dist, Weights.Set, Test.Org) %>%
+  ggplot(aes(x = dist)) + 
+  geom_density()+
+  facet_grid(as.factor(Test.Org) ~ Weights.Set) + 
+  ggtitle("Total Distace By Weights Set for each Test Org") +
+  theme(strip.text.y = element_text(size = 5))+
+  xlab("total distance ")
+
+
+dat %>%
+  select(dist.log.expense, Weights.Set, Test.Org) %>%
+  ggplot(aes(x = dist.log.expense)) + 
+  geom_density()+
+  facet_grid(as.factor(Test.Org) ~ Weights.Set) + 
+  ggtitle("log(Expense) Distace By Weights Set for each Test Org") +
+  theme(strip.text.y = element_text(size = 5)) +
+  xlab("log(Expense) distance")
+
+
+dat %>%
+  select(dist.geo, Weights.Set, Test.Org) %>%
+  ggplot(aes(x = dist.geo)) + 
+  geom_density()+
+  facet_grid(as.factor(Test.Org) ~ Weights.Set) + 
+  ggtitle("Geographic Distace By Weights Set for each Test Org") +
+  theme(strip.text.y = element_text(size = 5))+
+  xlab("geographic distance ")
+
+dat %>%
+  select(dist.mission, Weights.Set, Test.Org) %>%
+  ggplot(aes(x = dist.mission)) + 
+  geom_density()+
+  facet_grid(as.factor(Test.Org) ~ Weights.Set) + 
+  ggtitle("Mission Distace By Weights Set for each Test Org") +
+  theme(strip.text.y = element_text(size = 5))+
+  xlab("mission distance ")
+
+```

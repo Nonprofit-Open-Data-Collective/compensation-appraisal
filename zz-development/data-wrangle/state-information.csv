@@ -1,0 +1,53 @@
+state,border,num.border,order,region,abb
+Alabama,"Mississippi, Tennessee, Florida, Georgia",4,1,6,AL
+Alaska,Washington,1,2,9,AK
+Arizona,"Nevada, New Mexico, Utah, California, Colorado",5,3,8,AZ
+Arkansas,"Oklahoma, Tennessee, Texas, Louisiana, Mississippi, Missouri",6,4,7,AR
+California,"Oregon, Arizona, Nevada",3,5,9,CA
+Colorado,"New Mexico, Oklahoma, Utah, Wyoming, Arizona, Kansas, Nebraska",7,6,8,CO
+Connecticut,"New York, Rhode Island, Massachusetts",3,7,1,CT
+Delaware,"New Jersey, Pennsylvania, Maryland",3,8,1,DE
+District of Columbia,"Virginia, Maryland",2,9,5,DC
+Florida,"Georgia, Alabama",2,10,5,FL
+Georgia,"North Carolina, South Carolina, Tennessee, Alabama, Florida",5,11,5,GA
+Hawaii,California,1,12,9,HI
+Idaho,"Utah, Washington, Wyoming, Montana, Nevada, Oregon",6,13,8,ID
+Illinois,"Kentucky, Missouri, Wisconsin, Indiana, Iowa, Michigan (water border only)",6,14,3,IL
+Indiana,"Michigan, Ohio, Illinois, Kentucky",4,15,3,IN
+Iowa,"Nebraska, South Dakota, Wisconsin, Illinois, Minnesota, Missouri",6,16,5,IA
+Kansas,"Nebraska, Oklahoma, 	Colorado, Missouri",4,17,4,KS
+Kentucky,"Tennessee, Virginia, West Virginia, Illinois, Indiana, Missouri, Ohio",7,18,6,KY
+Louisiana,"Texas, Arkansas, Mississippi",3,19,7,LA
+Maine,New Hampshire,1,20,1,ME
+Maryland,"Virginia, West Virginia, Delaware, Pennsylvania",4,21,1,MD
+Massachusetts,"New York, Rhode Island, Vermont, Connecticut, New Hampshire",5,22,1,MA
+Michigan,"Ohio, Wisconsin, Illinois, Indiana, Minnesota (water border)",5,23,6,MI
+Minnesota,"North Dakota, South Dakota, Wisconsin, 	Iowa, Michigan (water border)",5,24,4,MN
+Mississippi,"Louisiana, Tennessee, 	Alabama, Arkansas",4,25,6,MS
+Missouri,"Nebraska, Oklahoma, Tennessee, 	Arkansas, Illinois, Iowa, Kansas, Kentucky",8,26,4,MO
+Montana,"South Dakota, Wyoming, Idaho, North Dakota",4,27,8,MT
+Nebraska,"Missouri, South Dakota, Wyoming, Colorado, Iowa, Kansas,",6,28,4,NE
+Nevada,"Idaho, Oregon, Utah, Arizona, California",5,29,8,NV
+New Hampshire,"Vermont, Maine, Massachusetts",3,30,1,NH
+New Jersey,"Pennsylvania, Delaware, New York",3,31,1,NJ
+New Mexico,"Oklahoma, Texas, Utah, Arizona, Colorado",5,32,8,NM
+New York,"Pennsylvania, Rhode Island (water border), Vermont, 	Connecticut, Massachusetts, New Jersey",6,33,1,NY
+North Carolina,"Tennessee, Virginia, Georgia, South Carolina",4,34,5,NC
+North Dakota,"South Dakota, Minnesota, Montana",3,35,4,ND
+Ohio,"Michigan, Pennsylvania, West Virginia, Indiana, Kentucky",5,36,3,OH
+Oklahoma,"Missouri, New Mexico, Texas, 	Arkansas, Colorado, Kansas",6,37,7,OK
+Oregon,"Nevada, Washington, California, Idaho",4,38,9,OR
+Pennsylvania,"New York, Ohio, West Virginia, Delaware, Maryland, New Jersey",6,39,1,PA
+Puerto Rico,Florida,1,40,5,PR
+Rhode Island,"Massachusetts, New York (water border), Connecticut",3,41,1,RI
+South Carolina,"North Carolina, Georgia,",2,42,5,SC
+South Dakota,"Nebraska, North Dakota, Wyoming, Iowa, Minnesota, Montana",6,43,4,SD
+Tennessee,"Mississippi, Missouri, North Carolina, Virginia, Alabama, Arkansas, Georgia, Kentucky",8,44,6,TN
+Texas,"New Mexico, Oklahoma, 	Arkansas, Louisiana",4,45,7,TX
+Utah,"Nevada, New Mexico, Wyoming, Arizona, Colorado, Idaho",6,46,8,UT
+Vermont,"New Hampshire, New York, Massachusetts",3,47,1,VT
+Virginia,"North Carolina, Tennessee, West Virginia, Kentucky, Maryland",5,48,5,VA
+Washington,"Oregon, Idaho",2,49,8,WA
+West Virginia,"Pennsylvania, Virginia,   Kentucky, Maryland, Ohio",5,50,5,WV
+Wisconsin,"Michigan, Minnesota, Illinois, Iowa",4,51,3,WI
+Wyoming,"Nebraska, South Dakota, Utah, Colorado, Idaho, Montana",6,52,8,WY
