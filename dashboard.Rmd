@@ -1,0 +1,109 @@
+---
+title: "Nonprofit CEO Compensation Appraisal Tool"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    social: menu
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(shiny)
+library(ggplot2)
+library(kableExtra)
+library(compensator)
+
+```
+
+
+
+Compensation Tool 
+=======================================================================
+
+
+Row
+-----------------------------------------------------------------------
+
+### Appraisal Tool
+
+Welcome to the Nonprofit CEO Compensation Appraisal Tool! 
+
+Please enter the following information then click submit. 
+
+
+```{r}
+# Input State 
+selectInput(inputId = "input.org.state",
+            label = "State",
+            choices = state.abb52)
+
+# Input Location
+selectInput(inputId = "input.org.location",
+            label = "Location Type",
+            choices = c("Metropolitan", "Rural"))
+
+# Input Total Expenses
+numericInput(inputId = "input.org.expense", 
+             label = "Total Annual Expenses", 
+             value = 100000, 
+             min = 0,
+             max = 1e10)
+
+# NTEE Input
+textInput(inputId = "input.org.ntee",
+          label = "NTEE Code",
+          value = "A24")
+
+# Generate Report 
+
+actionButton(inputId = "generate",
+             label = "Generate Appraisal")
+
+randomVals <- eventReactive(input$generate, {
+    runif(input$input.org.expense)
+  })
+
+renderPlot({
+    hist(randomVals())
+  })
+
+
+```
+
+### Percent of downloads (last 5 min) {data-width=340}
+
+```{r}
+data.frame(numbers = 1:12,
+           letters = letters[1:12])
+
+```
+
+
+
+Detailed Appraisal
+=======================================================================
+
+### Recent Downlads
+
+```{r}
+mtcars %>%
+  kable()
+```
+
+
+About
+=======================================================================
+
+
+Here is we will put the about information 
+
+
+Gender Pay Gaps
+=======================================================================
+
+Here is where we will put the gender pay gap graphs
+
+
+
+
