@@ -11,8 +11,10 @@ runtime: shiny
 library(flexdashboard)
 library(shiny)
 library(ggplot2)
+library(dplyr)
 library(kableExtra)
 library(compensator)
+library(DT)
 
 ```
 
@@ -25,9 +27,8 @@ Compensation Tool
 Row
 -----------------------------------------------------------------------
 
-### Appraisal Tool
+### Welcome to the Nonprofit CEO Compensation Appraisal Tool! 
 
-Welcome to the Nonprofit CEO Compensation Appraisal Tool! 
 
 Please enter the following information then click submit. 
 
@@ -47,7 +48,7 @@ selectInput(inputId = "input.org.location",
 numericInput(inputId = "input.org.expense", 
              label = "Total Annual Expenses", 
              value = 100000, 
-             min = 0,
+             min = 1e5,
              max = 1e10)
 
 # NTEE Input
@@ -60,24 +61,44 @@ textInput(inputId = "input.org.ntee",
 actionButton(inputId = "generate",
              label = "Generate Appraisal")
 
-randomVals <- eventReactive(input$generate, {
-    runif(input$input.org.expense)
+apprasial <- eventReactive(input$generate, {
+  
+  loc <- dplyr::case_when(input$input.org.location == "Metropolitan" ~ "metro",
+                          input$input.org.location == "Rural" ~ "rural")
+  
+  org <- compensator::get_org_values(state = input$input.org.state,
+                                     location.type = loc,
+                                     total.expense = input$input.org.expense,
+                                      ntee = input$input.org.ntee)
+  
+
+  search.criteria <-
+  list(broad.category = org$broad.category,
+       major.group = base::LETTERS,
+       tens = 0:9,
+       type.org = org$type.org,
+       univ = org$univ,
+       hosp = org$hosp,
+       location.type = org$location.type,
+       state = state.abb52,
+       total.expense = c(0.1*org$total.expense, 10*org$total.expense) )
+  
+  samp <- select_sample(org = org, search.criteria = search.criteria)
+  predict_salary(samp)
+  
   })
 
-renderPlot({
-    hist(randomVals())
+renderPrint({
+  # print(apprasial()[[2]])
+  app <- apprasial()
+  print(paste0("Your suggested salary is ", dollarize(round(app[[2]][1], 0)), " - ", dollarize(round(app[[2]][2],0)), "."))
   })
+
+
 
 
 ```
 
-### Percent of downloads (last 5 min) {data-width=340}
-
-```{r}
-data.frame(numbers = 1:12,
-           letters = letters[1:12])
-
-```
 
 
 
