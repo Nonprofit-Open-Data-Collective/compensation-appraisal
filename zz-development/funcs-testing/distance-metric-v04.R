@@ -121,7 +121,7 @@ HEOM_with_weights <- function(org, search, dat.filtered, weights){
       D[i, "Mission"] <- 1 #max distance 
     }else if(org.mission$type.org == "R"){
       cols <- c("type.org", "letter", "letter1", "letter2")
-      D[i, "Mission"] <- sum( r.mission.weights$weight * (temp.org[, cols] != org.mission[, cols]))
+      D[i, "Mission"] <- log(sum( r.mission.weights$weight * (temp.org[, cols] != org.mission[, cols])), base = 10)
     }else if(org.mission$type.org == "S"){
       temp.comp <- data.frame(
         two.digit = ifelse(as.numeric(temp.org$two.digit)>10, 10, as.numeric(temp.org$two.digit)),
