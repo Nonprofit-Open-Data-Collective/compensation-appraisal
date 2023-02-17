@@ -15,6 +15,8 @@ library(dplyr)
 library(kableExtra)
 library(compensator)
 library(DT)
+library(shinyWidgets)
+
 
 ```
 
@@ -47,7 +49,7 @@ selectInput(inputId = "input.org.location",
 # Input Total Expenses
 numericInput(inputId = "input.org.expense", 
              label = "Total Annual Expenses", 
-             value = 100000, 
+             value = 1000000, 
              min = 1e5,
              max = 1e10)
 
@@ -61,7 +63,7 @@ textInput(inputId = "input.org.ntee",
 actionButton(inputId = "generate",
              label = "Generate Appraisal")
 
-apprasial <- eventReactive(input$generate, {
+appraisal <- eventReactive(input$generate, {
   
   loc <- dplyr::case_when(input$input.org.location == "Metropolitan" ~ "metro",
                           input$input.org.location == "Rural" ~ "rural")
@@ -89,8 +91,8 @@ apprasial <- eventReactive(input$generate, {
   })
 
 renderPrint({
-  # print(apprasial()[[2]])
-  app <- apprasial()
+  # print(appraisal()[[2]])
+  app <- appraisal()
   print(paste0("Your suggested salary is ", dollarize(round(app[[2]][1], 0)), " - ", dollarize(round(app[[2]][2],0)), "."))
   })
 
@@ -120,11 +122,137 @@ About
 Here is we will put the about information 
 
 
+## Geo dist map
+
+```{r picture, echo = F, fig.cap = "Map used for calculating geographic distance between two states", out.width = '100%'}
+knitr::include_graphics("images/geo-dist-map.jpeg")
+```
+
+
+
 Gender Pay Gaps
 =======================================================================
 
-Here is where we will put the gender pay gap graphs
+Inputs {.sidebar}
+-------------------------------------
+
+**Filter By Location:**
+
+```{r}
+#### Inputs for Graph 
+
+## State
+shinyWidgets::pickerInput(
+   inputId = "filter.gender.state",
+   label = "States",
+   choices = state.abb52,
+   multiple = TRUE,
+   selected = state.abb52,
+   options = list(
+     `actions-box` = TRUE,
+     `deselect-all-text` = "None",
+     `select-all-text` = "Select All",
+     `none-selected-text` = "NA"
+   )
+)
+
+## Location Type
+shinyWidgets::pickerInput(
+   inputId = "filter.gender.location.type",
+   label = "Location Type",
+   choices = c("Metropolitan" = "metro",
+               "Rural" = "rural"),
+   multiple = TRUE,
+   selected = c("Metropolitan", "Rural"),
+   options = list(
+     `actions-box` = TRUE,
+     `deselect-all-text` = "None",
+     `select-all-text` = "Select All",
+     `none-selected-text` = "NA"
+   )
+)
 
 
+```
 
 
+**Filter By Organization Characteristics: **
+
+```{r}
+## Broad Category
+shinyWidgets::pickerInput(
+  inputId = "filter.gender.broad.category",
+  label = "Broad Category",
+  choices = c("Arts, Culture, and Humanities" = 1,
+              "Education" = 2,
+              "Environment and Animals" = 3,
+              "Health" = 4,
+              "Human Services" = 5,
+              "International, Foreign Affairs" = 6,
+              "Public, Societal Benefit" = 7,
+              "Religion Related" = 8,
+              "Mutual/Membership Benefit" = 9,
+              "Unknown/Unclassified"= 10,
+              "University" = 11,
+              "Hospital" = 12), #showing up as 1:10 and idk why
+  multiple = TRUE,
+  selected = 1:12,
+  options = list(
+    `actions-box` = TRUE,
+    `deselect-all-text` = "None",
+    `select-all-text` = "Select All",
+      `none-selected-text` = "NA"
+    )
+  )
+
+
+## Total Expenses
+numericRangeInput("filter.gender.total.expense", 
+                  "Range of Total Expenses",
+                  value = c(0, Inf), #can we get commas on these values?
+                  min = 0
+)
+
+## Total Employees
+numericRangeInput("filter.gender.total.employee", 
+                  "Range of Total Employees",
+                  value = c(0, Inf), #can we get commas on these values?
+                  min = 0)
+```
+
+
+Column
+------------------------------------------------------------------
+
+Here is where we will put the graphs
+
+```{r}
+
+#Format the Search Criteria
+gender.graph.filters <- reactive({
+  filter.gender.1 <- list(form.year = 2019, #input$filter.year, 
+                   state = input$filter.gender.state,
+                   broad.categroy = input$filter.gender.broad.category,
+                   location.type = input$filter.gender.location.type,
+                   ntee = NA, #need to add input for this
+                   ntee.cc = NA, #need to add input for this
+                   total.expense = input$filter.gender.total.expense,
+                   total.employee = input$filter.gender.total.employee)
+
+  # Change null to na
+  if(is.null(filter.gender.1$form.year)){filter.gender.1$form.year <- NA}
+  if(is.null(filter.gender.1$state)){filter.gender.1$state <- NA}
+  if(is.null(filter.gender.1$broad.category)){filter.gender.1$broad.category <- NA}
+  if(is.null(filter.gender.1$location.type)){filter.gender.1$location.type <- NA}
+  if(is.null(filter.gender.1$total.expense)){filter.gender.1$total.expense <- c(-Inf, Inf)}
+  if(is.null(filter.gender.1$total.employee)){filter.gender.1$total.employee <- c(0, Inf)}
+
+  filter.gender.1
+
+})
+
+# ## Testing that the filtering criteria is what it should be
+# renderPrint({
+#   paste(gender.graph.filters())
+# })
+```
