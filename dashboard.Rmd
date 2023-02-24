@@ -16,7 +16,7 @@ library(kableExtra)
 library(compensator)
 library(DT)
 library(shinyWidgets)
-
+library(plotly)
 
 ```
 
@@ -75,7 +75,7 @@ appraisal <- eventReactive(input$generate, {
   
 
   search.criteria <-
-  list(broad.category = org$broad.category,
+  list(broad.category = ifelse(org$type.org == "regular", org$broad.category, 1:12), 
        major.group = base::LETTERS,
        tens = 0:9,
        type.org = org$type.org,
@@ -133,10 +133,10 @@ knitr::include_graphics("images/geo-dist-map.jpeg")
 Gender Pay Gaps
 =======================================================================
 
-Inputs {.sidebar}
--------------------------------------
+Inputs {.sidebar data-width=300}
+----------------------------------------------------------------------
 
-**Filter By Location:**
+### **Filter By Location:**
 
 ```{r}
 #### Inputs for Graph 
@@ -163,7 +163,7 @@ shinyWidgets::pickerInput(
    choices = c("Metropolitan" = "metro",
                "Rural" = "rural"),
    multiple = TRUE,
-   selected = c("Metropolitan", "Rural"),
+   selected = c("metro", "rural"),
    options = list(
      `actions-box` = TRUE,
      `deselect-all-text` = "None",
@@ -175,8 +175,7 @@ shinyWidgets::pickerInput(
 
 ```
 
-
-**Filter By Organization Characteristics: **
+### **Filter By Organization Characteristics:**
 
 ```{r}
 ## Broad Category
@@ -214,45 +213,231 @@ numericRangeInput("filter.gender.total.expense",
 )
 
 ## Total Employees
-numericRangeInput("filter.gender.total.employee", 
-                  "Range of Total Employees",
-                  value = c(0, Inf), #can we get commas on these values?
-                  min = 0)
+# numericRangeInput("filter.gender.total.employee", 
+#                   "Range of Total Employees",
+#                   value = c(0, Inf), #can we get commas on these values?
+#                   min = 0)
 ```
 
+
+### **Format Graph**
+
+```{r}
+shinyWidgets::pickerInput(
+   inputId = "format.gender.yaxis",
+   label = "Y-Axis",
+   choices = c("Braod Category" = "broad.category",
+               "Major Group" = "major.group"),
+   multiple = FALSE,
+   selected = c("broad.category")
+) 
+
+
+shinyWidgets::pickerInput(
+   inputId = "format.gender.value",
+   label = "Y-Axis",
+   choices = c("Mean" = "Mean",
+               "Median" = "Median"),
+   multiple = FALSE,
+   selected = c("Mean")
+) 
+```
 
 Column
 ------------------------------------------------------------------
 
-Here is where we will put the graphs
+### Gender Pay Gap Graph
 
 ```{r}
 
 #Format the Search Criteria
 gender.graph.filters <- reactive({
-  filter.gender.1 <- list(form.year = 2019, #input$filter.year, 
+  filter.gender.1 <- list(#form.year = 2019, #input$filter.year, 
                    state = input$filter.gender.state,
-                   broad.categroy = input$filter.gender.broad.category,
+                   broad.category = input$filter.gender.broad.category,
                    location.type = input$filter.gender.location.type,
-                   ntee = NA, #need to add input for this
-                   ntee.cc = NA, #need to add input for this
-                   total.expense = input$filter.gender.total.expense,
-                   total.employee = input$filter.gender.total.employee)
+                   total.expense = input$filter.gender.total.expense
+                   #total.employee = input$filter.gender.total.employee
+                   )
 
+  # A little formatting to get correct input values for `dat_filtering`
+  if(length(filter.gender.1$location.type) == 2){
+    filter.gender.1$location.type <- "both"
+  }
+
+  
+  
   # Change null to na
   if(is.null(filter.gender.1$form.year)){filter.gender.1$form.year <- NA}
-  if(is.null(filter.gender.1$state)){filter.gender.1$state <- NA}
-  if(is.null(filter.gender.1$broad.category)){filter.gender.1$broad.category <- NA}
+  if(is.null(filter.gender.1$state)){filter.gender.1$state <- "none"}
+  if(is.null(filter.gender.1$broad.category)){filter.gender.1$broad.category <- 0}
   if(is.null(filter.gender.1$location.type)){filter.gender.1$location.type <- NA}
   if(is.null(filter.gender.1$total.expense)){filter.gender.1$total.expense <- c(-Inf, Inf)}
   if(is.null(filter.gender.1$total.employee)){filter.gender.1$total.employee <- c(0, Inf)}
+  
+  
 
   filter.gender.1
 
 })
 
-# ## Testing that the filtering criteria is what it should be
+# Testing that the filtering criteria is what it should be
 # renderPrint({
 #   paste(gender.graph.filters())
 # })
+
+
+```
+
+
+
+```{r}
+
+renderPlotly({
+  #yaxis options: "broad.category", 
+    y.axis <-  input$format.gender.yaxis  
+    
+    #stat options: Median, Mean
+    s <- input$format.gender.value
+    
+    #get filtered data from compensator package
+    dat.filterd <- 
+      compensator::dat_filtering(
+        broad.category = as.numeric( gender.graph.filters()$broad.category),
+        tens = 0:9,
+        type.org = "both",
+        univ = TRUE,
+        hosp = TRUE,
+        state = gender.graph.filters()$state,
+        location.type = gender.graph.filters()$location.type,
+        total.expense =  gender.graph.filters()$total.expense
+      )
+
+
+    #format data for plotting
+    dat.plot <- 
+      #get information in nonprofits for the ones that made it though filtersing
+      dplyr::inner_join(dat.filterd, nonprofits, by = "EIN") %>%
+      #remove unknown gender 
+      dplyr::filter(gender != "U") %>%
+      dplyr::select(ceo.compensation, gender, paste(y.axis)) %>%
+      #get the correect yaxis value based on inputs
+      dplyr::rename(Yaxis = paste(y.axis)) %>%
+      #group by everything execpt ceo.compensation
+      dplyr::group_by_at(vars(-ceo.compensation)) %>%
+      #get the mean or median of ceo.compensation
+      dplyr::summarise(
+        Value =  ifelse(s == "Median", 
+                        median(ceo.compensation), 
+                        mean(ceo.compensation)), 
+        n = n(), 
+        .groups = "keep") %>%
+      dplyr::ungroup()
+    
+    if(y.axis == "broad.category"){
+      dat.plot <- dat.plot %>%
+        dplyr::mutate(Yaxis = case_when(
+          Yaxis == 1 ~ "Arts, Culture, and Humanities",
+          Yaxis == 2 ~ "Education",
+          Yaxis == 3 ~ "Environment and Animals",
+          Yaxis == 4 ~ "Health",
+          Yaxis == 5 ~ "Human Services",
+          Yaxis == 6 ~ "International, Foreign Affairs",
+          Yaxis == 7 ~ "Public, Societal Benefit",
+          Yaxis == 8 ~ "Religion Related",
+          Yaxis == 9 ~ "Mutual/Membership Benefit",
+          Yaxis == 10 ~ "Unknown/Unclassified",
+          Yaxis == 11 ~ "Hosptial",
+          Yaxis == 12 ~ "University"))
+    }
+    
+    if(y.axis == "major.group"){
+      dat.plot <- dat.plot %>%
+        dplyr::mutate(Yaxis = case_when(
+          Yaxis == "A" ~ "Arts, Culture, and Humanities",
+          Yaxis == "B" ~ "Education", 
+          Yaxis == "C" ~ "Environment",
+          Yaxis == "D" ~ "Animal-Related",
+          Yaxis == "E" ~ "Health Care",
+          Yaxis == "F" ~ "Mental Health & Crisis Intervention",
+          Yaxis == "G" ~ "Voluntary Health Associations & Medical Disciplines",
+          Yaxis == "H" ~ "Medical Research",
+          Yaxis == "I" ~ "Crime & Legal-Related",
+          Yaxis == "J" ~ "Employment",
+          Yaxis == "K" ~ "Food, Agriculture & Nutrition",
+          Yaxis == "L" ~ "Housing & Shelter",
+          Yaxis == "M" ~ "Public Safety, Disaster Preparedness & Relief",
+          Yaxis == "N" ~ "Recreation & Sports",
+          Yaxis == "O" ~ "Youth Development",
+          Yaxis == "P" ~ "Human Services",
+          Yaxis == "Q" ~ "International, Foreign Affairs & National Security",
+          Yaxis == "R" ~ "Civil Rights, Social Action & Advocacy",
+          Yaxis == "S" ~ "Community Improvement & Capacity Building",
+          Yaxis == "T" ~ "Philanthropy, Voluntarism & Grantmaking Foundations",
+          Yaxis == "U" ~ "Science & Technology",
+          Yaxis == "V" ~ "Social Science",
+          Yaxis == "W" ~ "Public & Societal Benefit",
+          Yaxis == "X" ~ "Religion-Related",
+          Yaxis == "Y" ~ "Mutual & Membership Benefit",
+          Yaxis == "Z" ~ "Unknown"))
+    }
+    
+    
+    #recode as factors
+    dat.plot$gender <- as.factor(dat.plot$gender)
+    dat.plot$Yaxis <- as.factor(dat.plot$Yaxis)
+    
+     #format
+    x.label <- paste0(toupper(strsplit(s, "")[[1]][1]), 
+                      paste0(strsplit(s, "")[[1]][-1], 
+                             collapse = ""), 
+                      collapse = "")
+
+    #a little more formatting
+    dat.diff <- dat.plot %>%
+      tidyr::pivot_wider(names_from = gender, values_from = c(Value, n)) %>%
+      dplyr::mutate(diff = abs(Value_F - Value_M)) %>%
+      dplyr::mutate(pois = (Value_F + Value_M) / 2) %>%
+      dplyr::select(c(Yaxis, pois, diff)) %>%
+      base::merge(dat.plot)
+  
+    #make the ggplot
+    p <- dat.diff %>%
+      ggplot(aes(x = Value,
+                 y = reorder(Yaxis,Value),
+                 color = gender,
+                 text = paste("Classification:", Yaxis),
+                 n = n)) +
+      geom_point(aes(text = paste0(s, ": ", dollarize(Value),
+                                  "<br>Gender: ", gender)
+                     )) +
+      geom_line(aes(group = Yaxis), col = "gray" ) +
+      geom_text(aes(x = pois, 
+                    y = reorder(Yaxis,Value) ,
+                    label = dollarize (round(diff))),
+                nudge_y = 0.3,
+                color = "grey",
+                size = 3)+
+      scale_color_manual(values=c("#9525AD", "#25AD80"), 
+                         name = "Gender") +
+      scale_x_continuous(labels=scales::dollar_format())+
+      ggtitle(
+        paste("CEO Pay by Gender by", 
+              case_when(y.axis == "broad.category" ~ "Broad Category",
+                        y.axis == "major.group" ~ "Major Group"),
+              "from 2009 - 2019")) +
+      xlab(paste(x.label, "CEO Compensation")) +
+      ylab(
+        paste(case_when(y.axis == "broad.category" ~ "Broad Category",
+                        y.axis == "major.group" ~ "Major Group")))
+
+    #output plotly
+    ggplotly(p,
+             tooltip = c( "text", "n"))  %>%
+      #suppress the hover over the difference line
+      style(p, hoverinfo = "none", traces = c(4))
+
+  })
+
+
 ```
