@@ -235,7 +235,7 @@ shinyWidgets::pickerInput(
 
 shinyWidgets::pickerInput(
    inputId = "format.gender.value",
-   label = "Y-Axis",
+   label = "Summary Statistic",
    choices = c("Mean" = "Mean",
                "Median" = "Median"),
    multiple = FALSE,
@@ -243,10 +243,10 @@ shinyWidgets::pickerInput(
 ) 
 ```
 
-Column
+Column {.tabset}
 ------------------------------------------------------------------
 
-### Gender Pay Gap Graph
+### Graph
 
 ```{r}
 
@@ -288,8 +288,6 @@ gender.graph.filters <- reactive({
 
 
 ```
-
-
 
 ```{r}
 
@@ -438,6 +436,113 @@ renderPlotly({
       style(p, hoverinfo = "none", traces = c(4))
 
   })
+
+
+```
+
+
+### Data 
+
+```{r}
+#right now this is redoing the data table above, just without the plotly, 
+# i know to make this more efficent we want to not have to do this twice, 
+renderDT({
+  y.axis <-  input$format.gender.yaxis  
+  
+  #stat options: Median, Mean
+  s <- input$format.gender.value
+  
+  #get filtered data from compensator package
+  dat.filterd <- 
+    compensator::dat_filtering(
+      broad.category = as.numeric( gender.graph.filters()$broad.category),
+      tens = 0:9,
+      type.org = "both",
+      univ = TRUE,
+      hosp = TRUE,
+      state = gender.graph.filters()$state,
+      location.type = gender.graph.filters()$location.type,
+      total.expense =  gender.graph.filters()$total.expense
+    )
+
+
+  #format data for plotting
+  dat.plot <- 
+    #get information in nonprofits for the ones that made it though filtersing
+    dplyr::inner_join(dat.filterd, nonprofits, by = "EIN") %>%
+    #remove unknown gender 
+    dplyr::filter(gender != "U") %>%
+    dplyr::select(ceo.compensation, gender, paste(y.axis)) %>%
+    #get the correect yaxis value based on inputs
+    dplyr::rename(Yaxis = paste(y.axis)) %>%
+    #group by everything execpt ceo.compensation
+    dplyr::group_by_at(vars(-ceo.compensation)) %>%
+    #get the mean or median of ceo.compensation
+    dplyr::summarise(
+      Value =  round(ifelse(s == "Median", 
+                      median(ceo.compensation), 
+                      mean(ceo.compensation)),2), 
+      SD = round(sd(ceo.compensation),2),
+      n = n(), 
+      .groups = "keep") %>%
+    dplyr::ungroup()%>%
+    dplyr::rename(!!s := Value)  %>%
+    dplyr::arrange(Yaxis)  
+  
+  if(y.axis == "broad.category"){
+    dat.plot <- dat.plot %>%
+      dplyr::mutate(Yaxis = case_when(
+        Yaxis == 1 ~ "Arts, Culture, and Humanities",
+        Yaxis == 2 ~ "Education",
+        Yaxis == 3 ~ "Environment and Animals",
+        Yaxis == 4 ~ "Health",
+        Yaxis == 5 ~ "Human Services",
+        Yaxis == 6 ~ "International, Foreign Affairs",
+        Yaxis == 7 ~ "Public, Societal Benefit",
+        Yaxis == 8 ~ "Religion Related",
+        Yaxis == 9 ~ "Mutual/Membership Benefit",
+        Yaxis == 10 ~ "Unknown/Unclassified",
+        Yaxis == 11 ~ "Hosptial",
+        Yaxis == 12 ~ "University"))
+  }
+  
+  if(y.axis == "major.group"){
+    dat.plot <- dat.plot %>%
+      dplyr::mutate(Yaxis = case_when(
+        Yaxis == "A" ~ "Arts, Culture, and Humanities",
+        Yaxis == "B" ~ "Education", 
+        Yaxis == "C" ~ "Environment",
+        Yaxis == "D" ~ "Animal-Related",
+        Yaxis == "E" ~ "Health Care",
+        Yaxis == "F" ~ "Mental Health & Crisis Intervention",
+        Yaxis == "G" ~ "Voluntary Health Associations & Medical Disciplines",
+        Yaxis == "H" ~ "Medical Research",
+        Yaxis == "I" ~ "Crime & Legal-Related",
+        Yaxis == "J" ~ "Employment",
+        Yaxis == "K" ~ "Food, Agriculture & Nutrition",
+        Yaxis == "L" ~ "Housing & Shelter",
+        Yaxis == "M" ~ "Public Safety, Disaster Preparedness & Relief",
+        Yaxis == "N" ~ "Recreation & Sports",
+        Yaxis == "O" ~ "Youth Development",
+        Yaxis == "P" ~ "Human Services",
+        Yaxis == "Q" ~ "International, Foreign Affairs & National Security",
+        Yaxis == "R" ~ "Civil Rights, Social Action & Advocacy",
+        Yaxis == "S" ~ "Community Improvement & Capacity Building",
+        Yaxis == "T" ~ "Philanthropy, Voluntarism & Grantmaking Foundations",
+        Yaxis == "U" ~ "Science & Technology",
+        Yaxis == "V" ~ "Social Science",
+        Yaxis == "W" ~ "Public & Societal Benefit",
+        Yaxis == "X" ~ "Religion-Related",
+        Yaxis == "Y" ~ "Mutual & Membership Benefit",
+        Yaxis == "Z" ~ "Unknown"))
+  }
+ 
+
+
+  dat.plot %>%
+    dplyr::rename_with(~ ifelse(y.axis == "broad.category", "BroadCategory", "MajorGroup"), starts_with("Yaxis"))
+  
+})
 
 
 ```
