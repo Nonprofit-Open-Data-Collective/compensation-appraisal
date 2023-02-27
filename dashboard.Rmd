@@ -3,9 +3,14 @@ title: "Nonprofit CEO Compensation Appraisal Tool"
 output: 
   flexdashboard::flex_dashboard:
     orientation: rows
+    vertical_layout: fill
     social: menu
+    theme:
+      version: 4
+      navbar-bg: "#3ADAC6"
 runtime: shiny
 ---
+
 
 ```{r setup, include=FALSE}
 library(flexdashboard)
@@ -26,16 +31,15 @@ Compensation Tool
 =======================================================================
 
 
-Row
+Organization Characteristics {.sidebar data-width=300}
 -----------------------------------------------------------------------
 
 ### Welcome to the Nonprofit CEO Compensation Appraisal Tool! 
 
-
 Please enter the following information then click submit. 
 
 
-```{r}
+```{r simple.apprasial.inputs}
 # Input State 
 selectInput(inputId = "input.org.state",
             label = "State",
@@ -63,6 +67,9 @@ textInput(inputId = "input.org.ntee",
 actionButton(inputId = "generate",
              label = "Generate Appraisal")
 
+
+#########################################################
+### Get Compensation appraisal
 appraisal <- eventReactive(input$generate, {
   
   loc <- dplyr::case_when(input$input.org.location == "Metropolitan" ~ "metro",
@@ -88,18 +95,127 @@ appraisal <- eventReactive(input$generate, {
   samp <- select_sample(org = org, search.criteria = search.criteria)
   predict_salary(samp)
   
+  
   })
 
-renderPrint({
-  # print(appraisal()[[2]])
-  app <- appraisal()
-  print(paste0("Your suggested salary is ", dollarize(round(app[[2]][1], 0)), " - ", dollarize(round(app[[2]][2],0)), "."))
+```
+
+
+Row  {data-height=150}
+---------------------------------------------------------------
+
+### Apprasial Details 
+
+```{r}
+#print suggested Salary
+h2(
+  renderText({
+    app <- appraisal()$salary.range 
+    print(paste0("Your suggested salary range is ", dollarize(round(app[1], 0)), " - ", dollarize(round(app[2],0)), "."))
+  }) #, style="color:red"
+  )
+
+
+read.this <- eventReactive(input$generate, {"Look through the graphs below to learn about the nonprofits we used to generate your apprasial."})
+h5(renderText({
+  paste(read.this())
+}))
+
+```
+
+
+Row {.tabset}
+----------------------------------------------
+
+### CEO Compensation
+
+```{r simple.apprasial.results}
+
+## Histogram of CEO Compensations
+renderPlotly({
+  comparison.set <- appraisal()$sample
+  suggested.salary <- appraisal()$point.value
+  suggested.range <- appraisal()$salary.range
+  comparison.set <- as.data.frame(comparison.set)
+
+  p <- comparison.set %>%
+    #remove outliners
+    dplyr::filter(!(ceo.compensation %in%
+                      grDevices::boxplot.stats(comparison.set$ceo.compensation)$out) )%>%
+    ggplot(aes(text = paste0("CEO Compensation: ", dollarize(ceo.compensation)))) +
+    geom_histogram(aes(x = ceo.compensation),
+                   bins = round(nrow(comparison.set) / 10, 0)) +
+    geom_vline(xintercept  = suggested.salary, color = "red") +
+    geom_vline(xintercept  = suggested.range[1], color = "blue") +
+    geom_vline(xintercept  = suggested.range[2], color = "blue") +
+    scale_x_continuous(labels=scales::dollar_format())+
+    xlab("CEO Compensation") +
+    ylab("Count") +
+    ggtitle("CEO Compensation of All Nonprofits in Comparison Set",
+            subtitle = paste0("The red line is your apprasial value of ",
+                              dollarize(suggested.salary),
+                              "."))
+
+
+    ggplotly(p, tooltip =  c("text"))
   })
-
-
 
 
 ```
+
+
+### CEO Compensation vs. Total Expense
+
+```{r}
+
+## Compensation vs  log_10(Total Expense) by distance
+renderPlotly({
+  comparison.set <- appraisal()$sample
+  comparison.set <- as.data.frame(comparison.set)
+
+  new.obs <- data.frame(
+    total.expense = input$input.org.expense,
+    ceo.compensation = appraisal()$point.value,
+    total.dist = 0)
+
+  p <- comparison.set %>%
+  filter(rank < 101) %>%
+  ggplot(aes(text = paste0("Total Expense: ", dollarize(total.expense),
+                           "<br>CEO Compensatoin: ", dollarize(ceo.compensation),
+                           "<br>Total Distance: ", round(total.dist, 2)))) +
+  geom_point(aes(x = log(total.expense, 10), y = ceo.compensation, cex = 1/total.dist / 100)) +
+  geom_point(data = new.obs,
+             aes(x = log(total.expense, 10),
+                 y = ceo.compensation),
+             col = "red", cex =5 ) +
+  labs( x = "Log10( Total Expense )",
+        y = "CEO Compensation",
+        title = "CEO Compensation versus Log10(Total Expense) for the 100 closest Nonprofits",
+        subtitle = "Large point are those close to the input organization,
+        <br> and small points are those far from the input organization.")
+
+  ggplotly(p, tooltip = "text")
+
+})
+```
+
+
+### Download Data
+
+```{r}
+# This button works but the button filles up the entire page
+# downloadHandler(
+#     filename = function() {
+#       paste("myapprasial.csv", sep = "")
+#     },
+#     content = function(file) {
+#       write.csv(appraisal()$sample, file, row.names = FALSE)
+#     }
+# )
+
+```
+
+
 
 
 
@@ -107,12 +223,24 @@ renderPrint({
 Detailed Appraisal
 =======================================================================
 
-### Recent Downlads
+Column {.tabset}
+------------------------------------------------------------------
 
-```{r}
-mtcars %>%
-  kable()
-```
+### Instructions 
+
+Welcome to do a more detailed appraisal. Here you can enter more detailed information about your organization and search criteria. 
+
+### Step 1: Your Organization Characteristics 
+
+
+
+### Step 2: Search Criteria 
+
+
+### Step 3: Select Orgazations for Comparison 
+
+
+### Step 4: Get Apprasial 
 
 
 About
@@ -230,6 +358,7 @@ shinyWidgets::pickerInput(
                "Major Group" = "major.group"),
    multiple = FALSE,
    selected = c("broad.category")
+   
 ) 
 
 
@@ -247,6 +376,9 @@ Column {.tabset}
 ------------------------------------------------------------------
 
 ### Graph
+
+
+
 
 ```{r}
 
@@ -423,11 +555,12 @@ renderPlotly({
         paste("CEO Pay by Gender by", 
               case_when(y.axis == "broad.category" ~ "Broad Category",
                         y.axis == "major.group" ~ "Major Group"),
-              "from 2009 - 2019")) +
+              "from 2009 - 2019"),
+        subtitle = "All values listed in 2022 U.S. dollars.") +
       xlab(paste(x.label, "CEO Compensation")) +
       ylab(
         paste(case_when(y.axis == "broad.category" ~ "Broad Category",
-                        y.axis == "major.group" ~ "Major Group")))
+                        y.axis == "major.group" ~ "Major Group"))) 
 
     #output plotly
     ggplotly(p,
@@ -441,108 +574,123 @@ renderPlotly({
 ```
 
 
+
+
 ### Data 
+
 
 ```{r}
 #right now this is redoing the data table above, just without the plotly, 
 # i know to make this more efficent we want to not have to do this twice, 
-renderDT({
-  y.axis <-  input$format.gender.yaxis  
-  
-  #stat options: Median, Mean
-  s <- input$format.gender.value
-  
-  #get filtered data from compensator package
-  dat.filterd <- 
-    compensator::dat_filtering(
-      broad.category = as.numeric( gender.graph.filters()$broad.category),
-      tens = 0:9,
-      type.org = "both",
-      univ = TRUE,
-      hosp = TRUE,
-      state = gender.graph.filters()$state,
-      location.type = gender.graph.filters()$location.type,
-      total.expense =  gender.graph.filters()$total.expense
-    )
-
-
-  #format data for plotting
-  dat.plot <- 
-    #get information in nonprofits for the ones that made it though filtersing
-    dplyr::inner_join(dat.filterd, nonprofits, by = "EIN") %>%
-    #remove unknown gender 
-    dplyr::filter(gender != "U") %>%
-    dplyr::select(ceo.compensation, gender, paste(y.axis)) %>%
-    #get the correect yaxis value based on inputs
-    dplyr::rename(Yaxis = paste(y.axis)) %>%
-    #group by everything execpt ceo.compensation
-    dplyr::group_by_at(vars(-ceo.compensation)) %>%
-    #get the mean or median of ceo.compensation
-    dplyr::summarise(
-      Value =  round(ifelse(s == "Median", 
-                      median(ceo.compensation), 
-                      mean(ceo.compensation)),2), 
-      SD = round(sd(ceo.compensation),2),
-      n = n(), 
-      .groups = "keep") %>%
-    dplyr::ungroup()%>%
-    dplyr::rename(!!s := Value)  %>%
-    dplyr::arrange(Yaxis)  
-  
-  if(y.axis == "broad.category"){
-    dat.plot <- dat.plot %>%
-      dplyr::mutate(Yaxis = case_when(
-        Yaxis == 1 ~ "Arts, Culture, and Humanities",
-        Yaxis == 2 ~ "Education",
-        Yaxis == 3 ~ "Environment and Animals",
-        Yaxis == 4 ~ "Health",
-        Yaxis == 5 ~ "Human Services",
-        Yaxis == 6 ~ "International, Foreign Affairs",
-        Yaxis == 7 ~ "Public, Societal Benefit",
-        Yaxis == 8 ~ "Religion Related",
-        Yaxis == 9 ~ "Mutual/Membership Benefit",
-        Yaxis == 10 ~ "Unknown/Unclassified",
-        Yaxis == 11 ~ "Hosptial",
-        Yaxis == 12 ~ "University"))
-  }
-  
-  if(y.axis == "major.group"){
-    dat.plot <- dat.plot %>%
-      dplyr::mutate(Yaxis = case_when(
-        Yaxis == "A" ~ "Arts, Culture, and Humanities",
-        Yaxis == "B" ~ "Education", 
-        Yaxis == "C" ~ "Environment",
-        Yaxis == "D" ~ "Animal-Related",
-        Yaxis == "E" ~ "Health Care",
-        Yaxis == "F" ~ "Mental Health & Crisis Intervention",
-        Yaxis == "G" ~ "Voluntary Health Associations & Medical Disciplines",
-        Yaxis == "H" ~ "Medical Research",
-        Yaxis == "I" ~ "Crime & Legal-Related",
-        Yaxis == "J" ~ "Employment",
-        Yaxis == "K" ~ "Food, Agriculture & Nutrition",
-        Yaxis == "L" ~ "Housing & Shelter",
-        Yaxis == "M" ~ "Public Safety, Disaster Preparedness & Relief",
-        Yaxis == "N" ~ "Recreation & Sports",
-        Yaxis == "O" ~ "Youth Development",
-        Yaxis == "P" ~ "Human Services",
-        Yaxis == "Q" ~ "International, Foreign Affairs & National Security",
-        Yaxis == "R" ~ "Civil Rights, Social Action & Advocacy",
-        Yaxis == "S" ~ "Community Improvement & Capacity Building",
-        Yaxis == "T" ~ "Philanthropy, Voluntarism & Grantmaking Foundations",
-        Yaxis == "U" ~ "Science & Technology",
-        Yaxis == "V" ~ "Social Science",
-        Yaxis == "W" ~ "Public & Societal Benefit",
-        Yaxis == "X" ~ "Religion-Related",
-        Yaxis == "Y" ~ "Mutual & Membership Benefit",
-        Yaxis == "Z" ~ "Unknown"))
-  }
- 
-
-
-  dat.plot %>%
-    dplyr::rename_with(~ ifelse(y.axis == "broad.category", "BroadCategory", "MajorGroup"), starts_with("Yaxis"))
-  
-})
+DT::renderDataTable(
+  DT::datatable(
+    { y.axis <-  input$format.gender.yaxis  
+    
+    #stat options: Median, Mean
+    s <- input$format.gender.value
+    
+    #get filtered data from compensator package
+    dat.filterd <- 
+      compensator::dat_filtering(
+        broad.category = as.numeric( gender.graph.filters()$broad.category),
+        tens = 0:9,
+        type.org = "both",
+        univ = TRUE,
+        hosp = TRUE,
+        state = gender.graph.filters()$state,
+        location.type = gender.graph.filters()$location.type,
+        total.expense =  gender.graph.filters()$total.expense
+      )
+    
+    
+    #format data for plotting
+    dat.plot <- 
+      #get information in nonprofits for the ones that made it though filtersing
+      dplyr::inner_join(dat.filterd, nonprofits, by = "EIN") %>%
+      #remove unknown gender 
+      dplyr::filter(gender != "U") %>%
+      dplyr::select(ceo.compensation, gender, paste(y.axis)) %>%
+      #get the correect yaxis value based on inputs
+      dplyr::rename(Yaxis = paste(y.axis)) %>%
+      #group by everything execpt ceo.compensation
+      dplyr::group_by_at(vars(-ceo.compensation)) %>%
+      #get the mean or median of ceo.compensation
+      dplyr::summarise(
+        Mean =  round(mean(ceo.compensation), 2),
+        Median =  round(median(ceo.compensation), 2),
+        SD = round(sd(ceo.compensation),2),
+        n = n(), 
+        .groups = "keep") %>%
+      dplyr::ungroup()%>%
+      dplyr::arrange(Yaxis)  
+    
+    if(y.axis == "broad.category"){
+      dat.plot <- dat.plot %>%
+        dplyr::mutate(Yaxis = case_when(
+          Yaxis == 1 ~ "Arts, Culture, and Humanities",
+          Yaxis == 2 ~ "Education",
+          Yaxis == 3 ~ "Environment and Animals",
+          Yaxis == 4 ~ "Health",
+          Yaxis == 5 ~ "Human Services",
+          Yaxis == 6 ~ "International, Foreign Affairs",
+          Yaxis == 7 ~ "Public, Societal Benefit",
+          Yaxis == 8 ~ "Religion Related",
+          Yaxis == 9 ~ "Mutual/Membership Benefit",
+          Yaxis == 10 ~ "Unknown/Unclassified",
+          Yaxis == 11 ~ "Hosptial",
+          Yaxis == 12 ~ "University"))
+    }
+    
+    if(y.axis == "major.group"){
+      dat.plot <- dat.plot %>%
+        dplyr::mutate(Yaxis = case_when(
+          Yaxis == "A" ~ "Arts, Culture, and Humanities",
+          Yaxis == "B" ~ "Education", 
+          Yaxis == "C" ~ "Environment",
+          Yaxis == "D" ~ "Animal-Related",
+          Yaxis == "E" ~ "Health Care",
+          Yaxis == "F" ~ "Mental Health & Crisis Intervention",
+          Yaxis == "G" ~ "Voluntary Health Associations & Medical Disciplines",
+          Yaxis == "H" ~ "Medical Research",
+          Yaxis == "I" ~ "Crime & Legal-Related",
+          Yaxis == "J" ~ "Employment",
+          Yaxis == "K" ~ "Food, Agriculture & Nutrition",
+          Yaxis == "L" ~ "Housing & Shelter",
+          Yaxis == "M" ~ "Public Safety, Disaster Preparedness & Relief",
+          Yaxis == "N" ~ "Recreation & Sports",
+          Yaxis == "O" ~ "Youth Development",
+          Yaxis == "P" ~ "Human Services",
+          Yaxis == "Q" ~ "International, Foreign Affairs & National Security",
+          Yaxis == "R" ~ "Civil Rights, Social Action & Advocacy",
+          Yaxis == "S" ~ "Community Improvement & Capacity Building",
+          Yaxis == "T" ~ "Philanthropy, Voluntarism & Grantmaking Foundations",
+          Yaxis == "U" ~ "Science & Technology",
+          Yaxis == "V" ~ "Social Science",
+          Yaxis == "W" ~ "Public & Societal Benefit",
+          Yaxis == "X" ~ "Religion-Related",
+          Yaxis == "Y" ~ "Mutual & Membership Benefit",
+          Yaxis == "Z" ~ "Unknown"))
+    }
+    
+    
+    
+    dat.plot %>%
+      dplyr::rename_with(~ ifelse(y.axis == "broad.category", "BroadCategory", "MajorGroup"), starts_with("Yaxis"))},
+    
+    extensions = 'Buttons',
+    
+    options = list(
+      paging = FALSE,
+      searching = TRUE,
+      fixedColumns = FALSE,
+      autoWidth = FALSE,
+      ordering = TRUE,
+      dom = 'tB',
+      buttons = c('copy', 'csv', 'excel')
+    ),
+    
+    class = "display"
+  ))
 
 
 ```
