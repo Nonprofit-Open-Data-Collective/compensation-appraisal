@@ -1,0 +1,95 @@
+---
+title: "Dynamic report"
+output: html_document
+params:
+  appraisal: NA
+  org: NA
+  search.criteria: NA
+---
+
+```{r setup, echo = FALSE}
+# The `params` object is available in the document.
+point.value <- params$appraisal[[1]]
+suggested.range <- params$appraisal[[2]]
+comparison.set <- params$appraisal[[3]]
+
+org <- params$org
+search.criteria <- params$search.criteria
+
+
+knitr::opts_chunk$set(echo = FALSE)
+library(dplyr)
+library(ggplot2)
+library(kableExtra)
+
+```
+
+## Nonprofit Compensation Apprasial
+
+### Your Inputs
+
+
+```{r, echo = FALSE}
+org.tab <- data.frame(total.expense = dollarize(org$total.expense),
+                      state = org$state, 
+                      location.type = org$location.type,
+                      ntee = org$ntee)
+
+org.tab %>% 
+  kbl(col.names = c("Total Expense", "State", "Location Type", "NTEE Code"),
+      caption = "Organization Inputs") %>%
+  kable_styling()
+```
+
+
+### Apprasial 
+
+Your suggested salary range is `r dollarize(suggested.range[1])` to `r dollarize(suggested.range[2])`. 
+
+
+
+```{r, echo = FALSE}
+
+comparison.set %>%
+  #remove outliers
+  dplyr::filter(!(ceo.compensation %in%
+                    grDevices::boxplot.stats(comparison.set$ceo.compensation)$out) )%>%
+  ggplot() + #aes(text = paste0("CEO Compensation: ", dollarize(ceo.compensation)))
+  geom_histogram(aes(x = ceo.compensation),
+                 bins = round(nrow(comparison.set) / 10, 0)) +
+  geom_vline(xintercept  = point.value, color = "red") +
+  geom_vline(xintercept  = suggested.range[1], color = "blue") +
+  geom_vline(xintercept  = suggested.range[2], color = "blue") +
+  scale_x_continuous(labels=scales::dollar_format())+
+  xlab("CEO Compensation") +
+  ylab("Count") +
+  ggtitle("CEO Compensation of All Nonprofits in Comparison Set",
+          subtitle = paste0("The red line is your apprasial value of ",
+                            dollarize(point.value),
+                            "."))
+```
+
+
+```{r}
+new.obs <- data.frame(
+  total.expense = org$total.expense,
+  ceo.compensation = point.value,
+  total.dist = 0,
+  name = "Input Organization")
+
+comparison.set %>%
+  filter(rank < 101) %>%
+  ggplot(aes(text = paste0("Total Expense: ", dollarize(total.expense),
+                           "<br>CEO Compensatoin: ", dollarize(ceo.compensation),
+                           "<br>Total Distance: ", round(total.dist, 2),
+                           "<br>Name :", name))) +
+  geom_point(aes(x = log(total.expense, 10), y = ceo.compensation, cex = 1/total.dist / 100)) +
+  geom_point(data = new.obs,
+             aes(x = log(total.expense, 10),
+                 y = ceo.compensation),
+             col = "red", cex =5 ) +
+  labs( x = "Log10( Total Expense )",
+        y = "CEO Compensation",
+        title = "CEO Compensation versus Log10(Total Expense) for the 100 closest Nonprofits",
+        subtitle = "Large point are those close to the input organization, and small points are those far from the input organization.")
+```

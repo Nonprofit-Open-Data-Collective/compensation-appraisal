@@ -31,7 +31,7 @@ Compensation Tool
 =======================================================================
 
 
-Organization Characteristics {.sidebar data-width=300}
+Organization Characteristics {.sidebar data-width=350}
 -----------------------------------------------------------------------
 
 ### Welcome to the Nonprofit CEO Compensation Appraisal Tool! 
@@ -40,6 +40,7 @@ Please enter the following information then click submit.
 
 
 ```{r simple.apprasial.inputs}
+
 # Input State 
 selectInput(inputId = "input.org.state",
             label = "State",
@@ -62,6 +63,17 @@ textInput(inputId = "input.org.ntee",
           label = "NTEE Code",
           value = "A24")
 
+
+## Potential help button for NTEE Code
+# actionButton('help', 'Help')
+# observeEvent(input$help,{
+#     showModal(modalDialog(
+#       title = "Help!",
+#       "Information",
+#       textInput('text2', 'You can also put UI elements here')
+#     ))
+#   })
+
 # Generate Report 
 
 actionButton(inputId = "generate",
@@ -70,29 +82,37 @@ actionButton(inputId = "generate",
 
 #########################################################
 ### Get Compensation appraisal
-appraisal <- eventReactive(input$generate, {
+org <- eventReactive(input$generate, {
   
-  loc <- dplyr::case_when(input$input.org.location == "Metropolitan" ~ "metro",
+   loc <- dplyr::case_when(input$input.org.location == "Metropolitan" ~ "metro",
                           input$input.org.location == "Rural" ~ "rural")
   
-  org <- compensator::get_org_values(state = input$input.org.state,
+  compensator::get_org_values(state = input$input.org.state,
                                      location.type = loc,
                                      total.expense = input$input.org.expense,
-                                      ntee = input$input.org.ntee)
-  
+                                     ntee = input$input.org.ntee)
+} )
 
-  search.criteria <-
-  list(broad.category = ifelse(org$type.org == "regular", org$broad.category, 1:12), 
+
+
+search.criteria <- eventReactive(input$generate, {
+    
+  list(broad.category = ifelse(org()$type.org == "regular", org()$broad.category, NA), 
        major.group = base::LETTERS,
        tens = 0:9,
-       type.org = org$type.org,
-       univ = org$univ,
-       hosp = org$hosp,
-       location.type = org$location.type,
+       type.org = org()$type.org,
+       univ = org()$univ,
+       hosp = org()$hosp,
+       location.type = org()$location.type,
        state = state.abb52,
-       total.expense = c(0.1*org$total.expense, 10*org$total.expense) )
+       total.expense = c(0.1*org()$total.expense, 10*org()$total.expense) )
   
-  samp <- select_sample(org = org, search.criteria = search.criteria)
+})
+
+
+appraisal <- eventReactive(input$generate, {
+
+  samp <- select_sample(org = org(), search.criteria = search.criteria())
   predict_salary(samp)
   
   
@@ -101,19 +121,26 @@ appraisal <- eventReactive(input$generate, {
 ```
 
 
-Row  {data-height=150}
+Row  {data-height=100}
 ---------------------------------------------------------------
+
 
 ### Apprasial Details 
 
 ```{r}
 #print suggested Salary
+
+
 h2(
-  renderText({
-    app <- appraisal()$salary.range 
-    print(paste0("Your suggested salary range is ", dollarize(round(app[1], 0)), " - ", dollarize(round(app[2],0)), "."))
-  }) #, style="color:red"
-  )
+      renderText({
+         app <- appraisal()$salary.range 
+       print(
+         paste0("Your suggested salary range is ", 
+                dollarize(round(app[1], 0)), " - ", 
+                dollarize(round(app[2],0)), "."))
+       }) #, style="color:red"
+)
+
 
 
 read.this <- eventReactive(input$generate, {"Look through the graphs below to learn about the nonprofits we used to generate your apprasial."})
@@ -124,6 +151,7 @@ h5(renderText({
 ```
 
 
+
 Row {.tabset}
 ----------------------------------------------
 
@@ -132,17 +160,21 @@ Row {.tabset}
 ```{r simple.apprasial.results}
 
 ## Histogram of CEO Compensations
-renderPlotly({
+plotlyOutput("simple.ceo") 
+  
+
+output$simple.ceo <- renderPlotly({
+
   comparison.set <- appraisal()$sample
   suggested.salary <- appraisal()$point.value
   suggested.range <- appraisal()$salary.range
   comparison.set <- as.data.frame(comparison.set)
 
   p <- comparison.set %>%
-    #remove outliners
+    #remove outliers
     dplyr::filter(!(ceo.compensation %in%
                       grDevices::boxplot.stats(comparison.set$ceo.compensation)$out) )%>%
-    ggplot(aes(text = paste0("CEO Compensation: ", dollarize(ceo.compensation)))) +
+    ggplot() + #aes(text = paste0("CEO Compensation: ", dollarize(ceo.compensation)))
     geom_histogram(aes(x = ceo.compensation),
                    bins = round(nrow(comparison.set) / 10, 0)) +
     geom_vline(xintercept  = suggested.salary, color = "red") +
@@ -157,8 +189,9 @@ renderPlotly({
                               "."))
 
 
-    ggplotly(p, tooltip =  c("text"))
+    ggplotly(p, tooltip =  c(""))
   })
+
 
 
 ```
@@ -169,20 +202,24 @@ renderPlotly({
 ```{r}
 
 ## Compensation vs  log_10(Total Expense) by distance
-renderPlotly({
+plotlyOutput("simple.ceo.vs.expense")
+
+output$simple.ceo.vs.expense <- renderPlotly({
   comparison.set <- appraisal()$sample
   comparison.set <- as.data.frame(comparison.set)
 
   new.obs <- data.frame(
     total.expense = input$input.org.expense,
     ceo.compensation = appraisal()$point.value,
-    total.dist = 0)
+    total.dist = 0,
+    name = "Input Organization")
 
   p <- comparison.set %>%
   filter(rank < 101) %>%
   ggplot(aes(text = paste0("Total Expense: ", dollarize(total.expense),
                            "<br>CEO Compensatoin: ", dollarize(ceo.compensation),
-                           "<br>Total Distance: ", round(total.dist, 2)))) +
+                           "<br>Total Distance: ", round(total.dist, 2),
+                           "<br>Name :", name))) +
   geom_point(aes(x = log(total.expense, 10), y = ceo.compensation, cex = 1/total.dist / 100)) +
   geom_point(data = new.obs,
              aes(x = log(total.expense, 10),
@@ -200,11 +237,44 @@ renderPlotly({
 ```
 
 
-### Download Data
+### Nonprofit Data
 
 ```{r}
-# This button works but the button filles up the entire page
-# downloadHandler(
+
+DT::renderDataTable(
+  DT::datatable({
+    comparison.set <- appraisal()$sample
+    
+    comparison.set
+      
+    },
+    
+    extensions = 'Buttons',
+    
+    options = list(
+      paging = FALSE,
+      searching = TRUE,
+      fixedColumns = FALSE,
+      autoWidth = FALSE,
+      ordering = TRUE,
+      dom = 'tB',
+      buttons = c('copy', 'csv', 'excel')
+    ),
+    
+    class = "display"
+  ))
+
+```
+
+### Downloads
+
+#### Downdload Data 
+
+
+```{r}
+
+
+# output$downloadData <- downloadHandler(
 #     filename = function() {
 #       paste("myapprasial.csv", sep = "")
 #     },
@@ -212,11 +282,148 @@ renderPlotly({
 #       write.csv(appraisal()$sample, file, row.names = FALSE)
 #     }
 # )
+# downloadButton("downloadData", "Download")
+
+
+# This button works but the button files up the entire page
+downloadHandler(
+    filename = function() {
+      paste("myapprasial.csv", sep = "")
+    },
+    content = function(file) {
+      write.csv(appraisal()$sample, file, row.names = FALSE)
+    }
+)
 
 ```
 
 
+#### Download Report
 
+
+
+```{r}
+
+#downloadButton("report", "Generate report")
+
+downloadHandler(
+      # For PDF output, change this to "report.pdf"
+      filename = "report.html",
+      content = function(file) {
+        # Copy the report file to a temporary directory before processing it, in
+        # case we don't have write permissions to the current working dir (which
+        # can happen when deployed).
+        tempReport <- file.path(tempdir(), "report.Rmd")
+        file.copy("report-template.Rmd", tempReport, overwrite = TRUE)
+        
+        # Set up parameters to pass to Rmd document
+        params <- list(appraisal = appraisal(),
+                       org = org(),
+                       search.criteria = search.criteria)
+        
+        # Knit the document, passing in the `params` list, and eval it in a
+        # child of the global environment (this isolates the code in the document
+        # from the code in this app).
+        rmarkdown::render(tempReport, output_file = file,
+                          params = params,
+                          envir = new.env(parent = globalenv())
+        )
+      }
+    )
+```
+
+
+
+
+Learn My NTEE Code
+========================================================================
+
+Here is where we will help you learn your ntee code. 
+
+#### Type of Organization 
+
+```{r}
+ntee.codes <- read.csv("data-raw/ntee-disaggregated.csv")
+ntee.values <- read.csv("data-raw/ntee-original.csv")
+
+shinyWidgets::pickerInput(
+   inputId = "ntee.rs",
+   label = "Which of the following describes your nonprofit best?",
+   choices = c("Regular Nontprofit" = "regular",
+               "Alliance/Advocacy Organizations" = "01",
+               "Management and Technical Assistance" = "02",
+               "Professional Societies/Associations" = "03",
+               "Research Institutes and/or Public Policy Analysis" = "05",
+               "Monetary Support - Single Organization" = "11",
+               "Monetary Support - Multiple Organizations" = "12",
+               "Nonmonetary Support Not Elsewhere Classified (N.E.C.)" = "19"),
+   multiple = FALSE,
+   selected = "regular"
+)
+
+```
+
+
+#### Broad Category
+
+```{r}
+### Regular org
+output$IsRegular <- reactive({
+   input$ntee.rs == "regular"
+})
+
+outputOptions(output, "IsRegular", suspendWhenHidden = FALSE)
+
+conditionalPanel(
+  condition = "output.IsRegular",
+  shinyWidgets::pickerInput(
+   inputId = "ntee.broad.category",
+   label = "Which of the following broad cateogires describes your nonprofit best?",
+   choices = c("Arts, Culture, and Humanities" = "1",
+               "Education" = "2",
+               "University" = "12",
+               "Environment and Animals" = "3",
+               "Health" = "4",
+               "Hospital" = "11",
+               "Human Services" = "5",
+               "International, Foreign Affairs" = "6",
+               "Public, Societal Benefit" = "7",
+               "Religion Related" = "8",
+               "Mutual/Membership Benefit" = "9",
+               "Unknown/Unclassified" = 10),
+   multiple = FALSE
+  )
+)
+```
+
+#### Major Group
+
+```{r}
+# 
+# pickerInput(inputId = "ntee.major.group",
+#                label = "Major Group",
+#             choices = "Arts, Culture & Humanities")
+# 
+#     
+# observeEvent(input$ntee.major.group, {
+#     which.letter <- ntee.codes %>% 
+#       dplyr::filter(BroadCategory == as.numeric(input$ntee.broad.category)) %>%
+#       select(MajorGroup) %>%
+#       unique()
+#   
+#   which.mg <- ntee.values %>%
+#     filter(nchar(ntee) == 1) %>%
+#     filter(ntee %in% which.letter$MajorGroup)  %>%
+#     select(description)
+#     
+#     # Method 1
+#     updatePickerInput(session = session, inputId = "ntee.major.group",
+#                       choices = input$ntee.broad.category)
+#     
+# 
+#   }, ignoreInit = TRUE)
+
+```
 
 
 
@@ -538,10 +745,10 @@ renderPlotly({
                  color = gender,
                  text = paste("Classification:", Yaxis),
                  n = n)) +
+      geom_line(aes(group = Yaxis), col = "gray" ) +
       geom_point(aes(text = paste0(s, ": ", dollarize(Value),
                                   "<br>Gender: ", gender)
                      )) +
-      geom_line(aes(group = Yaxis), col = "gray" ) +
       geom_text(aes(x = pois, 
                     y = reorder(Yaxis,Value) ,
                     label = dollarize (round(diff))),
@@ -694,3 +901,4 @@ DT::renderDataTable(
 
 
 ```
+
