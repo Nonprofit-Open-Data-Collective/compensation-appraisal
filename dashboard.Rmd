@@ -340,6 +340,7 @@ Learn My NTEE Code
 
 Here is where we will help you learn your ntee code. 
 
+
 #### Type of Organization 
 
 ```{r}
@@ -499,9 +500,9 @@ observe({
         rs <- "0"
   
   if(rs == "regular"){
-    lab <- "Which of the following major groups best describes your nonprofit?"
+    lab <- "Which of the following descriptions best describes your nonprofit?"
   }else{
-    lab <- "Which of the following major groups best describes the nonprofit you support?"
+    lab <- "Which of the following descriptions best describes the nonprofit you support?"
   }
   
   #Broad Cateogry 
@@ -568,9 +569,9 @@ observe({
         rs <- "0"
   
   if(rs == "regular"){
-    lab <- "Which of the following major groups best describes your nonprofit?"
+    lab <- "Which of the following descriptions best describes your nonprofit?"
   }else{
-    lab <- "Which of the following major groups best describes the nonprofit you support?"
+    lab <- "Which of the following descriptions best describes the nonprofit you support?"
   }
   
   #Broad Cateogry 
@@ -701,7 +702,7 @@ ntee.code <- reactive({
   
 })
 
-renderText(paste0("Your NTEE Code is ", ntee.code(), "."))
+h2(renderText(paste0("Your NTEE Code is ", ntee.code(), ".")))
 
 ```
 
