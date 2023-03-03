@@ -3,13 +3,16 @@ title: "Nonprofit CEO Compensation Appraisal Tool"
 output: 
   flexdashboard::flex_dashboard:
     orientation: rows
-    vertical_layout: fill
-    social: menu
+    vertical_laypout: fill
     theme:
-      version: 4
       navbar-bg: "#3ADAC6"
 runtime: shiny
 ---
+```{css my-style, echo = FALSE}
+.chart-shim {
+    overflow-y: scroll;
+    }
+```
 
 
 ```{r setup, include=FALSE}
@@ -23,6 +26,7 @@ library(DT)
 library(shinyWidgets)
 library(plotly)
 
+
 ```
 
 
@@ -31,7 +35,7 @@ Compensation Tool
 =======================================================================
 
 
-Organization Characteristics {.sidebar data-width=350}
+Organization Characteristics {.sidebar data-width=400}
 -----------------------------------------------------------------------
 
 ### Welcome to the Nonprofit CEO Compensation Appraisal Tool! 
@@ -338,10 +342,13 @@ downloadHandler(
 Learn My NTEE Code
 ========================================================================
 
-Here is where we will help you learn your ntee code. 
+
+Column {data-width=500}
+---------------------------------------------------------------
+
+### Here is where we will help you learn your ntee code. 
 
 
-#### Type of Organization 
 
 ```{r}
 ntee.codes <- read.csv("data-raw/ntee-disaggregated.csv")
@@ -349,7 +356,7 @@ ntee.values <- read.csv("data-raw/ntee-original.csv")
 
 shinyWidgets::pickerInput(
    inputId = "ntee.rs",
-   label = "Which of the following describes your nonprofit best?",
+   label = "Which of the following describes your nonprofit best? (most organizations are regular nonprofits)",
    choices = c("Regular Nontprofit" = "regular",
                "Alliance/Advocacy Organizations" = "01",
                "Management and Technical Assistance" = "02",
@@ -359,13 +366,14 @@ shinyWidgets::pickerInput(
                "Monetary Support - Multiple Organizations" = "12",
                "Nonmonetary Support Not Elsewhere Classified (N.E.C.)" = "19"),
    multiple = FALSE,
-   selected = "regular"
+   selected = "regular",
+   width = 450
 )
+
 
 ```
 
 
-#### Broad Category
 
 ```{r}
 selectInput("ntee.bc", 
@@ -379,7 +387,8 @@ selectInput("ntee.bc",
                "Public, Societal Benefit" = "7",
                "Religion Related" = "8",
                "Mutual/Membership Benefit" = "9",
-               "Unknown/Unclassified" = 10))
+               "Unknown/Unclassified" = 10),
+   width = 450)
   
 observe({
   rs <- input$ntee.rs
@@ -401,10 +410,8 @@ observe({
     lab,
     choices = c("Arts, Culture & Humanities" = "1",
        "Education" = "2",
-       "University" = "12",
        "Environment and Animals" = "3",
        "Health" = "4",
-       "Hospital" = "11",
        "Human Services" = "5",
        "International, Foreign Affairs" = "6",
        "Public, Societal Benefit" = "7",
@@ -417,14 +424,14 @@ observe({
 })
 ```
 
-#### Major Group
 
 
 ```{r}
 selectInput("ntee.mg", 
             "Which of the following major groups best describes your nonprofit?",
             choices = c("Arts, Culture & Humanities" = "A",
-                        "Education" = "B"))
+                        "Education" = "B"),
+   width = 450)
 
 
 observe({
@@ -474,11 +481,9 @@ observe({
 ```
 
 
-#### Further Description
-
 ```{r}
 selectInput("ntee.tens", 
-            "Which of the following descriptions best describes your nonprofit?",
+            "Which of the following devisions best describes your nonprofit?",
             choices = c("Arts & Culture" = "2",
                         "Media & Communications" = "3",
                         "Visual Arts" = "4",
@@ -487,7 +492,8 @@ selectInput("ntee.tens",
                         "Humanities" = "7",
                         "Historical Organizations" = "8",
                         "Arts Services" = "9",
-                        "Arts, Culture & Humanities N.E.C." = "99"))
+                        "Arts, Culture & Humanities N.E.C." = "99"),
+   width = 450)
 
 
 observe({
@@ -500,9 +506,9 @@ observe({
         rs <- "0"
   
   if(rs == "regular"){
-    lab <- "Which of the following descriptions best describes your nonprofit?"
+    lab <- "Which of the following devisions best describes your nonprofit?"
   }else{
-    lab <- "Which of the following descriptions best describes the nonprofit you support?"
+    lab <- "Which of the following devisions best describes the nonprofit you support?"
   }
   
   #Broad Cateogry 
@@ -518,10 +524,18 @@ observe({
      chs <- "None"
   }
   
+  mg.letter <- ntee.values %>%
+    dplyr::filter(nchar(ntee) == 1,
+                  description == mg) %>% 
+    select(ntee) %>%
+    as.character()
+  
   which.letter <- ntee.codes %>%
-      dplyr::filter(BroadCategory == as.numeric(bc)) %>%
+      dplyr::filter(BroadCategory == as.numeric(bc),
+                    MajorGroup == mg.letter) %>%
       select(MajorGroup) %>%
       unique()
+  
 
   which.tens <- ntee.values %>%
     filter(substr(ntee, 3, 3) == 0 | substr(ntee, 2, 3) == 99) %>%
@@ -544,18 +558,18 @@ observe({
 ```
 
 
-#### Even Further Description
 
 
 ```{r}
 selectInput("ntee.ones", 
-            "Which of the following descriptions best describes your nonprofit?",
+            "Which of the following subdivisions best describes your nonprofit?",
             choices = c("None of These" = "0",
                         "Cultural & Ethnic Awareness" = "3",
                         "Folk Arts" = "4",
                         "Arts Education" = "5", 
                         "Arts & Humanities Councils & Agencies" = "6", 
-                        "Community Celebrations" = "7"))
+                        "Community Celebrations" = "7"),
+   width = 450)
 
 
 observe({
@@ -569,9 +583,9 @@ observe({
         rs <- "0"
   
   if(rs == "regular"){
-    lab <- "Which of the following descriptions best describes your nonprofit?"
+    lab <- "Which of the following subdivisions best describes your nonprofit?"
   }else{
-    lab <- "Which of the following descriptions best describes the nonprofit you support?"
+    lab <- "Which of the following subdivisions best describes the nonprofit you support?"
   }
   
   #Broad Cateogry 
@@ -595,8 +609,15 @@ observe({
     chs <- "None"
   }
   
+  mg.letter <- ntee.values %>%
+    dplyr::filter(nchar(ntee) == 1,
+                  description == mg) %>% 
+    select(ntee) %>%
+    as.character()
+  
   which.letter <- ntee.codes %>%
-      dplyr::filter(BroadCategory == as.numeric(bc)) %>%
+      dplyr::filter(BroadCategory == as.numeric(bc),
+                    MajorGroup == mg.letter) %>%
       select(MajorGroup) %>%
       unique()
   
@@ -631,7 +652,7 @@ observe({
 
 
 
-#### Results 
+#### Results :
 
 
 ```{r}
@@ -707,13 +728,16 @@ h2(renderText(paste0("Your NTEE Code is ", ntee.code(), ".")))
 ```
 
 
+### Explore The NTEE Code Structure 
+
+Here is where we will put the ntee code structure graph
 
 
 
 Detailed Appraisal
 =======================================================================
 
-Column {.tabset}
+Columns {.tabset .tabset-fade}
 ------------------------------------------------------------------
 
 ### Instructions 
@@ -722,12 +746,152 @@ Welcome to do a more detailed appraisal. Here you can enter more detailed inform
 
 ### Step 1: Your Organization Characteristics 
 
+```{r}
 
+# Input State 
+selectInput(inputId = "detailed.org.state",
+            label = "State",
+            choices = state.abb52)
+
+# Input Location
+selectInput(inputId = "detailed.org.location",
+            label = "Location Type",
+            choices = c("Metropolitan", "Rural"))
+
+# Input Total Expenses
+numericInput(inputId = "detailed.org.expense", 
+             label = "Total Annual Expenses", 
+             value = 1000000, 
+             min = 1e5,
+             max = 1e10)
+
+# NTEE Input
+textInput(inputId = "detailed.org.ntee",
+          label = "NTEE Code",
+          value = "A24")
+
+```
 
 ### Step 2: Search Criteria 
 
 
-### Step 3: Select Orgazations for Comparison 
+```{r}
+##regular/specialty
+selectInput("detailed.search.rs",
+            "Do you want to include regular or specality organization in your search?", 
+            choices = c("Regular" = "regular",
+                        "Specality" = "specality"))
+
+
+## Broad Category 
+pickerInput("detailed.search.bc",
+            label = htmltools::HTML("Which broad categories do you want to include in your search?"),
+            choices = c("Arts, Culture & Humanities" = 1,
+                        "Education" = 2,
+                        "Environment and Animals" = 3,
+                        "Health" = 4,
+                        "Human Services" = 5,
+                        "International, Foreign Affairs" = 6,
+                        "Public, Societal Benefit" = 7,
+                        "Religion Related" = 8,
+                        "Mutual/Membership Benefit" = 9,
+                        "Unknown/Unclassified"= 10),
+            multiple = TRUE,
+            selected = 1,
+            options = list(
+              `actions-box` = TRUE,
+              `deselect-all-text` = "None",
+              `select-all-text` = "Select All",
+                `none-selected-text` = "NA"
+              ))
+
+
+## Major Group 
+# Original Major Group
+pickerInput("detailed.search.mg",
+            label = "Which major groups do you want to include in your serach?",
+            choices = c("Arts, Culture & Humanities"),
+            multiple = TRUE,
+            options = list(
+              `actions-box` = TRUE,
+              `deselect-all-text` = "None",
+              `select-all-text` = "Select All",
+                `none-selected-text` = "NA"
+              ))
+
+#updating major group
+
+observe({
+  bc <- input$detailed.search.bc
+
+
+  ## Broad Category
+  if (is.null(bc)){
+     bc <- "2"
+     chs <- "Education"
+  }
+
+  which.letters <- ntee.codes %>%
+      dplyr::filter(BroadCategory == as.numeric(bc)) %>%
+      select(MajorGroup) %>%
+      unique()
+
+  which.mg <- ntee.values %>%
+    filter(nchar(ntee) == 1) %>%
+    filter(ntee %in% which.letters$MajorGroup)  %>%
+    select(description)
+
+
+  chs <- which.mg$description
+
+
+  ## Updates
+  updatePickerInput(
+    session = session,
+    inputId = "detailed.search.mg",
+    label = "Which major groups do you want to include in your serach?",
+    choices = chs,
+    selected = chs[1],
+    options = list(
+      `actions-box` = TRUE,
+      `deselect-all-text` = "None",
+      `select-all-text` = "Select All",
+        `none-selected-text` = "NA"
+      )
+      )
+
+})
+
+
+## Hospitals 
+shinyWidgets::pickerInput(
+            inputId = "detailed.search.hosp",
+            label = "Do you want to include hospitals in your comparison set?",
+            choices = list("No, I do not want include with hospitals." = 1,
+                           "Yes, I want to include both hospitals and non-hospitals." = 2,
+                           "Yes, I exclusively want to include hospitals." = 3),
+            selected = 2)
+
+## Universities
+shinyWidgets::pickerInput(
+            inputId = "detailed.search.univ",
+            label = "Do you want to include universities in your comparison set?",
+            choices = list("No, I do not want to include universities." = 1,
+                           "Yes, I want to include both universities and non-universities." = 2,
+                           "Yes, I exclusively want to include universities." = 3),
+            selected = 2)
+
+pickerInput("OrgState",
+            label = "Which states do you want to include in your search? ?",
+            choices = state.abb52,
+            multiple = TRUE)
+
+
+
+```
+
+
+### Step 3: Select Organizations for Comparison 
 
 
 ### Step 4: Get Apprasial 
