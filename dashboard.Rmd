@@ -31,7 +31,7 @@ library(plotly)
 
 
 
-Compensation Tool 
+Get Appraisal 
 =======================================================================
 
 
@@ -339,7 +339,7 @@ downloadHandler(
 
 
 
-Learn My NTEE Code
+Find My NTEE Code
 ========================================================================
 
 
@@ -347,7 +347,6 @@ Column {data-width=500}
 ---------------------------------------------------------------
 
 ### Here is where we will help you learn your ntee code. 
-
 
 
 ```{r}
@@ -734,7 +733,7 @@ Here is where we will put the ntee code structure graph
 
 
 
-Detailed Appraisal
+Advanced Search
 =======================================================================
 
 Columns {.tabset .tabset-fade}
@@ -797,7 +796,7 @@ pickerInput("detailed.search.bc",
                         "Mutual/Membership Benefit" = 9,
                         "Unknown/Unclassified"= 10),
             multiple = TRUE,
-            selected = 1,
+            selected = 1:10,
             options = list(
               `actions-box` = TRUE,
               `deselect-all-text` = "None",
@@ -808,10 +807,16 @@ pickerInput("detailed.search.bc",
 
 ## Major Group 
 # Original Major Group
+mg.options <- 
+  ntee.values %>% 
+  dplyr::filter(nchar(ntee) == 1) %>% 
+  pull(description)
+
 pickerInput("detailed.search.mg",
             label = "Which major groups do you want to include in your serach?",
-            choices = c("Arts, Culture & Humanities"),
+            choices = mg.options,
             multiple = TRUE,
+            selected = mg.options,
             options = list(
               `actions-box` = TRUE,
               `deselect-all-text` = "None",
@@ -832,14 +837,14 @@ observe({
   }
 
   which.letters <- ntee.codes %>%
-      dplyr::filter(BroadCategory == as.numeric(bc)) %>%
+      dplyr::filter(BroadCategory %in% as.numeric(bc)) %>%
       select(MajorGroup) %>%
       unique()
 
   which.mg <- ntee.values %>%
     filter(nchar(ntee) == 1) %>%
     filter(ntee %in% which.letters$MajorGroup)  %>%
-    select(description)
+    select(description) 
 
 
   chs <- which.mg$description
@@ -851,7 +856,7 @@ observe({
     inputId = "detailed.search.mg",
     label = "Which major groups do you want to include in your serach?",
     choices = chs,
-    selected = chs[1],
+    selected = chs,
     options = list(
       `actions-box` = TRUE,
       `deselect-all-text` = "None",
@@ -881,12 +886,35 @@ shinyWidgets::pickerInput(
                            "Yes, I exclusively want to include universities." = 3),
             selected = 2)
 
-pickerInput("OrgState",
-            label = "Which states do you want to include in your search? ?",
+pickerInput("detailed.search.state",
+            label = "Which states do you want to include in your search?",
             choices = state.abb52,
-            multiple = TRUE)
+            multiple = TRUE,
+            selected = state.abb52,
+            options = list(
+              `actions-box` = TRUE,
+              `deselect-all-text` = "None",
+              `select-all-text` = "Select All",
+                `none-selected-text` = "NA"
+              ))
 
+pickerInput("detailed.search.location",
+            label = "Which location types do you want to include in your search?",
+            choices = c("Metropolitan" = "metro",
+                        "Rural" = "rural"),
+            multiple = TRUE,
+            selected = c("metro", "rural"),
+            options = list(
+              `actions-box` = TRUE,
+              `deselect-all-text` = "None",
+              `select-all-text` = "Select All",
+                `none-selected-text` = "NA"
+              ))
 
+numericRangeInput("detailed.search.total.expenses",
+                  "What range of annual total expenses do you want to include in your search?",
+                  value = c(1000000, 5000000 ),
+                  min = 100000)
 
 ```
 
@@ -894,10 +922,76 @@ pickerInput("OrgState",
 ### Step 3: Select Organizations for Comparison 
 
 
+
+
+```{r}
+
+actionButton(inputId = "detailed.update.comparison",
+             label = "Update Comparison Set")
+
+
+detailed.org <- eventReactive(input$detailed.update.comparison, {
+  
+   loc <- dplyr::case_when(input$detailed.org.location == "Metropolitan" ~ "metro",
+                          input$detailed.org.location == "Rural" ~ "rural")
+  
+  compensator::get_org_values(state = input$detailed.org.state,
+                                     location.type = loc,
+                                     total.expense = input$detailed.org.expense,
+                                     ntee = input$detailed.org.ntee)
+} )
+
+detailed.search.criteria <- eventReactive(input$detailed.update.comparison,{
+  
+  ## Get letters for major group
+  bc <- input$detailed.search.bc
+  mg <- input$detailed.search.mg
+  
+  which.letters <- ntee.codes %>%
+    dplyr::filter(BroadCategory %in% as.numeric(bc)) %>%
+    select(MajorGroup) %>%
+    unique()
+
+  search.letters <- ntee.values %>%
+    filter(nchar(ntee) == 1) %>%
+    #filter(ntee %in% which.letters$MajorGroup) %>% 
+    filter(description %in% mg) %>% 
+    pull(ntee)
+  
+  ## Get Hospital
+  
+  #format search criteria
+
+   list(broad.category = input$detailed.search.bc,
+       major.group = search.letters,
+       tens = 0:9,
+       type.org = input$detailed.search.rs ,
+       univ = input$detailed.search.univ,
+       hosp = input$detailed.search.hosp,
+       location.type = ifelse(length(input$detailed.search.location) == 2,
+                              "both",
+                              input$detailed.search.location),
+       state = input$detailed.search.state,
+       total.expense = input$detailed.search.total.expenses )
+
+
+
+})
+
+
+
+
+renderText({
+  paste(detailed.search.criteria())
+})
+
+```
+
+
 ### Step 4: Get Apprasial 
 
 
-About
+Methodology
 =======================================================================
 
 
@@ -912,7 +1006,7 @@ knitr::include_graphics("images/geo-dist-map.jpeg")
 
 
 
-Gender Pay Gaps
+Gender In Pay Gaps
 =======================================================================
 
 Inputs {.sidebar data-width=300}
@@ -1348,4 +1442,9 @@ DT::renderDataTable(
 
 
 ```
+
+
+About 
+===============================================================
+
 
