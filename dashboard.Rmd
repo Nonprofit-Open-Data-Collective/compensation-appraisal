@@ -25,6 +25,8 @@ library(compensator)
 library(DT)
 library(shinyWidgets)
 library(plotly)
+library(collapsibleTree)
+
 
 ntee.codes <- read.csv("data-raw/ntee-disaggregated.csv")
 ntee.values <- read.csv("data-raw/ntee-original.csv")
@@ -1090,8 +1092,82 @@ h2(renderText(paste0("Your NTEE Code is ", ntee.code(), ".")))
 
 ### Explore The NTEE Code Structure 
 
-Here is where we will put the ntee code structure graph
+```{r}
 
+dat.letter1 <- 
+  ntee.values%>%
+  filter(substr(ntee, 3, 3) == 0) %>%
+  mutate(letter1 = substr(ntee, 1, 2)) %>%
+  select(-c(definition, ntee)) 
+  
+
+dat.letter2 <- 
+  ntee.values %>%
+  filter(nchar(ntee) == 3) %>%
+  select(-definition) %>%
+  mutate(description = gsub("<*>", "", description)) %>%
+  rename(letter2 = ntee)
+
+
+NTEE <- compensator::ntee.crosswalk %>%
+  filter(nchar(ntee) == 3) %>%
+  mutate(letter1 = paste0(major.group, tens)) %>%
+  mutate(letter2 = ntee) %>%
+  left_join(dat.letter1, by = "letter1") %>% 
+  mutate(description.tens = ifelse(is.na(description), "Specality", description)) %>% 
+  left_join(dat.letter2, by = "letter2" ) %>%
+  mutate(description.ones = description.y) %>%
+  dplyr::mutate(broad.category = case_when(
+    broad.category == 1 ~ "Arts, Culture & Humanities",
+    broad.category == 2 ~ "Education",
+    broad.category == 3 ~ "Environment and Animals",
+    broad.category == 4 ~ "Health",
+    broad.category == 5 ~ "Human Services",
+    broad.category == 6 ~ "International, Foreign Affairs",
+    broad.category == 7 ~ "Public, Societal Benefit",
+    broad.category == 8 ~ "Religion Related",
+    broad.category == 9 ~ "Mutual/Membership Benefit",
+    broad.category == 10 ~ "Unknown/Unclassified",
+    broad.category == 11 ~ "Education",
+    broad.category == 12 ~ "Health")) %>%
+  dplyr::mutate(major.group = case_when(
+    major.group == "A" ~ "Arts, Culture & Humanities",
+    major.group == "B" ~ "Education", 
+    major.group == "C" ~ "Environment",
+    major.group == "D" ~ "Animal-Related",
+    major.group == "E" ~ "Health Care",
+    major.group == "F" ~ "Mental Health & Crisis Intervention",
+    major.group == "G" ~ "Voluntary Health Associations & Medical Disciplines",
+    major.group == "H" ~ "Medical Research",
+    major.group == "I" ~ "Crime & Legal-Related",
+    major.group == "J" ~ "Employment",
+    major.group == "K" ~ "Food, Agriculture & Nutrition",
+    major.group == "L" ~ "Housing & Shelter",
+    major.group == "M" ~ "Public Safety, Disaster Preparedness & Relief",
+    major.group == "N" ~ "Recreation & Sports",
+    major.group == "O" ~ "Youth Development",
+    major.group == "P" ~ "Human Services",
+    major.group == "Q" ~ "International, Foreign Affairs & National Security",
+    major.group == "R" ~ "Civil Rights, Social Action & Advocacy",
+    major.group == "S" ~ "Community Improvement & Capacity Building",
+    major.group == "T" ~ "Philanthropy, Voluntarism & Grantmaking Foundations",
+    major.group == "U" ~ "Science & Technology",
+    major.group == "V" ~ "Social Science",
+    major.group == "W" ~ "Public & Societal Benefit",
+    major.group == "X" ~ "Religion-Related",
+    major.group == "Y" ~ "Mutual & Membership Benefit",
+    major.group == "Z" ~ "Unknown")) 
+
+collapsibleTree(
+  NTEE,
+  hierarchy = c("broad.category", "major.group", "description.tens", "description.ones", "ntee"),
+  width = 3000,
+  fill = "#0082ea"
+  )
+
+
+
+```
 
 
 
