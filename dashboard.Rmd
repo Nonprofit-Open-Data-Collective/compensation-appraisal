@@ -26,6 +26,9 @@ library(DT)
 library(shinyWidgets)
 library(plotly)
 
+ntee.codes <- read.csv("data-raw/ntee-disaggregated.csv")
+ntee.values <- read.csv("data-raw/ntee-original.csv")
+
 
 ```
 
@@ -278,17 +281,6 @@ DT::renderDataTable(
 ```{r}
 
 
-# output$downloadData <- downloadHandler(
-#     filename = function() {
-#       paste("myapprasial.csv", sep = "")
-#     },
-#     content = function(file) {
-#       write.csv(appraisal()$sample, file, row.names = FALSE)
-#     }
-# )
-# downloadButton("downloadData", "Download")
-
-
 # This button works but the button files up the entire page
 downloadHandler(
     filename = function() {
@@ -323,7 +315,377 @@ downloadHandler(
         # Set up parameters to pass to Rmd document
         params <- list(appraisal = appraisal(),
                        org = org(),
-                       search.criteria = search.criteria)
+                       search.criteria = search.criteria())
+        
+        # Knit the document, passing in the `params` list, and eval it in a
+        # child of the global environment (this isolates the code in the document
+        # from the code in this app).
+        rmarkdown::render(tempReport, output_file = file,
+                          params = params,
+                          envir = new.env(parent = globalenv())
+        )
+      }
+    )
+```
+
+
+
+Advanced Search
+=======================================================================
+
+Columns {.tabset .tabset-fade}
+------------------------------------------------------------------
+
+### Instructions 
+
+Welcome to do a more detailed appraisal. Here you can enter more detailed information about your organization and search criteria. 
+
+### Step 1: Your Organization Characteristics 
+
+```{r}
+
+# Input State 
+selectInput(inputId = "detailed.org.state",
+            label = "State",
+            choices = state.abb52)
+
+# Input Location
+selectInput(inputId = "detailed.org.location",
+            label = "Location Type",
+            choices = c("Metropolitan", "Rural"))
+
+# Input Total Expenses
+numericInput(inputId = "detailed.org.expense", 
+             label = "Total Annual Expenses", 
+             value = 1000000, 
+             min = 1e5,
+             max = 1e10)
+
+# NTEE Input
+textInput(inputId = "detailed.org.ntee",
+          label = "NTEE Code",
+          value = "A24")
+
+```
+
+### Step 2: Search Criteria 
+
+
+```{r}
+##regular/specialty
+selectInput("detailed.search.rs",
+            "Do you want to include regular or specality organization in your search?", 
+            choices = c("Regular" = "regular",
+                        "Specality" = "specality"))
+
+
+## Broad Category 
+pickerInput("detailed.search.bc",
+            label = htmltools::HTML("Which broad categories do you want to include in your search?"),
+            choices = c("Arts, Culture & Humanities" = 1,
+                        "Education" = 2,
+                        "Environment and Animals" = 3,
+                        "Health" = 4,
+                        "Human Services" = 5,
+                        "International, Foreign Affairs" = 6,
+                        "Public, Societal Benefit" = 7,
+                        "Religion Related" = 8,
+                        "Mutual/Membership Benefit" = 9,
+                        "Unknown/Unclassified"= 10),
+            multiple = TRUE,
+            selected = 1:10,
+            options = list(
+              `actions-box` = TRUE,
+              `deselect-all-text` = "None",
+              `select-all-text` = "Select All",
+                `none-selected-text` = "NA"
+              ))
+
+
+## Major Group 
+# Original Major Group
+mg.options <- 
+  ntee.values %>% 
+  dplyr::filter(nchar(ntee) == 1) %>% 
+  pull(description)
+
+pickerInput("detailed.search.mg",
+            label = "Which major groups do you want to include in your serach?",
+            choices = mg.options,
+            multiple = TRUE,
+            selected = mg.options,
+            options = list(
+              `actions-box` = TRUE,
+              `deselect-all-text` = "None",
+              `select-all-text` = "Select All",
+                `none-selected-text` = "NA"
+              ))
+
+#updating major group
+
+observe({
+  bc <- input$detailed.search.bc
+
+
+  ## Broad Category
+  if (is.null(bc)){
+     bc <- "2"
+     chs <- "Education"
+  }
+
+  which.letters <- ntee.codes %>%
+      dplyr::filter(BroadCategory %in% as.numeric(bc)) %>%
+      select(MajorGroup) %>%
+      unique()
+
+  which.mg <- ntee.values %>%
+    filter(nchar(ntee) == 1) %>%
+    filter(ntee %in% which.letters$MajorGroup)  %>%
+    select(description) 
+
+
+  chs <- which.mg$description
+
+
+  ## Updates
+  updatePickerInput(
+    session = session,
+    inputId = "detailed.search.mg",
+    label = "Which major groups do you want to include in your serach?",
+    choices = chs,
+    selected = chs,
+    options = list(
+      `actions-box` = TRUE,
+      `deselect-all-text` = "None",
+      `select-all-text` = "Select All",
+        `none-selected-text` = "NA"
+      )
+      )
+
+})
+
+
+## Hospitals 
+shinyWidgets::pickerInput(
+            inputId = "detailed.search.hosp",
+            label = "Do you want to include hospitals in your comparison set?",
+            choices = list("No, I do not want include with hospitals." = 1,
+                           "Yes, I want to include both hospitals and non-hospitals." = 2,
+                           "Yes, I exclusively want to include hospitals." = 3),
+            selected = 2)
+
+## Universities
+shinyWidgets::pickerInput(
+            inputId = "detailed.search.univ",
+            label = "Do you want to include universities in your comparison set?",
+            choices = list("No, I do not want to include universities." = 1,
+                           "Yes, I want to include both universities and non-universities." = 2,
+                           "Yes, I exclusively want to include universities." = 3),
+            selected = 2)
+
+pickerInput("detailed.search.state",
+            label = "Which states do you want to include in your search?",
+            choices = state.abb52,
+            multiple = TRUE,
+            selected = state.abb52,
+            options = list(
+              `actions-box` = TRUE,
+              `deselect-all-text` = "None",
+              `select-all-text` = "Select All",
+                `none-selected-text` = "NA"
+              ))
+
+pickerInput("detailed.search.location",
+            label = "Which location types do you want to include in your search?",
+            choices = c("Metropolitan" = "metro",
+                        "Rural" = "rural"),
+            multiple = TRUE,
+            selected = c("metro", "rural"),
+            options = list(
+              `actions-box` = TRUE,
+              `deselect-all-text` = "None",
+              `select-all-text` = "Select All",
+                `none-selected-text` = "NA"
+              ))
+
+numericRangeInput("detailed.search.total.expenses",
+                  "What range of annual total expenses do you want to include in your search?",
+                  value = c(1000000, 5000000 ),
+                  min = 100000)
+
+```
+
+
+### Step 3: Select Organizations for Comparison 
+
+Click "Update Comparison Set" to update your comparison set with you inputs from Step 1 and Step 2. Then select all organizations you want to include in your analysis. You can deselect organizations you do not want. Blue is selected and gray is deselected. 
+
+
+```{r}
+
+actionButton(inputId = "detailed.update.comparison",
+             label = "Update Comparison Set")
+
+
+### Get Org Details 
+detailed.org <- eventReactive(input$detailed.update.comparison, {
+  
+   loc <- dplyr::case_when(input$detailed.org.location == "Metropolitan" ~ "metro",
+                          input$detailed.org.location == "Rural" ~ "rural")
+  
+  compensator::get_org_values(state = input$detailed.org.state,
+                                     location.type = loc,
+                                     total.expense = input$detailed.org.expense,
+                                     ntee = input$detailed.org.ntee)
+} )
+
+### Get Search Criteria 
+detailed.search.criteria <- eventReactive(input$detailed.update.comparison,{
+  
+  ## Get letters for major group
+  bc <- input$detailed.search.bc
+  mg <- input$detailed.search.mg
+  
+  which.letters <- ntee.codes %>%
+    dplyr::filter(BroadCategory %in% as.numeric(bc)) %>%
+    select(MajorGroup) %>%
+    unique()
+
+  search.letters <- ntee.values %>%
+    filter(nchar(ntee) == 1) %>%
+    #filter(ntee %in% which.letters$MajorGroup) %>% 
+    filter(description %in% mg) %>% 
+    pull(ntee)
+  
+  ## Get Hospital
+  
+  #format search criteria
+
+   list(broad.category = input$detailed.search.bc,
+       major.group = search.letters,
+       tens = 0:9,
+       type.org = input$detailed.search.rs ,
+       univ = input$detailed.search.univ,
+       hosp = input$detailed.search.hosp,
+       location.type = ifelse(length(input$detailed.search.location) == 2,
+                              "both",
+                              input$detailed.search.location),
+       state = input$detailed.search.state,
+       total.expense = input$detailed.search.total.expenses )
+
+
+
+})
+
+
+### Get Comparison Set 
+detailed.comparisonset <- eventReactive(input$detailed.update.comparison, {
+
+  select_sample(org = detailed.org(), search.criteria = detailed.search.criteria())
+  
+  })
+
+# 
+# DT::renderDataTable(
+#   DT::datatable(
+#     {detailed.comparisonset() }
+#   ))
+    
+
+
+output$comparisonset = DT::renderDataTable({
+  
+  detailed.comparisonset() %>% 
+    dplyr::select(-c(ceo.compensation, gender))
+  
+  }, server = FALSE, selection = list(selected =1:nrow(detailed.comparisonset()))
+)
+DT::dataTableOutput('comparisonset')
+
+
+
+# renderText({
+#   paste(detailed.search.criteria())
+# })
+
+```
+
+
+### Step 4: Get Apprasial 
+
+```{r}
+
+
+actionButton(inputId = "detailed.generate",
+             label = "Generate Appraisal")
+
+
+
+detailed.appraisal <- eventReactive(input$detailed.generate, {
+
+  rows <- input$comparisonset_rows_selected
+  samp <- detailed.comparisonset()
+  samp <- samp[rows, ]
+  predict_salary(samp)
+
+})
+
+h2(
+  renderText({
+     app <- detailed.appraisal()$salary.range 
+   print(
+     paste0("Your suggested salary range is ", 
+            dollarize(round(app[1], 0)), " - ", 
+            dollarize(round(app[2],0)), "."))
+   }) #, style="color:red"
+)
+
+
+```
+
+
+
+#### Downdload Data 
+
+
+```{r}
+
+
+# This button works but the button files up the entire page
+downloadHandler(
+    filename = function() {
+      paste("myapprasial.csv", sep = "")
+    },
+    content = function(file) {
+      write.csv(detailed.appraisal()$sample, file, row.names = FALSE)
+    }
+)
+
+```
+
+
+#### Download Report
+
+
+
+```{r}
+
+#downloadButton("report", "Generate report")
+
+downloadHandler(
+      # For PDF output, change this to "report.pdf"
+      filename = "report.html",
+      content = function(file) {
+        # Copy the report file to a temporary directory before processing it, in
+        # case we don't have write permissions to the current working dir (which
+        # can happen when deployed).
+        tempReport <- file.path(tempdir(), "report.Rmd")
+        file.copy("report-template.Rmd", tempReport, overwrite = TRUE)
+        
+        # Set up parameters to pass to Rmd document
+        params <- list(appraisal = detailed.appraisal(),
+                       org = detailed.org(),
+                       search.criteria = detailed.search.criteria())
         
         # Knit the document, passing in the `params` list, and eval it in a
         # child of the global environment (this isolates the code in the document
@@ -339,6 +701,7 @@ downloadHandler(
 
 
 
+
 Find My NTEE Code
 ========================================================================
 
@@ -350,8 +713,6 @@ Column {data-width=500}
 
 
 ```{r}
-ntee.codes <- read.csv("data-raw/ntee-disaggregated.csv")
-ntee.values <- read.csv("data-raw/ntee-original.csv")
 
 shinyWidgets::pickerInput(
    inputId = "ntee.rs",
@@ -732,263 +1093,6 @@ h2(renderText(paste0("Your NTEE Code is ", ntee.code(), ".")))
 Here is where we will put the ntee code structure graph
 
 
-
-Advanced Search
-=======================================================================
-
-Columns {.tabset .tabset-fade}
-------------------------------------------------------------------
-
-### Instructions 
-
-Welcome to do a more detailed appraisal. Here you can enter more detailed information about your organization and search criteria. 
-
-### Step 1: Your Organization Characteristics 
-
-```{r}
-
-# Input State 
-selectInput(inputId = "detailed.org.state",
-            label = "State",
-            choices = state.abb52)
-
-# Input Location
-selectInput(inputId = "detailed.org.location",
-            label = "Location Type",
-            choices = c("Metropolitan", "Rural"))
-
-# Input Total Expenses
-numericInput(inputId = "detailed.org.expense", 
-             label = "Total Annual Expenses", 
-             value = 1000000, 
-             min = 1e5,
-             max = 1e10)
-
-# NTEE Input
-textInput(inputId = "detailed.org.ntee",
-          label = "NTEE Code",
-          value = "A24")
-
-```
-
-### Step 2: Search Criteria 
-
-
-```{r}
-##regular/specialty
-selectInput("detailed.search.rs",
-            "Do you want to include regular or specality organization in your search?", 
-            choices = c("Regular" = "regular",
-                        "Specality" = "specality"))
-
-
-## Broad Category 
-pickerInput("detailed.search.bc",
-            label = htmltools::HTML("Which broad categories do you want to include in your search?"),
-            choices = c("Arts, Culture & Humanities" = 1,
-                        "Education" = 2,
-                        "Environment and Animals" = 3,
-                        "Health" = 4,
-                        "Human Services" = 5,
-                        "International, Foreign Affairs" = 6,
-                        "Public, Societal Benefit" = 7,
-                        "Religion Related" = 8,
-                        "Mutual/Membership Benefit" = 9,
-                        "Unknown/Unclassified"= 10),
-            multiple = TRUE,
-            selected = 1:10,
-            options = list(
-              `actions-box` = TRUE,
-              `deselect-all-text` = "None",
-              `select-all-text` = "Select All",
-                `none-selected-text` = "NA"
-              ))
-
-
-## Major Group 
-# Original Major Group
-mg.options <- 
-  ntee.values %>% 
-  dplyr::filter(nchar(ntee) == 1) %>% 
-  pull(description)
-
-pickerInput("detailed.search.mg",
-            label = "Which major groups do you want to include in your serach?",
-            choices = mg.options,
-            multiple = TRUE,
-            selected = mg.options,
-            options = list(
-              `actions-box` = TRUE,
-              `deselect-all-text` = "None",
-              `select-all-text` = "Select All",
-                `none-selected-text` = "NA"
-              ))
-
-#updating major group
-
-observe({
-  bc <- input$detailed.search.bc
-
-
-  ## Broad Category
-  if (is.null(bc)){
-     bc <- "2"
-     chs <- "Education"
-  }
-
-  which.letters <- ntee.codes %>%
-      dplyr::filter(BroadCategory %in% as.numeric(bc)) %>%
-      select(MajorGroup) %>%
-      unique()
-
-  which.mg <- ntee.values %>%
-    filter(nchar(ntee) == 1) %>%
-    filter(ntee %in% which.letters$MajorGroup)  %>%
-    select(description) 
-
-
-  chs <- which.mg$description
-
-
-  ## Updates
-  updatePickerInput(
-    session = session,
-    inputId = "detailed.search.mg",
-    label = "Which major groups do you want to include in your serach?",
-    choices = chs,
-    selected = chs,
-    options = list(
-      `actions-box` = TRUE,
-      `deselect-all-text` = "None",
-      `select-all-text` = "Select All",
-        `none-selected-text` = "NA"
-      )
-      )
-
-})
-
-
-## Hospitals 
-shinyWidgets::pickerInput(
-            inputId = "detailed.search.hosp",
-            label = "Do you want to include hospitals in your comparison set?",
-            choices = list("No, I do not want include with hospitals." = 1,
-                           "Yes, I want to include both hospitals and non-hospitals." = 2,
-                           "Yes, I exclusively want to include hospitals." = 3),
-            selected = 2)
-
-## Universities
-shinyWidgets::pickerInput(
-            inputId = "detailed.search.univ",
-            label = "Do you want to include universities in your comparison set?",
-            choices = list("No, I do not want to include universities." = 1,
-                           "Yes, I want to include both universities and non-universities." = 2,
-                           "Yes, I exclusively want to include universities." = 3),
-            selected = 2)
-
-pickerInput("detailed.search.state",
-            label = "Which states do you want to include in your search?",
-            choices = state.abb52,
-            multiple = TRUE,
-            selected = state.abb52,
-            options = list(
-              `actions-box` = TRUE,
-              `deselect-all-text` = "None",
-              `select-all-text` = "Select All",
-                `none-selected-text` = "NA"
-              ))
-
-pickerInput("detailed.search.location",
-            label = "Which location types do you want to include in your search?",
-            choices = c("Metropolitan" = "metro",
-                        "Rural" = "rural"),
-            multiple = TRUE,
-            selected = c("metro", "rural"),
-            options = list(
-              `actions-box` = TRUE,
-              `deselect-all-text` = "None",
-              `select-all-text` = "Select All",
-                `none-selected-text` = "NA"
-              ))
-
-numericRangeInput("detailed.search.total.expenses",
-                  "What range of annual total expenses do you want to include in your search?",
-                  value = c(1000000, 5000000 ),
-                  min = 100000)
-
-```
-
-
-### Step 3: Select Organizations for Comparison 
-
-
-
-
-```{r}
-
-actionButton(inputId = "detailed.update.comparison",
-             label = "Update Comparison Set")
-
-
-detailed.org <- eventReactive(input$detailed.update.comparison, {
-  
-   loc <- dplyr::case_when(input$detailed.org.location == "Metropolitan" ~ "metro",
-                          input$detailed.org.location == "Rural" ~ "rural")
-  
-  compensator::get_org_values(state = input$detailed.org.state,
-                                     location.type = loc,
-                                     total.expense = input$detailed.org.expense,
-                                     ntee = input$detailed.org.ntee)
-} )
-
-detailed.search.criteria <- eventReactive(input$detailed.update.comparison,{
-  
-  ## Get letters for major group
-  bc <- input$detailed.search.bc
-  mg <- input$detailed.search.mg
-  
-  which.letters <- ntee.codes %>%
-    dplyr::filter(BroadCategory %in% as.numeric(bc)) %>%
-    select(MajorGroup) %>%
-    unique()
-
-  search.letters <- ntee.values %>%
-    filter(nchar(ntee) == 1) %>%
-    #filter(ntee %in% which.letters$MajorGroup) %>% 
-    filter(description %in% mg) %>% 
-    pull(ntee)
-  
-  ## Get Hospital
-  
-  #format search criteria
-
-   list(broad.category = input$detailed.search.bc,
-       major.group = search.letters,
-       tens = 0:9,
-       type.org = input$detailed.search.rs ,
-       univ = input$detailed.search.univ,
-       hosp = input$detailed.search.hosp,
-       location.type = ifelse(length(input$detailed.search.location) == 2,
-                              "both",
-                              input$detailed.search.location),
-       state = input$detailed.search.state,
-       total.expense = input$detailed.search.total.expenses )
-
-
-
-})
-
-
-
-
-renderText({
-  paste(detailed.search.criteria())
-})
-
-```
-
-
-### Step 4: Get Apprasial 
 
 
 Methodology
