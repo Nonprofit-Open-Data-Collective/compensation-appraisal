@@ -10,7 +10,7 @@ library(stringr)
 
 
 #### Read in Data ####
-dat <- read_csv("data-raw/step-04-ceo-final.csv")
+dat <- read_csv("zz-archive/data-raw/step-04-ceo-final.csv")
 #length(unique(dat$EIN))
 #13958
 
@@ -47,8 +47,8 @@ dat <- read_csv("data-raw/step-04-ceo-final.csv")
 
 #### Get 2020 to 2022 inflation rate #### 
 # https://www.bls.gov/data/inflation_calculator.htm
-# $1 in Jan 2020 is worth $1.09 in Jan 2022
-rate.2020.to.2022 <- 1.09
+# $1 in Jan 2020 is worth $1.09 in Jan 2023
+rate.2020.to.2023 <- 1.18
 
 
 #### Filtering Data #### 
@@ -94,7 +94,7 @@ dat.sec <- dat %>%
   mutate(TotalAssests = case_when(TotalAssests >= 0 ~ TotalAssests ,
                                   TotalAssests < 0  ~ 0))%>%
   #Adjust for inflation , *1.09
-  mutate(CEOCompensation = CEOCompensation * rate.2020.to.2022) %>%
+  mutate(CEOCompensation = CEOCompensation * rate.2020.to.2023) %>%
   #Only keep the most recent Year for each unique EIN
   group_by(EIN) %>%
   filter(FormYr==max(FormYr)) %>%
@@ -186,7 +186,7 @@ dat.with.geo <- merge(dat.sec , bmf.all, by = "EIN") %>%
 
 #### Match FIPS Codes with RUCA codes ######
 #get RUCA codes from FIPS codes
-dat.ruca.raw <- readxl::read_excel("data-raw/cencus-ruca-2010-revised.xlsx", 
+dat.ruca.raw <- readxl::read_excel("zz-archive/data-raw/cencus-ruca-2010-revised.xlsx", 
                                skip = 1)
 
 #format so it can be merged 
@@ -209,7 +209,7 @@ dat.merge <- merge(dat.with.geo, dat.ruca, by = "FIPS") %>%
   mutate(LocationType = case_when(RUCA <= 6 ~ "Metropolitan", 
                                   RUCA > 7 ~ "Rural")) %>%
   #get rid of intermediate steps 
-  select(-c(RUCA, digit)) %>%
+  select(-c( digit)) %>%
   relocate(FIPS, .after = LocationType)
 
 
@@ -283,14 +283,14 @@ dat.final <- rbind(dat.990, dat.EZ) %>%
 #13072 13075 13083 13103 13106 13111 13114 13117 13127 13139 13142
 
 get.rid.of <- which(is.na(dat.final$MajorGroup) & is.na(dat.final$NTEE) & is.na(dat.final$NTEE.CC))
-get.rid.of <- c(get.rid.of, 13139, 13142)
+#get.rid.of <- c(get.rid.of, 13139, 13142)
 
 dat.final <- dat.final[ -get.rid.of, ]
   
 
 
 #### Save ####
-write_csv(dat.final, file = "data-rodeo/dat-shinyapp.csv")
+write_csv(dat.final, file = "zz-archive/data-rodeo/dat-shinyapp.csv")
 
 
 
