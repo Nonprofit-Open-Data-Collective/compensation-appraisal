@@ -44,8 +44,8 @@ lonlat <- 2*as.matrix(state.centers[ , 3:4], ncol =2)
 ## Plot -----------------------------------------
 plot(state.igraph, 
      layout = lonlat,
-     vertex.size = 12,
-     vertex.label.size = 6,
+     vertex.size = 15,
+     vertex.label.size = 3,
      vertex.color = "black",
      vertex.label.color = "white")
 
