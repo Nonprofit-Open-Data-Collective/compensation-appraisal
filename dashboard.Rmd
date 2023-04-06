@@ -28,7 +28,7 @@ library(plotly)
 library(collapsibleTree)
 
 
-ntee.codes <- read.csv("data-raw/ntee-disaggregated.csv")
+ntee.codes <- read.csv("data-raw/ntee-crosswalk.csv")
 ntee.values <- read.csv("data-raw/ntee-original.csv")
 
 
@@ -58,7 +58,7 @@ selectInput(inputId = "input.org.state",
 # Input Location
 selectInput(inputId = "input.org.location",
             label = "Location Type",
-            choices = c("Metropolitan", "Rural"))
+            choices = c("Metropolitan", "Suburban", "Town", "Rural"))
 
 # Input Total Expenses
 numericInput(inputId = "input.org.expense", 
@@ -97,7 +97,9 @@ org <- reactive({
   loc <- 
    dplyr::case_when(
      input$input.org.location == "Metropolitan" ~ "metro",
-     input$input.org.location == "Rural" ~ "rural")
+     input$input.org.location == "Rural" ~ "rural",
+     input$input.org.location == "Suburban" ~ "suburban", 
+     input$input.org.location == "Town" ~ "town")
 
   #return
   compensator::get_org_values(
@@ -109,21 +111,26 @@ org <- reactive({
 } )
 
 
+loc_func <- function(x){
+  if(x == "metro"){return(c("metro", "suburban"))}
+  else if(x =="suburban"){return(c("metro", "subruban", "town"))}
+  else if(x == "town"){return(c("rural", "subruban", "town"))}
+  else{return(c("metro", "subruban", "town"))}
+}
+
 
 search.criteria <- reactive( {
   
   #return
   list(
-    broad.category = ifelse(
-      org()$type.org == "regular", 
-      org()$broad.category, 
-      NA), 
-    major.group = base::LETTERS,
-    tens = 0:9,
-    type.org = org()$type.org,
-    univ = org()$univ,
-    hosp = org()$hosp,
-    location.type = org()$location.type,
+    type.org = base::ifelse(org()$type.org == "RG", "RG", c("AA", "MT", "PA", "RP", "MS", "MM", "NS")),
+    broad.category = base::ifelse(org()$type.org == "RG", org()$broad.category, NA),
+    major.group = NA,
+    division = NA,
+    subdivision = NA,
+    univ = TRUE,
+    hosp = TRUE,
+    location.type = loc_func(org()$location.type),
     state = state.abb52,
     total.expense = c(0.1*org()$total.expense, 10*org()$total.expense) )
   
@@ -133,12 +140,12 @@ search.criteria <- reactive( {
 appraisal <- eventReactive(input$generate, {
 
   samp <- select_sample(
-    org = org(), 
+    org = org(),
     search.criteria = search.criteria())
-  
+
   #return
   predict_salary(samp)
-  
+
   })
 
 ```
@@ -155,24 +162,27 @@ Row  {data-height=100}
 
 
 h2(renderText({
-  app <- appraisal()$salary.range 
-  
+  app <- appraisal()$salary.range
+
   #return
   print(
-     paste0("Your suggested salary range is ", 
-            dollarize(round(app[1], 0)), " - ", 
+     paste0("Your suggested salary range is ",
+            dollarize(round(app[1], 0)), " - ",
             dollarize(round(app[2],0)), "."))
-   }) 
+
+
+  
+  }) 
 )
 
 
-read.this <- eventReactive(input$generate, {
-  #return
-  "Look through the graphs below to learn about the nonprofits we used to generate your apprasial."})
-
-h5(renderText({
-  paste(read.this())
-}))
+# read.this <- eventReactive(input$generate, {
+#   #return
+#   "Look through the graphs below to learn about the nonprofits we used to generate your apprasial."})
+# 
+# h5(renderText({
+#   paste(read.this())
+# }))
 
 ```
 
@@ -370,7 +380,7 @@ selectInput(inputId = "detailed.org.state",
 # Input Location
 selectInput(inputId = "detailed.org.location",
             label = "Location Type",
-            choices = c("Metropolitan", "Rural"))
+            choices = c("Metropolitan", "Suburban", "Small Town", "Rural"))
 
 # Input Total Expenses
 numericInput(inputId = "detailed.org.expense", 
@@ -391,27 +401,43 @@ textInput(inputId = "detailed.org.ntee",
 
 ```{r}
 ##regular/specialty
-selectInput("detailed.search.rs",
-            "Do you want to include regular or specality organization in your search?", 
-            choices = c("Regular" = "regular",
-                        "Specality" = "specality"))
+pickerInput("detailed.search.rs",
+            "Whay types of organizations do you want to include in your search?", 
+            choices = c("Regular" = "RG",
+                        "Alliance/Advocacy Organizations" = "AA",
+                        "Management and Technical Assistance " = "MT", 
+                        "Professional Societies/Associations" = "PS", 
+                        "Research Institutes and/or Public Policy Analysis" = "RP", 
+                        "Monetary Support - Single Organization" = "MS", 
+                        "Monetary Support - Multiple Organizations" = "MM", 
+                        "Nonmonetary Support Not Elsewhere Classified" = "NS"),
+            multiple = TRUE,
+            selected = c("RG"),
+            options = list(
+              `actions-box` = TRUE,
+              `deselect-all-text` = "None",
+              `select-all-text` = "Select All",
+                `none-selected-text` = "NA"
+              ))
 
 
 ## Broad Category 
 pickerInput("detailed.search.bc",
             label = htmltools::HTML("Which broad categories do you want to include in your search?"),
-            choices = c("Arts, Culture & Humanities" = 1,
-                        "Education" = 2,
-                        "Environment and Animals" = 3,
-                        "Health" = 4,
-                        "Human Services" = 5,
-                        "International, Foreign Affairs" = 6,
-                        "Public, Societal Benefit" = 7,
-                        "Religion Related" = 8,
-                        "Mutual/Membership Benefit" = 9,
-                        "Unknown/Unclassified"= 10),
+            choices = c("Arts, Culture & Humanities" = "ART",
+                        "Education" = "EDU",
+                        "Environment and Animals" = "ENV",
+                        "Health" = "HEL",
+                        "Human Services" = "HMS",
+                        "International, Foreign Affairs" = "IFA",
+                        "Public, Societal Benefit" = "PSB",
+                        "Religion Related" = "REL",
+                        "Mutual/Membership Benefit" = "MMB",
+                        "Unknown/Unclassified"= "UNU",
+                        "University" = "UNI",
+                        "Hospital" = "HOS"),
             multiple = TRUE,
-            selected = 1:10,
+            selected = c("ART", "EDU", "ENV", "HEL", "HMS", "IFA", "PSB", "REL", "MMB", "UNU", "UNI", "HOS"),
             options = list(
               `actions-box` = TRUE,
               `deselect-all-text` = "None",
@@ -447,18 +473,18 @@ observe({
 
   ## Broad Category
   if (is.null(bc)){
-     bc <- "2"
+     bc <- "EDU"
      chs <- "Education"
   }
 
   which.letters <- ntee.codes %>%
-      dplyr::filter(BroadCategory %in% as.numeric(bc)) %>%
-      dplyr::select(MajorGroup) %>%
+      dplyr::filter(broad.category %in% bc) %>%
+      dplyr::select(major.group) %>%
       unique()
 
   which.mg <- ntee.values %>%
     dplyr::filter(nchar(ntee) == 1) %>%
-    dplyr::filter(ntee %in% which.letters$MajorGroup)  %>%
+    dplyr::filter(ntee %in% which.letters$major.group)  %>%
     dplyr::select(description) 
 
 
@@ -483,23 +509,6 @@ observe({
 })
 
 
-## Hospitals 
-shinyWidgets::pickerInput(
-            inputId = "detailed.search.hosp",
-            label = "Do you want to include hospitals in your comparison set?",
-            choices = list("No, I do not want include with hospitals." = 1,
-                           "Yes, I want to include both hospitals and non-hospitals." = 2,
-                           "Yes, I exclusively want to include hospitals." = 3),
-            selected = 2)
-
-## Universities
-shinyWidgets::pickerInput(
-            inputId = "detailed.search.univ",
-            label = "Do you want to include universities in your comparison set?",
-            choices = list("No, I do not want to include universities." = 1,
-                           "Yes, I want to include both universities and non-universities." = 2,
-                           "Yes, I exclusively want to include universities." = 3),
-            selected = 2)
 
 pickerInput("detailed.search.state",
             label = "Which states do you want to include in your search?",
@@ -516,9 +525,11 @@ pickerInput("detailed.search.state",
 pickerInput("detailed.search.location",
             label = "Which location types do you want to include in your search?",
             choices = c("Metropolitan" = "metro",
+                        "Suburban" = "suburban",
+                        "Small Town" = "town",
                         "Rural" = "rural"),
             multiple = TRUE,
-            selected = c("metro", "rural"),
+            selected = c("metro", "suburban", "town", "rural"),
             options = list(
               `actions-box` = TRUE,
               `deselect-all-text` = "None",
@@ -544,76 +555,70 @@ Click "Update Comparison Set" to update your comparison set with you inputs from
 actionButton(inputId = "detailed.update.comparison",
              label = "Update Comparison Set")
 
+# renderText(paste(unlist(detailed.search.criteria())))
+
 
 ### Get Org Details 
 detailed.org <- eventReactive(input$detailed.update.comparison, {
-  
-   loc <- 
-     dplyr::case_when(
-       input$detailed.org.location == "Metropolitan" ~ "metro",
-       input$detailed.org.location == "Rural" ~ "rural")
-  
   #return
   compensator::get_org_values(
     state = input$detailed.org.state,
-    location.type = loc,
+    location.type = 
+      dplyr::case_when(input$detailed.org.location == "Metropolitan" ~ "metro", 
+                       input$detailed.org.location == "Suburban" ~ "suburban",
+                       input$detailed.org.location == "Small Town" ~ "town",
+                       input$detailed.org.location == "Rural" ~ "rural"),
     total.expense = input$detailed.org.expense,
     ntee = input$detailed.org.ntee)
 } )
 
-### Get Search Criteria 
-detailed.search.criteria <- eventReactive(input$detailed.update.comparison,{
-  
-  ## Get letters for major group
-  bc <- input$detailed.search.bc
-  mg <- input$detailed.search.mg
-  
-  which.letters <- ntee.codes %>%
-    dplyr::filter(BroadCategory %in% as.numeric(bc)) %>%
-    dplyr::select(MajorGroup) %>%
-    unique()
 
+
+### Get Search Criteria
+detailed.search.criteria <- eventReactive(input$detailed.update.comparison,{
+
+  ## Get letters for major group
   search.letters <- ntee.values %>%
-    dplyr::filter(nchar(ntee) == 1) %>%
-    #filter(ntee %in% which.letters$MajorGroup) %>% 
-    dplyr::filter(description %in% mg) %>% 
-    pull(ntee)
-  
-  ## Get Hospital
-  
+    dplyr::filter(nchar(ntee) == 1,
+                  description %in% input$detailed.search.mg ) %>%
+    dplyr::select(ntee) %>%
+    pull()
+
+
   #format search criteria
    list(broad.category = input$detailed.search.bc,
        major.group = search.letters,
-       tens = 0:9,
        type.org = input$detailed.search.rs ,
-       univ = input$detailed.search.univ,
-       hosp = input$detailed.search.hosp,
-       location.type = ifelse(length(input$detailed.search.location) == 2,
-                              "both",
-                              input$detailed.search.location),
+       location.type = input$detailed.search.location,
        state = input$detailed.search.state,
-       total.expense = input$detailed.search.total.expenses )
+       total.expense = input$detailed.search.total.expenses,
+       division = NA,
+       subdivision = NA,
+       univ = TRUE,
+       hosp = TRUE)
 
 
 
 })
 
 
-### Get Comparison Set 
+
+
+### Get Comparison Set
 detailed.comparisonset <- eventReactive(input$detailed.update.comparison, {
 
   #return
   select_sample(org = detailed.org(), search.criteria = detailed.search.criteria())
-  
+
   })
 
 output$comparisonset = DT::renderDataTable({
-  
+
   #return
-  detailed.comparisonset() %>% 
+  detailed.comparisonset() %>%
     dplyr::select(-c(ceo.compensation, gender))
-  
-  }, server = FALSE, selection = list(selected =1:nrow(detailed.comparisonset()))
+
+  } , server = FALSE, selection = list(selected =1:nrow(detailed.comparisonset()))
 )
 DT::dataTableOutput('comparisonset')
 
@@ -721,16 +726,16 @@ Column {data-width=500}
 shinyWidgets::pickerInput(
    inputId = "ntee.rs",
    label = "Which of the following describes your nonprofit best? (most organizations are regular nonprofits)",
-   choices = c("Regular Nontprofit" = "regular",
-               "Alliance/Advocacy Organizations" = "01",
-               "Management and Technical Assistance" = "02",
-               "Professional Societies/Associations" = "03",
-               "Research Institutes and/or Public Policy Analysis" = "05",
-               "Monetary Support - Single Organization" = "11",
-               "Monetary Support - Multiple Organizations" = "12",
-               "Nonmonetary Support Not Elsewhere Classified (N.E.C.)" = "19"),
+   choices = c("Regular Nontprofit" = "RG",
+               "Alliance/Advocacy Organizations" = "AA",
+               "Management and Technical Assistance" = "MT",
+               "Professional Societies/Associations" = "PS",
+               "Research Institutes and/or Public Policy Analysis" = "RI",
+               "Monetary Support - Single Organization" = "MS",
+               "Monetary Support - Multiple Organizations" = "MM",
+               "Nonmonetary Support Not Elsewhere Classified (N.E.C.)" = "NS"),
    multiple = FALSE,
-   selected = "regular",
+   selected = "RG",
    width = 450
 )
 
@@ -743,16 +748,18 @@ shinyWidgets::pickerInput(
 selectInput(
   "ntee.bc", 
    "Which of the following broad cateogires best describes your nonprofit?",
-   choices = c("Arts, Culture & Humanities" = "1",
-      "Education" = "2",
-      "Environment and Animals" = "3",
-      "Health" = "4",
-      "Human Services" = "5",
-      "International, Foreign Affairs" = "6",
-      "Public, Societal Benefit" = "7",
-      "Religion Related" = "8",
-      "Mutual/Membership Benefit" = "9",
-      "Unknown/Unclassified" = 10),
+   choices = c("Arts, Culture & Humanities" = "ART",
+      "Education" = "EDU",
+      "Environment and Animals" = "ENV",
+      "Health" = "HEL",
+      "Human Services" = "HMS",
+      "International, Foreign Affairs" = "IFA",
+      "Public, Societal Benefit" = "PSB",
+      "Religion Related" = "REL",
+      "Mutual/Membership Benefit" = "MMB",
+      "Unknown/Unclassified" = "UNU",
+      "University" = "UNI", 
+      "Hospital" = "HOS"),
    width = 450)
   
 observe({
@@ -760,9 +767,9 @@ observe({
   
   ## regular/specality 
   if (is.null(rs))
-        rs <- "0"
+        rs <- "REG"
   
-  if(rs == "regular"){
+  if(rs == "RG"){
     lab <- "Which of the following broad cateogires best describes your nonprofit?"
   }else{
     lab <- "Which of the following broad cateogires best describes the nonprofit you support?"
@@ -773,17 +780,19 @@ observe({
     session, 
     "ntee.bc",
     lab,
-    choices = c("Arts, Culture & Humanities" = "1",
-       "Education" = "2",
-       "Environment and Animals" = "3",
-       "Health" = "4",
-       "Human Services" = "5",
-       "International, Foreign Affairs" = "6",
-       "Public, Societal Benefit" = "7",
-       "Religion Related" = "8",
-       "Mutual/Membership Benefit" = "9",
-       "Unknown/Unclassified" = 10),
-    selected = "1"
+    choices = c("Arts, Culture & Humanities" = "ART",
+       "Education" = "EDU",
+       "Environment and Animals" = "ENV",
+       "Health" = "HEL",
+       "Human Services" = "HMS",
+       "International, Foreign Affairs" = "IFA",
+       "Public, Societal Benefit" = "PSB",
+       "Religion Related" = "REL",
+       "Mutual/Membership Benefit" = "MMB",
+       "Unknown/Unclassified" = "UNU",
+       "University" = "UNI",
+       "Hospital" = "HOS"),
+    selected = "ART"
       )
   
 })
@@ -793,7 +802,7 @@ observe({
 
 ```{r}
 selectInput(
-  "ntee.mg", 
+  "ntee.mg",
   "Which of the following major groups best describes your nonprofit?",
   choices = c("Arts, Culture & Humanities" = "A",
               "Education" = "B"),
@@ -803,59 +812,59 @@ selectInput(
 observe({
   rs <- input$ntee.rs
   bc <- input$ntee.bc
-  
-  ## Regular/specialty 
+
+  ## Regular/specialty
   if (is.null(rs))
-        rs <- "0"
-  
+        rs <- "RG"
+
   if(rs == "regular"){
     lab <- "Which of the following major groups best describes your nonprofit?"
   }else{
     lab <- "Which of the following major groups best describes the nonprofit you support?"
   }
-  
-  ## Broad Category 
+
+  ## Broad Category
   if (is.null(bc)){
-     bc <- "2"
+     bc <- "EDU"
      chs <- "Education"
   }
-  
+
   which.letter <- ntee.codes %>%
-      dplyr::filter(BroadCategory == as.numeric(bc)) %>%
-      dplyr::select(MajorGroup) %>%
+      dplyr::filter(broad.category == bc) %>%
+      dplyr::select(major.group) %>%
       unique()
 
   which.mg <- ntee.values %>%
     dplyr::filter(nchar(ntee) == 1) %>%
-    dplyr::filter(ntee %in% which.letter$MajorGroup)  %>%
+    dplyr::filter(ntee %in% which.letter$major.group)  %>%
     dplyr::select(description)
 
 
   chs <- which.mg$description
 
-  
+
   ## Updates
   updateSelectInput(
-    session, 
+    session,
     "ntee.mg",
     lab,
     choices = chs,
     selected = chs[1]
       )
-  
+
 })
 ```
 
 
 ```{r}
 selectInput(
-  "ntee.tens", 
+  "ntee.tens",
   "Which of the following devisions best describes your nonprofit?",
   choices = c("Arts & Culture" = "2",
               "Media & Communications" = "3",
               "Visual Arts" = "4",
-              "Museums" = "5", 
-              "Performing Arts" = "6", 
+              "Museums" = "5",
+              "Performing Arts" = "6",
               "Humanities" = "7",
               "Historical Organizations" = "8",
               "Arts Services" = "9",
@@ -867,58 +876,58 @@ observe({
   rs <- input$ntee.rs
   bc <- input$ntee.bc
   mg <- input$ntee.mg
-  
+
   ## Regular/Specality
   if (is.null(rs))
-        rs <- "0"
-  
-  if(rs == "regular"){
+        rs <- "RG"
+
+  if(rs == "RG"){
     lab <- "Which of the following devisions best describes your nonprofit?"
   }else{
     lab <- "Which of the following devisions best describes the nonprofit you support?"
   }
-  
-  #Broad Cateogry 
+
+  #Broad Cateogry
   if (is.null(bc)){
-     bc <- "2"
+     bc <- "EDU"
      chs <- "Education"
   }
-  
+
   # Major Group
   if (is.null(mg)){
-     bc <- "2"
+     bc <- "EDU"
      mg <- "Education"
      chs <- "None"
   }
-  
+
   mg.letter <- ntee.values %>%
     dplyr::filter(nchar(ntee) == 1,
-                  description == mg) %>% 
+                  description == mg) %>%
     dplyr::select(ntee) %>%
     as.character()
-  
+
   which.letter <- ntee.codes %>%
-      dplyr::filter(BroadCategory == as.numeric(bc),
-                    MajorGroup == mg.letter) %>%
-      dplyr::select(MajorGroup) %>%
+      dplyr::filter(broad.category == bc,
+                    major.group == mg.letter) %>%
+      dplyr::select(major.group) %>%
       unique()
-  
+
 
   which.tens <- ntee.values %>%
     dplyr::filter(substr(ntee, 3, 3) == 0 | substr(ntee, 2, 3) == 99) %>%
-    dplyr::filter(substr(ntee, 1, 1) %in% which.letter$MajorGroup)  %>%
+    dplyr::filter(substr(ntee, 1, 1) %in% which.letter$major.group)  %>%
     dplyr::select(description)
 
   chs <- which.tens$description
 
   updateSelectInput(
-    session, 
+    session,
     "ntee.tens",
     lab,
     choices = chs,
     selected = chs[1]
       )
-  
+
 })
 
 
@@ -929,13 +938,13 @@ observe({
 
 ```{r}
 selectInput(
-  "ntee.ones", 
+  "ntee.ones",
   "Which of the following subdivisions best describes your nonprofit?",
   choices = c("None of These" = "0",
               "Cultural & Ethnic Awareness" = "3",
               "Folk Arts" = "4",
-              "Arts Education" = "5", 
-              "Arts & Humanities Councils & Agencies" = "6", 
+              "Arts Education" = "5",
+              "Arts & Humanities Councils & Agencies" = "6",
               "Community Celebrations" = "7"),
    width = 450)
 
@@ -945,71 +954,71 @@ observe({
   bc <- input$ntee.bc
   mg <- input$ntee.mg
   tens <- input$ntee.tens
-  
+
   ## Regular/Specality
   if (is.null(rs))
-        rs <- "0"
-  
-  if(rs == "regular"){
+        rs <- "RG"
+
+  if(rs == "RG"){
     lab <- "Which of the following subdivisions best describes your nonprofit?"
   }else{
     lab <- "Which of the following subdivisions best describes the nonprofit you support?"
   }
-  
-  #Broad Cateogry 
+
+  #Broad Cateogry
   if (is.null(bc)){
-     bc <- "2"
+     bc <- "EDU"
      chs <- "Education"
   }
-  
+
   # Major Group
   if (is.null(mg)){
-     bc <- "2"
+     bc <- "EDU"
      mg <- "Education"
      chs <- "None"
   }
-  
+
   # Tens
   if(is.null(tens)){
-    bc <- "1"
+    bc <- "ART"
     mg <- "Arts, Culture, & Humanities"
     tens <- "Museums"
     chs <- "None"
   }
-  
+
   mg.letter <- ntee.values %>%
     dplyr::filter(nchar(ntee) == 1,
-                  description == mg) %>% 
+                  description == mg) %>%
     dplyr::select(ntee) %>%
     as.character()
-  
+
   which.letter <- ntee.codes %>%
-      dplyr::filter(BroadCategory == as.numeric(bc),
-                    MajorGroup == mg.letter) %>%
-      dplyr::select(MajorGroup) %>%
+      dplyr::filter(broad.category == bc,
+                    major.group == mg.letter) %>%
+      dplyr::select(major.group) %>%
       unique()
-  
+
 
   which.tens <- ntee.values %>%
     dplyr::filter(substr(ntee, 3, 3) == 0 | substr(ntee, 2, 3) == 99) %>%
-    dplyr::filter(substr(ntee, 1, 1) %in% which.letter$MajorGroup)  
-  
+    dplyr::filter(substr(ntee, 1, 1) %in% which.letter$major.group)
+
   tens.place <- substr(which.tens$ntee[which(which.tens$description == tens)], 2, 2)
 
   which.ones <- ntee.values %>%
-    dplyr::filter(substr(ntee, 1, 1) %in% which.letter$MajorGroup)  %>%
+    dplyr::filter(substr(ntee, 1, 1) %in% which.letter$major.group)  %>%
     dplyr::filter(substr(ntee, 2, 2) %in% tens.place)
 
   chs <- which.ones$description
 
   updateSelectInput(
-    session, 
+    session,
     "ntee.ones",
     lab,
     choices = chs,
     selected = chs[1]
       )
-  
+
 })
 
 
@@ -1025,69 +1034,48 @@ observe({
 
 ```{r}
 ntee.code <- reactive({
-  
+
   rs <- input$ntee.rs
   bc <- input$ntee.bc
-  mg <- input$ntee.mg
-  tens <- input$ntee.tens
-  ones <- input$ntee.ones
-  
-  ## Regular/Specality
-  if (is.null(rs))
-        rs <- "0"
-  #Broad Cateogry 
-  if (is.null(bc)){
-     bc <- "2"
-  }
-  # Major Group
-  if (is.null(mg)){
-     bc <- "2"
-     mg <- "Education"
-  }
-  # Tens
-  if(is.null(tens)){
-    bc <- "1"
-    mg <- "Arts, Culture, & Humanities"
-    tens <- "Museums"
-  }
-  #one
-  if(is.null(ones)){
-    bc <- "1"
-    mg <- "Arts, Culture, & Humanities"
-    tens <- "Museums"
-    ones <- "Art Museums"
-  }
-  
-  which.letter <- ntee.codes %>%
-      dplyr::filter(BroadCategory == as.numeric(bc)) %>%
-      dplyr::select(MajorGroup) %>%
-      unique()
-  
-  mg.letter <- ntee.values %>%
-    dplyr::filter(nchar(ntee) == 1,
-                  description == mg)
+  mg <- ntee.values %>%
+    dplyr::filter(nchar(ntee) == 1) %>%
+    dplyr::filter(description == input$ntee.mg ) %>%
+    select(ntee) %>%
+    pull()
+  tens <- ntee.values %>%
+    dplyr::filter(nchar(ntee) == 3,
+                  substr(ntee, 3, 3) == 0) %>%
+    dplyr::filter(description == input$ntee.tens ) %>%
+    select(ntee) %>%
+    pull() %>%
+    substr(2, 2)
+  ones <- ntee.values %>%
+    dplyr::filter(nchar(ntee) == 3) %>%
+    dplyr::filter(description == input$ntee.ones ) %>%
+    select(ntee) %>%
+    pull() %>%
+    substr(3, 3)
 
-  which.tens <- ntee.values %>%
-    dplyr::filter(substr(ntee, 3, 3) == 0 | substr(ntee, 2, 3) == 99) %>%
-    dplyr::filter(substr(ntee, 1, 1) %in% which.letter$MajorGroup)  
-  
-  tens.place <- substr(which.tens$ntee[which(which.tens$description == tens)], 2, 2)
-
-  which.ones <- ntee.values %>%
-    dplyr::filter(substr(ntee, 1, 1) %in% which.letter$MajorGroup)  %>%
-    dplyr::filter(substr(ntee, 2, 2) %in% tens.place)
-  
-  ones.place <- substr(which.ones$ntee[which(which.ones$description == ones)], 3, 3)
-  
-  if(rs == "regular"){
-      code.value  <- paste0(mg.letter$ntee, tens.place, ones.place)
+  if(rs == "RG"){
+    ret <- ntee.codes %>%
+      dplyr::filter(type.org == rs,
+                    broad.category == bc,
+                    major.group == mg,
+                    division.subdivision == as.numeric(paste0(tens, ones)))%>%
+      dplyr::select(old.code)%>%
+      pull()
   }else{
-    code.value <- paste0(mg.letter$ntee, rs, tens.place, ones.place)
+    p2 <- dplyr::case_when(rs == "AA" ~ "01", 
+                           rs == "MT" ~ "02", 
+                           rs == "PS" ~ "03", 
+                           rs == "RP" ~ "05",
+                           rs == "MS" ~ "11", 
+                           rs == "MM" ~ "12", 
+                           rs == "NS" ~ "19")
+    ret <- paste0(mg, p2, ones, tens)
+    # ret <- paste0(substr(p1, 1, 1),p2, substr(p1, 2, 3))
   }
-
-  code.value
-  
-  
+  ret
   
 })
 
@@ -1101,7 +1089,7 @@ h2(renderText(paste0("Your NTEE Code is ", ntee.code(), ".")))
 ```{r}
 tags$iframe(seamless="seamless", 
                src= 'images/ntee-dendogram.html',
-               width='100%', 
+               width='130%', 
                height=800)
 
 ```
@@ -1154,9 +1142,11 @@ shinyWidgets::pickerInput(
    inputId = "filter.gender.location.type",
    label = "Location Type",
    choices = c("Metropolitan" = "metro",
+               "Suburban" = "suburban",
+               "Small Town" = "town",
                "Rural" = "rural"),
    multiple = TRUE,
-   selected = c("metro", "rural"),
+   selected = c("metro", "subruban", "town", "rural"),
    options = list(
      `actions-box` = TRUE,
      `deselect-all-text` = "None",
@@ -1175,20 +1165,20 @@ shinyWidgets::pickerInput(
 shinyWidgets::pickerInput(
   inputId = "filter.gender.broad.category",
   label = "Broad Category",
-  choices = c("Arts, Culture & Humanities" = 1,
-              "Education" = 2,
-              "Environment and Animals" = 3,
-              "Health" = 4,
-              "Human Services" = 5,
-              "International, Foreign Affairs" = 6,
-              "Public, Societal Benefit" = 7,
-              "Religion Related" = 8,
-              "Mutual/Membership Benefit" = 9,
-              "Unknown/Unclassified"= 10,
-              "University" = 11,
-              "Hospital" = 12), #showing up as 1:10 and idk why
+  choices = c("Arts, Culture & Humanities" = "ART",
+              "Education" = "EDU",
+              "Environment and Animals" = "ENV",
+              "Health" = "HEL",
+              "Human Services" = "HMS",
+              "International, Foreign Affairs" = "IFA",
+              "Public, Societal Benefit" = "PSB",
+              "Religion Related" = "REL",
+              "Mutual/Membership Benefit" = "MMB",
+              "Unknown/Unclassified"= "UNU",
+              "University" = "UNI",
+              "Hospital" = "HOS"), 
   multiple = TRUE,
-  selected = 1:12,
+  selected = c("ART", "EDU", "ENV", "HEL", "HMS", "IFA", "PSB", "REL", "MMB", "UNU", "UNI", "HOS"),
   options = list(
     `actions-box` = TRUE,
     `deselect-all-text` = "None",
@@ -1255,24 +1245,14 @@ gender.graph.filters <- reactive({
       broad.category = input$filter.gender.broad.category,
       location.type = input$filter.gender.location.type,
       total.expense = input$filter.gender.total.expense
-      #total.employee = input$filter.gender.total.employee
       )
 
-  # A little formatting to get correct input values for `dat_filtering`
-  if(length(filter.gender.1$location.type) == 2){
-    filter.gender.1$location.type <- "both"
-  }
-
-  
-  
   # Change null to na
-  if(is.null(filter.gender.1$form.year)){filter.gender.1$form.year <- NA}
   if(is.null(filter.gender.1$state)){filter.gender.1$state <- "none"}
-  if(is.null(filter.gender.1$broad.category)){filter.gender.1$broad.category <- 0}
+  if(is.null(filter.gender.1$broad.category)){filter.gender.1$broad.category <- NA}
   if(is.null(filter.gender.1$location.type)){filter.gender.1$location.type <- NA}
   if(is.null(filter.gender.1$total.expense)){filter.gender.1$total.expense <- c(-Inf, Inf)}
-  if(is.null(filter.gender.1$total.employee)){filter.gender.1$total.employee <- c(0, Inf)}
-  
+
   
 
   filter.gender.1
@@ -1281,7 +1261,8 @@ gender.graph.filters <- reactive({
 
 # Testing that the filtering criteria is what it should be
 # renderPrint({
-#   paste(gender.graph.filters())
+#   
+#   paste(head(gender.graph.filters))
 # })
 
 
@@ -1297,11 +1278,10 @@ renderPlotly({
     s <- input$format.gender.value
     
     #get filtered data from compensator package
-    dat.filterd <- 
+    dat.filtered <- 
       compensator::dat_filtering(
-        broad.category = as.numeric( gender.graph.filters()$broad.category),
-        tens = 0:9,
-        type.org = "both",
+        broad.category =  gender.graph.filters()$broad.category,
+        major.group = NA,
         univ = TRUE,
         hosp = TRUE,
         state = gender.graph.filters()$state,
@@ -1312,8 +1292,10 @@ renderPlotly({
 
     #format data for plotting
     dat.plot <- 
+      dat.filtered %>%
+      dplyr::select(-c("ntee", "new.code", "total.expense", "state", "location.type")) %>%
       #get information in nonprofits for the ones that made it though filtersing
-      dplyr::inner_join(dat.filterd, nonprofits, by = "EIN") %>%
+      dplyr::inner_join(nonprofits, by = "EIN") %>%
       #remove unknown gender 
       dplyr::filter(gender != "U") %>%
       dplyr::select(ceo.compensation, gender, paste(y.axis)) %>%
@@ -1333,18 +1315,18 @@ renderPlotly({
     if(y.axis == "broad.category"){
       dat.plot <- dat.plot %>%
         dplyr::mutate(Yaxis = case_when(
-          Yaxis == 1 ~ "Arts, Culture & Humanities",
-          Yaxis == 2 ~ "Education",
-          Yaxis == 3 ~ "Environment and Animals",
-          Yaxis == 4 ~ "Health",
-          Yaxis == 5 ~ "Human Services",
-          Yaxis == 6 ~ "International, Foreign Affairs",
-          Yaxis == 7 ~ "Public, Societal Benefit",
-          Yaxis == 8 ~ "Religion Related",
-          Yaxis == 9 ~ "Mutual/Membership Benefit",
-          Yaxis == 10 ~ "Unknown/Unclassified",
-          Yaxis == 11 ~ "Hosptial",
-          Yaxis == 12 ~ "University"))
+          Yaxis == "ART" ~ "Arts, Culture & Humanities",
+          Yaxis == "EDU" ~ "Education",
+          Yaxis == "ENV" ~ "Environment and Animals",
+          Yaxis == "HEL" ~ "Health",
+          Yaxis == "HMS" ~ "Human Services",
+          Yaxis == "IFA" ~ "International, Foreign Affairs",
+          Yaxis == "PSB" ~ "Public, Societal Benefit",
+          Yaxis == "REL" ~ "Religion Related",
+          Yaxis == "MMB" ~ "Mutual/Membership Benefit",
+          Yaxis == "UNU" ~ "Unknown/Unclassified",
+          Yaxis == "HOS" ~ "Hosptial",
+          Yaxis == "UNI" ~ "University"))
     }
     
     if(y.axis == "major.group"){
@@ -1458,8 +1440,7 @@ DT::renderDataTable(
     dat.filterd <- 
       compensator::dat_filtering(
         broad.category = as.numeric( gender.graph.filters()$broad.category),
-        tens = 0:9,
-        type.org = "both",
+        type.org =NA,
         univ = TRUE,
         hosp = TRUE,
         state = gender.graph.filters()$state,
@@ -1492,18 +1473,18 @@ DT::renderDataTable(
     if(y.axis == "broad.category"){
       dat.plot <- dat.plot %>%
         dplyr::mutate(Yaxis = case_when(
-          Yaxis == 1 ~ "Arts, Culture & Humanities",
-          Yaxis == 2 ~ "Education",
-          Yaxis == 3 ~ "Environment and Animals",
-          Yaxis == 4 ~ "Health",
-          Yaxis == 5 ~ "Human Services",
-          Yaxis == 6 ~ "International, Foreign Affairs",
-          Yaxis == 7 ~ "Public, Societal Benefit",
-          Yaxis == 8 ~ "Religion Related",
-          Yaxis == 9 ~ "Mutual/Membership Benefit",
-          Yaxis == 10 ~ "Unknown/Unclassified",
-          Yaxis == 11 ~ "Hosptial",
-          Yaxis == 12 ~ "University"))
+          Yaxis == "ART" ~ "Arts, Culture & Humanities",
+          Yaxis == "EDU" ~ "Education",
+          Yaxis == "ENV" ~ "Environment and Animals",
+          Yaxis == "HEL" ~ "Health",
+          Yaxis == "HMS" ~ "Human Services",
+          Yaxis == "IFA" ~ "International, Foreign Affairs",
+          Yaxis == "PSB" ~ "Public, Societal Benefit",
+          Yaxis == "REL" ~ "Religion Related",
+          Yaxis == "MMB" ~ "Mutual/Membership Benefit",
+          Yaxis == "UNU" ~ "Unknown/Unclassified",
+          Yaxis == "HOS" ~ "Hosptial",
+          Yaxis == "UNI" ~ "University"))
     }
     
     if(y.axis == "major.group"){
