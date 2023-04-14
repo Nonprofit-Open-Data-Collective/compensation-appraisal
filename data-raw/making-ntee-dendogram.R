@@ -1,3 +1,6 @@
+#### Making the Dendogram/Collapsable Tree for orginal NTEE Codes 
+
+
 #devtools::install_github("AdeelK93/collapsibleTree")
 library(collapsibleTree)
 library(tidyverse)
@@ -161,7 +164,7 @@ NTEE2 <-
 
 
 #save this graph as an html document for ntee tab on dashboard 
-
+#images/saved in ntee-dendogram.html
 collapsibleTreeNetwork(NTEE2,
                        width = 3000,
                        height = 500,
