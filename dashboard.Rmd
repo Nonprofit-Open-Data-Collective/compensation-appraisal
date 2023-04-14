@@ -16,21 +16,24 @@ runtime: shiny
 
 
 ```{r setup, include=FALSE}
-library(flexdashboard)
-library(shiny)
-library(ggplot2)
-library(dplyr)
-library(kableExtra)
-library(compensator)
-library(DT)
-library(shinyWidgets)
-library(plotly)
-library(collapsibleTree)
+#install packages + load libraries libraries 
+list.of.packages <- c("flexdashboard", "shiny", "ggplot2", "dplyr", "kableExtra", 
+                      "DT", "shinyWidgets", "plotly", "devtools")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)>0){ install.packages(new.packages)}
 
+#install compensator
+if((!"compensator" %in%installed.packages()[,"Package"]) ){
+  devtools::install_github("Nonprofit-Open-Data-Collective/compensator")
+}
+
+lapply(c(list.of.packages, "compensator"), require, character.only = TRUE) 
 
 ntee.codes <- read.csv("data-raw/ntee-crosswalk.csv")
 ntee.values <- read.csv("data-raw/ntee-original.csv")
 
+data("ntee.orig", package = "compensator")
+data("ntee.crosswalk", package = "compensator")
 
 ```
 
@@ -1117,6 +1120,8 @@ Gender In Pay Gaps
 Inputs {.sidebar data-width=300}
 ----------------------------------------------------------------------
 
+Filters selected on this page will not impact the appraisal process. 
+
 ### **Filter By Location:**
 
 ```{r}
@@ -1146,7 +1151,7 @@ shinyWidgets::pickerInput(
                "Small Town" = "town",
                "Rural" = "rural"),
    multiple = TRUE,
-   selected = c("metro", "subruban", "town", "rural"),
+   selected = c("metro", "suburban", "town", "rural"),
    options = list(
      `actions-box` = TRUE,
      `deselect-all-text` = "None",
@@ -1270,7 +1275,8 @@ gender.graph.filters <- reactive({
 
 ```{r}
 
-renderPlotly({
+dat.gender.graph <- reactive({
+  
   #yaxis options: "broad.category", 
     y.axis <-  input$format.gender.yaxis  
     
@@ -1287,7 +1293,21 @@ renderPlotly({
         state = gender.graph.filters()$state,
         location.type = gender.graph.filters()$location.type,
         total.expense =  gender.graph.filters()$total.expense
-      )
+      )%>%
+    #add hosp and univ as broad categories - needed for data table
+    dplyr::mutate(
+      braod.category = case_when(
+        univ == TRUE ~ "UNI",
+        hosp == TRUE ~ "HOS",
+        TRUE ~ broad.category
+      )) %>%
+    #add hosp and univ as major groups - needed for data table
+    dplyr::mutate(
+      major.group = case_when(
+        univ == TRUE ~ "UNI",
+        hosp == TRUE ~ "HOS",
+        TRUE ~ major.group
+      ))
 
 
     #format data for plotting
@@ -1301,24 +1321,16 @@ renderPlotly({
       dplyr::select(ceo.compensation, gender, paste(y.axis)) %>%
       #get the correect yaxis value based on inputs
       dplyr::rename(Yaxis = paste(y.axis)) %>%
-      #group by everything execpt ceo.compensation
-      dplyr::group_by_at(vars(-ceo.compensation)) %>%
-      #get the mean or median of ceo.compensation
-      dplyr::summarise(
-        Value =  ifelse(s == "Median", 
-                        median(ceo.compensation), 
-                        mean(ceo.compensation)), 
-        n = n(), 
-        .groups = "keep") %>%
-      dplyr::ungroup()
+      #group by everything execept ceo.compensation
+      dplyr::group_by_at(vars(-ceo.compensation)) 
     
     if(y.axis == "broad.category"){
       dat.plot <- dat.plot %>%
         dplyr::mutate(Yaxis = case_when(
           Yaxis == "ART" ~ "Arts, Culture & Humanities",
-          Yaxis == "EDU" ~ "Education",
+          Yaxis == "EDU" ~ "Education, Non-University",
           Yaxis == "ENV" ~ "Environment and Animals",
-          Yaxis == "HEL" ~ "Health",
+          Yaxis == "HEL" ~ "Health, Non-Hospital",
           Yaxis == "HMS" ~ "Human Services",
           Yaxis == "IFA" ~ "International, Foreign Affairs",
           Yaxis == "PSB" ~ "Public, Societal Benefit",
@@ -1333,10 +1345,10 @@ renderPlotly({
       dat.plot <- dat.plot %>%
         dplyr::mutate(Yaxis = case_when(
           Yaxis == "A" ~ "Arts, Culture & Humanities",
-          Yaxis == "B" ~ "Education", 
+          Yaxis == "B" ~ "Education, Non-Univeristy", 
           Yaxis == "C" ~ "Environment",
           Yaxis == "D" ~ "Animal-Related",
-          Yaxis == "E" ~ "Health Care",
+          Yaxis == "E" ~ "Health Care, Non-Hospital",
           Yaxis == "F" ~ "Mental Health & Crisis Intervention",
           Yaxis == "G" ~ "Voluntary Health Associations & Medical Disciplines",
           Yaxis == "H" ~ "Medical Research",
@@ -1357,9 +1369,37 @@ renderPlotly({
           Yaxis == "W" ~ "Public & Societal Benefit",
           Yaxis == "X" ~ "Religion-Related",
           Yaxis == "Y" ~ "Mutual & Membership Benefit",
-          Yaxis == "Z" ~ "Unknown"))
+          Yaxis == "Z" ~ "Unknown",
+          Yaxis == "UNI" ~ "University",
+          Yaxis == "HOS" ~ "Hospital"))
     }
     
+    #return
+    dat.plot
+  
+  
+})
+
+
+renderPlotly({
+  
+  
+  #yaxis options: "broad.category", 
+  y.axis <-  input$format.gender.yaxis  
+    
+  #stat options: Median, Mean
+  s <- input$format.gender.value
+  
+  #formatted data + correct summary statistic
+  dat.plot <- dat.gender.graph()%>%
+      #get the mean or median of ceo.compensation
+      dplyr::summarise(
+        Value =  ifelse(s == "Median", 
+                        median(ceo.compensation), 
+                        mean(ceo.compensation)), 
+        n = n(), 
+        .groups = "keep") %>%
+      dplyr::ungroup()
     
     #recode as factors
     dat.plot$gender <- as.factor(dat.plot$gender)
@@ -1426,102 +1466,55 @@ renderPlotly({
 ### Data 
 
 
+
 ```{r}
 #right now this is redoing the data table above, just without the plotly, 
 # i know to make this more efficent we want to not have to do this twice, 
 DT::renderDataTable(
-  DT::datatable(
-    { y.axis <-  input$format.gender.yaxis  
+  DT::datatable({ 
+    y.axis <-  input$format.gender.yaxis  
     
     #stat options: Median, Mean
     s <- input$format.gender.value
     
-    #get filtered data from compensator package
-    dat.filterd <- 
-      compensator::dat_filtering(
-        broad.category = as.numeric( gender.graph.filters()$broad.category),
-        type.org =NA,
-        univ = TRUE,
-        hosp = TRUE,
-        state = gender.graph.filters()$state,
-        location.type = gender.graph.filters()$location.type,
-        total.expense =  gender.graph.filters()$total.expense
-      )
+    #data 
+    dat.plot <- dat.gender.graph()
     
+    #If y.axis == major.group, only display the selected major groups 
+    if(y.axis == "major.group"){
+      #get the name of the selected major  groups
+      letter.keep <- 
+        ntee.crosswalk %>%
+          dplyr::filter(broad.category %in% input$filter.gender.broad.category)%>%
+          dplyr::select(major.group) %>%
+          unique %>%
+          dplyr::pull()
+      
+      mg.keep <- 
+        ntee.orig %>%
+          dplyr::filter(nchar(ntee) == 1,
+                        ntee %in% letter.keep) %>%
+          dplyr::select(description)%>%
+          dplyr::pull()
+
+      dat.plot <- dat.plot %>%
+        dplyr::filter(Yaxis %in% mg.keep)
+    }
     
-    #format data for plotting
+    #get summary statistics to display
     dat.plot <- 
-      #get information in nonprofits for the ones that made it though filtersing
-      dplyr::inner_join(dat.filterd, nonprofits, by = "EIN") %>%
-      #remove unknown gender 
-      dplyr::filter(gender != "U") %>%
-      dplyr::select(ceo.compensation, gender, paste(y.axis)) %>%
-      #get the correect yaxis value based on inputs
-      dplyr::rename(Yaxis = paste(y.axis)) %>%
-      #group by everything execpt ceo.compensation
-      dplyr::group_by_at(vars(-ceo.compensation)) %>%
-      #get the mean or median of ceo.compensation
+      dat.plot%>%
       dplyr::summarise(
-        Mean =  round(mean(ceo.compensation), 2),
-        Median =  round(median(ceo.compensation), 2),
-        SD = round(sd(ceo.compensation),2),
+        Mean = round(mean(ceo.compensation),2),
+        Median = round(median(ceo.compensation),2), 
         n = n(), 
         .groups = "keep") %>%
-      dplyr::ungroup()%>%
-      dplyr::arrange(Yaxis)  
+      dplyr::ungroup() %>%
+      dplyr::arrange(Yaxis)
     
-    if(y.axis == "broad.category"){
-      dat.plot <- dat.plot %>%
-        dplyr::mutate(Yaxis = case_when(
-          Yaxis == "ART" ~ "Arts, Culture & Humanities",
-          Yaxis == "EDU" ~ "Education",
-          Yaxis == "ENV" ~ "Environment and Animals",
-          Yaxis == "HEL" ~ "Health",
-          Yaxis == "HMS" ~ "Human Services",
-          Yaxis == "IFA" ~ "International, Foreign Affairs",
-          Yaxis == "PSB" ~ "Public, Societal Benefit",
-          Yaxis == "REL" ~ "Religion Related",
-          Yaxis == "MMB" ~ "Mutual/Membership Benefit",
-          Yaxis == "UNU" ~ "Unknown/Unclassified",
-          Yaxis == "HOS" ~ "Hosptial",
-          Yaxis == "UNI" ~ "University"))
-    }
-    
-    if(y.axis == "major.group"){
-      dat.plot <- dat.plot %>%
-        dplyr::mutate(Yaxis = case_when(
-          Yaxis == "A" ~ "Arts, Culture & Humanities",
-          Yaxis == "B" ~ "Education", 
-          Yaxis == "C" ~ "Environment",
-          Yaxis == "D" ~ "Animal-Related",
-          Yaxis == "E" ~ "Health Care",
-          Yaxis == "F" ~ "Mental Health & Crisis Intervention",
-          Yaxis == "G" ~ "Voluntary Health Associations & Medical Disciplines",
-          Yaxis == "H" ~ "Medical Research",
-          Yaxis == "I" ~ "Crime & Legal-Related",
-          Yaxis == "J" ~ "Employment",
-          Yaxis == "K" ~ "Food, Agriculture & Nutrition",
-          Yaxis == "L" ~ "Housing & Shelter",
-          Yaxis == "M" ~ "Public Safety, Disaster Preparedness & Relief",
-          Yaxis == "N" ~ "Recreation & Sports",
-          Yaxis == "O" ~ "Youth Development",
-          Yaxis == "P" ~ "Human Services",
-          Yaxis == "Q" ~ "International, Foreign Affairs & National Security",
-          Yaxis == "R" ~ "Civil Rights, Social Action & Advocacy",
-          Yaxis == "S" ~ "Community Improvement & Capacity Building",
-          Yaxis == "T" ~ "Philanthropy, Voluntarism & Grantmaking Foundations",
-          Yaxis == "U" ~ "Science & Technology",
-          Yaxis == "V" ~ "Social Science",
-          Yaxis == "W" ~ "Public & Societal Benefit",
-          Yaxis == "X" ~ "Religion-Related",
-          Yaxis == "Y" ~ "Mutual & Membership Benefit",
-          Yaxis == "Z" ~ "Unknown"))
-    }
-    
-    
-    #reutrn
+    #return
     dat.plot %>%
-      dplyr::rename_with(~ ifelse(y.axis == "broad.category", "BroadCategory", "MajorGroup"), starts_with("Yaxis"))
+      dplyr::rename_with(~ ifelse(y.axis == "broad.category", "BroadCategory", "MajorGroup"), starts_with("Yaxis")) 
     },
     
     extensions = 'Buttons',
@@ -1534,7 +1527,7 @@ DT::renderDataTable(
       dom = 'tB',
       buttons = c('copy', 'csv', 'excel')
     ),
-    
+    rownames = FALSE,
     class = "display"
   ))
 
